@@ -61,7 +61,6 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
     @Override
     public ResultSet next() {
         if (!hasNext()) {
-            close();
             throw new NoSuchElementException();
         }
         hasMoved = false;
