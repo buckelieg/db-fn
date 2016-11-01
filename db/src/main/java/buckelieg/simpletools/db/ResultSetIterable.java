@@ -51,7 +51,6 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
                 LOG.debug(e);
             }
             hasNext = false;
-            close();
         }
         if (!hasNext) {
             close();
