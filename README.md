@@ -10,7 +10,7 @@ To get started just clone this repo and build with local maven.
 Operate on result set in a functional style.
 #### Select
 Use question marks:
-
+```
 Collection<?> results = DBUtils.stream(db, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
                 .collect(
                         ArrayList<SOME_TYPE>::new,
@@ -23,8 +23,9 @@ Collection<?> results = DBUtils.stream(db, "SELECT * FROM TEST WHERE ID IN (?, ?
                         },
                         Collection::addAll
                 );
+```
 or use named parameters:
-
+```
 Collection<?> results = DBUtils.stream(db, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
             put("id", new Object[]{1, 2});
             put("NaME", "name_5");
@@ -39,29 +40,32 @@ Collection<?> results = DBUtils.stream(db, "SELECT * FROM TEST WHERE 1=1 AND ID 
                 },
                 Collection::addAll
         );
-
+```
 #### Update/Insert/Delete
 
 ##### Insert 
 
 with question marks:
-
+```
 int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
-
+```
 Or with named parameters:
-
+```
 int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
-
+```
 ##### Update
-
+```
 int res = DBUtils.update(db, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
+```
 or
+```
 int res = DBUtils.update(db, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
+```
         
 ##### Delete
-
+```
 int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=?", "name_2");
-
+```
 and so on. Explore test suite for more examples.
 
 ### Prerequisites
