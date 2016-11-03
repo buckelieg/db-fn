@@ -8,6 +8,7 @@ import java.net.URL;
 import java.sql.*;
 import java.util.Calendar;
 import java.util.Map;
+import java.util.Objects;
 
 final class ImmutableResultSet implements ResultSet {
 
@@ -15,12 +16,13 @@ final class ImmutableResultSet implements ResultSet {
 
     private ResultSet delegate;
 
-    ImmutableResultSet(ResultSet delegate) {
-        this.delegate = delegate;
+    ImmutableResultSet(@Nonnull ResultSet delegate) {
+        setDelegate(delegate);
     }
 
-    void setDelegate(@Nonnull ResultSet delegate) {
-        this.delegate = delegate;
+    ResultSet setDelegate(@Nonnull ResultSet delegate) {
+        this.delegate = Objects.requireNonNull(delegate);
+        return this;
     }
 
     @Override

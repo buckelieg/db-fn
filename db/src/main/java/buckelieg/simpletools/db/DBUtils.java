@@ -18,72 +18,86 @@ import java.util.stream.StreamSupport;
 public final class DBUtils {
 
     private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
+    private static final Pattern STORED_PROCEDURE = Pattern.compile("\\{?\\s*call\\s+");
 
     private DBUtils() {
     }
 
     @Nonnull
-    public static Iterable<ResultSet> select(Connection con, String query, Object... params) {
+    public static Iterable<ResultSet> call(Connection conn, String call, Object... params) {
+        Matcher matcher = STORED_PROCEDURE.matcher(Objects.requireNonNull(call).toLowerCase().trim());
+        int found = 0;
+        while (matcher.find()) {
+            ++found;
+        }
+        if (1 != found) {
+            throw new IllegalArgumentException(String.format("Query '%s' is not a valid procedure call statement", call));
+        }
+        return Collections.emptyList();
+    }
+
+    @Nonnull
+    public static Iterable<ResultSet> select(Connection conn, String query, Object... params) {
         return query((lowerQuery) -> {
             if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not a select statement", query));
             }
-        }, ResultSetIterable::new, con, query, params);
+        }, ResultSetIterable::new, conn, query, params);
     }
 
     @Nonnull
-    public static Iterable<ResultSet> select(Connection con, String query, Map<String, ?> namedParams) {
-        return select(con, query, namedParams.entrySet());
-    }
-
-    @Nonnull
-    @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> Iterable<ResultSet> select(Connection con, String query, T... namedParams) {
-        return select(con, query, Arrays.asList(namedParams));
-    }
-
-    @Nonnull
-    public static Stream<ResultSet> stream(Connection con, String select, Object... params) {
-        return StreamSupport.stream(select(con, select, params).spliterator(), false);
-    }
-
-    @Nonnull
-    public static Stream<ResultSet> stream(Connection con, String select, Map<String, ?> namedParams) {
-        return StreamSupport.stream(select(con, select, namedParams).spliterator(), false);
+    public static Iterable<ResultSet> select(Connection conn, String query, Map<String, ?> namedParams) {
+        return select(conn, query, namedParams.entrySet());
     }
 
     @Nonnull
     @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> Stream<ResultSet> stream(Connection con, String select, T... namedParams) {
-        return StreamSupport.stream(select(con, select, namedParams).spliterator(), false);
+    public static <T extends Map.Entry<String, ?>> Iterable<ResultSet> select(Connection conn, String query, T... namedParams) {
+        return select(conn, query, Arrays.asList(namedParams));
     }
 
-    public static int update(Connection con, String query, Object... params) {
+    @Nonnull
+    public static Stream<ResultSet> stream(Connection conn, String select, Object... params) {
+        return StreamSupport.stream(select(conn, select, params).spliterator(), false);
+    }
+
+    @Nonnull
+    public static Stream<ResultSet> stream(Connection conn, String select, Map<String, ?> namedParams) {
+        return StreamSupport.stream(select(conn, select, namedParams).spliterator(), false);
+    }
+
+    @Nonnull
+    @SafeVarargs
+    public static <T extends Map.Entry<String, ?>> Stream<ResultSet> stream(Connection conn, String select, T... namedParams) {
+        return StreamSupport.stream(select(conn, select, namedParams).spliterator(), false);
+    }
+
+    public static int update(Connection conn, String query, Object... params) {
         return query((lowerQuery) -> {
             if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
             }
-        }, PreparedStatement::executeUpdate, con, query, params);
+        }, PreparedStatement::executeUpdate, conn, query, params);
     }
 
     @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> int update(Connection con, String query, T... namedParams) {
-        return update(con, query, Arrays.asList(namedParams));
+    public static <T extends Map.Entry<String, ?>> int update(Connection conn, String query, T... namedParams) {
+        return update(conn, query, Arrays.asList(namedParams));
     }
 
-    public static int update(Connection con, String query, Map<String, ?> namedParams) {
-        return update(con, query, namedParams.entrySet());
+    public static int update(Connection conn, String query, Map<String, ?> namedParams) {
+        return update(conn, query, namedParams.entrySet());
     }
 
     @Nonnull
-    private static Iterable<ResultSet> select(Connection con, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
+    private static Iterable<ResultSet> select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
-        return select(con, preparedQuery.getKey(), preparedQuery.getValue());
+        return select(conn, preparedQuery.getKey(), preparedQuery.getValue());
     }
 
-    private static int update(Connection con, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
+    private static int update(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
-        return update(con, preparedQuery.getKey(), preparedQuery.getValue());
+        return update(conn, preparedQuery.getKey(), preparedQuery.getValue());
     }
 
     private static Map.Entry<String, Object[]> prepareQuery(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
@@ -127,14 +141,14 @@ public final class DBUtils {
     @Nonnull
     private static <T> T query(Consumer<String> queryValidator,
                                Try<PreparedStatement, T, SQLException> action,
-                               Connection con, String query, Object... params) {
+                               Connection conn, String query, Object... params) {
         try {
             String lowerQuery = Objects.requireNonNull(query).toLowerCase();
-            queryValidator.accept(lowerQuery);
-            if (Objects.requireNonNull(con).isClosed()) {
-                throw new SQLException(String.format("Connection '%s' is closed", con));
+            queryValidator.accept(lowerQuery.trim());
+            if (Objects.requireNonNull(conn).isClosed()) {
+                throw new SQLException(String.format("Connection '%s' is closed", conn));
             }
-            PreparedStatement ps = con.prepareStatement(lowerQuery);
+            PreparedStatement ps = conn.prepareStatement(lowerQuery);
             int pNum = 0;
             for (Object p : params) {
                 ps.setObject(++pNum, p);
@@ -144,7 +158,7 @@ public final class DBUtils {
             throw new RuntimeException(
                     String.format(
                             "Could not execute statement '%s' on connection '%s' due to '%s'",
-                            query, con, e.getMessage()
+                            query, conn, e.getMessage()
                     ), e
             );
         }

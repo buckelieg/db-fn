@@ -64,8 +64,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
             throw new NoSuchElementException();
         }
         hasMoved = false;
-        wrapper.setDelegate(rs);
-        return wrapper;
+        return wrapper.setDelegate(rs);
     }
 
     private void close() {
