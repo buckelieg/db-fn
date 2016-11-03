@@ -10,7 +10,7 @@ To get started just clone this repo and build with local maven.
 Operate on result set in a functional style.
 #### Select
 Use question marks:
-```
+```java
 Collection<SOME_TYPE> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
                 .collect(
                         LinkedList<SOME_TYPE>::new,
@@ -25,7 +25,7 @@ Collection<SOME_TYPE> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE I
                 );
 ```
 or use named parameters:
-```
+```java
 Collection<SOME_TYPE> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
             put("id", new Object[]{1, 2});
             put("NaME", "name_5");
@@ -46,31 +46,31 @@ Collection<SOME_TYPE> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE 1
 ##### Insert 
 
 with question marks:
-```
+```java
 int res = DBUtils.update(conn, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
 ```
 Or with named parameters:
-```
+```java
 int res = DBUtils.update(conn, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
 ```
 ##### Update
-```
+```java
 int res = DBUtils.update(conn, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
 ```
 or
-```
+```java
 int res = DBUtils.update(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
 ```
         
 ##### Delete
-```
+```java
 int res = DBUtils.update(conn, "DELETE FROM TEST WHERE name=?", "name_2");
 ```
 and so on. Explore test suite for more examples.
 
 #### ETL
 implement simple ETL process:
-```
+```java
 long count = DBUtils.select(conn, "SELECT COUNT(*) FROM TEST").iterator().next().getLong(1);    
 // calculate partitions here and split work to threads if needed
 Executors.newCachedThreadPool().submit(() -> DBUtils.stream(conn, " SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end).map(rs -> /*map result set here*/).forEach(obj -> {
