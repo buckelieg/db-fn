@@ -11,9 +11,9 @@ Operate on result set in a functional style.
 #### Select
 Use question marks:
 ```
-Collection<?> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
+Collection<SOME_TYPE> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
                 .collect(
-                        ArrayList<SOME_TYPE>::new,
+                        LinkedList<SOME_TYPE>::new,
                         (pList, rs) -> {
                             try {
                                 pList.add(...);
@@ -26,7 +26,7 @@ Collection<?> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE ID IN (?,
 ```
 or use named parameters:
 ```
-Collection<?> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
+Collection<SOME_TYPE> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
             put("id", new Object[]{1, 2});
             put("NaME", "name_5");
         }}).collect(
@@ -73,7 +73,7 @@ implement simple ETL process:
 ```
 long count = DBUtils.select(conn, "SELECT COUNT(*) FROM TEST").iterator().next().getLong(1);    
 // calculate partitions here and split work to threads if needed
-Executors.newCachedThreadPool().submit(() -> DBUtils.stream(conn, " SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end).forEach(rs -> {
+Executors.newCachedThreadPool().submit(() -> DBUtils.stream(conn, " SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end).map(rs -> /*map result set here*/).forEach(obj -> {
             // do things here...
         }));
 ```
