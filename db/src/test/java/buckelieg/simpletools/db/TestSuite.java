@@ -73,7 +73,7 @@ public class TestSuite {
                                 if (rs.getInt(1) == 7) {
                                     throw new SQLException("Exception here...");
                                 }
-                                pList.add(new Pair<>(rs.getInt(1), rs.getString(2)));
+                                pList.add(Pair.of(rs.getInt(1), rs.getString(2)));
                             } catch (SQLException e) {
 //                                System.out.println(String.format("Caught exception '%s'", e.getMessage()));
                             }
@@ -90,7 +90,7 @@ public class TestSuite {
                         ArrayList<Pair<Integer, String>>::new,
                         (pList, rs) -> {
                             try {
-                                pList.add(new Pair<>(rs.getInt(1), rs.getString(2)));
+                                pList.add(Pair.of(rs.getInt(1), rs.getString(2)));
                             } catch (SQLException e) {
                                 e.printStackTrace();
                             }
@@ -111,7 +111,7 @@ public class TestSuite {
                         LinkedList<Pair<Integer, String>>::new,
                         (pList, rs) -> {
                             try {
-                                pList.add(new Pair<>(rs.getInt(1), rs.getString(2)));
+                                pList.add(Pair.of(rs.getInt(1), rs.getString(2)));
                             } catch (SQLException e) {
                                 e.printStackTrace();
                             }
@@ -129,7 +129,7 @@ public class TestSuite {
 
     @Test
     public void testInsertNamed() throws Exception {
-        int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
+        int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(:name)", Pair.of("name", "New_Name"));
         assertTrue(res == 1);
         assertTrue(DBUtils.stream(db, "SELECT * FROM TEST").count() == 11);
     }
@@ -143,7 +143,7 @@ public class TestSuite {
 
     @Test
     public void testUpdateNamed() throws Exception {
-        int res = DBUtils.update(db, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
+        int res = DBUtils.update(db, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", Pair.of("name", "new_name_2"), Pair.of("new_name", "name_2"));
         assertTrue(res == 1);
         assertTrue(DBUtils.stream(db, "SELECT * FROM TEST WHERE name=?", "new_name_2").count() == 1);
     }
@@ -157,14 +157,14 @@ public class TestSuite {
 
     @Test
     public void testDeleteNamed() throws Exception {
-        int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=:name", new Pair<>("name", "name_2"));
+        int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=:name", Pair.of("name", "name_2"));
         assertTrue(res == 1);
         assertTrue(DBUtils.stream(db, "SELECT * FROM TEST").count() == 9);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testDuplicatedNamedParameters() throws Exception {
-        DBUtils.select(db, "SELECT * FROM TEST WHERE 1=1 AND (NAME IN (:names) OR NAME=:NAMES)", new Pair<>("names", "name_1"), new Pair<>("NAMES", "name_2"));
+        DBUtils.select(db, "SELECT * FROM TEST WHERE 1=1 AND (NAME IN (:names) OR NAME=:NAMES)", Pair.of("names", "name_1"), Pair.of("NAMES", "name_2"));
     }
 
     @Test

@@ -15,16 +15,18 @@
 */
 package buckelieg.simpletools.db;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
+import java.util.Objects;
 
 @ParametersAreNonnullByDefault
 final class Pair<K, V> implements Map.Entry<K, V> {
     private final K key;
     private final V val;
 
-    public Pair(K key, V val) {
-        this.key = key;
+    private Pair(K key, @Nullable V val) {
+        this.key = Objects.requireNonNull(key);
         this.val = val;
     }
 
@@ -40,7 +42,7 @@ final class Pair<K, V> implements Map.Entry<K, V> {
 
     @Override
     public V setValue(V value) {
-        throw new UnsupportedOperationException(String.format("Pair '%s=%s' is read only", key, value));
+        throw new UnsupportedOperationException(String.format("Pair '%s' is read only", toString()));
     }
 
     @Override
@@ -63,5 +65,9 @@ final class Pair<K, V> implements Map.Entry<K, V> {
     @Override
     public String toString() {
         return String.format("%s=%s", key, val);
+    }
+
+    public static <K, V> Pair<K, V> of(K key, V val) {
+        return new Pair<>(key, val);
     }
 }

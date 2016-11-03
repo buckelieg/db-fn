@@ -138,7 +138,7 @@ public final class DBUtils {
                     StreamSupport.stream(asIterable(e.getValue()).spliterator(), false).map(o -> "?").collect(Collectors.joining(", "))
             );
         }
-        return new Pair<>(lowerQuery, indicesToValues.values().toArray(new Object[indicesToValues.size()]));
+        return Pair.of(lowerQuery, indicesToValues.values().toArray(new Object[indicesToValues.size()]));
     }
 
     private static Iterable<?> asIterable(Object o) {
