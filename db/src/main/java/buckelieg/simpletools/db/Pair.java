@@ -67,7 +67,7 @@ final class Pair<K, V> implements Map.Entry<K, V> {
         return String.format("%s=%s", key, val);
     }
 
-    public static <K, V> Pair<K, V> of(K key, V val) {
+    static <K, V> Pair<K, V> of(K key, V val) {
         return new Pair<>(key, val);
     }
 }

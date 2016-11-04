@@ -16,11 +16,9 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -39,16 +37,17 @@ public final class DBUtils {
     }
 
     @Nonnull
-    public static Iterable<ResultSet> call(Connection conn, String call, Object... params) {
-        Matcher matcher = STORED_PROCEDURE.matcher(Objects.requireNonNull(call).toLowerCase().trim());
-        int found = 0;
-        while (matcher.find()) {
-            ++found;
-        }
-        if (1 != found) {
-            throw new IllegalArgumentException(String.format("Query '%s' is not a valid procedure call statement", call));
-        }
-        return Collections.emptyList();
+    public static Iterable<ResultSet> call(Connection conn, String query, P... params) {
+        return call((lowerQuery) -> {
+            Matcher matcher = STORED_PROCEDURE.matcher(lowerQuery);
+            int found = 0;
+            while (matcher.find()) {
+                ++found;
+                if (1 != found) {
+                    throw new IllegalArgumentException(String.format("Query '%s' is not a valid procedure call statement", query));
+                }
+            }
+        }, ResultSetIterable::new, conn, query, params);
     }
 
     @Nonnull
@@ -116,7 +115,7 @@ public final class DBUtils {
     }
 
     private static Map.Entry<String, Object[]> prepareQuery(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
-        String lowerQuery = Objects.requireNonNull(query).toLowerCase();
+        String lowerQuery = validateQuery(query, null);
         Map<Integer, Object> indicesToValues = new TreeMap<>();
         Map<String, ?> transformedParams = StreamSupport.stream(namedParams.spliterator(), false).collect(Collectors.toMap(
                 k -> k.getKey().startsWith(":") ? k.getKey().toLowerCase() : String.format(":%s", k.getKey().toLowerCase()),
@@ -158,12 +157,7 @@ public final class DBUtils {
                                Try<PreparedStatement, T, SQLException> action,
                                Connection conn, String query, Object... params) {
         try {
-            String lowerQuery = Objects.requireNonNull(query).toLowerCase();
-            queryValidator.accept(lowerQuery.trim());
-            if (Objects.requireNonNull(conn).isClosed()) {
-                throw new SQLException(String.format("Connection '%s' is closed", conn));
-            }
-            PreparedStatement ps = conn.prepareStatement(lowerQuery);
+            PreparedStatement ps = requireOpened(conn).prepareStatement(validateQuery(query, queryValidator));
             int pNum = 0;
             for (Object p : params) {
                 ps.setObject(++pNum, p);
@@ -177,6 +171,65 @@ public final class DBUtils {
                     ), e
             );
         }
+    }
+
+    @Nonnull
+    private static <T> T call(Consumer<String> queryValidator,
+                              Try<CallableStatement, T, SQLException> action,
+                              Connection conn, String query, P... params) {
+        try {
+            String lowerQuery = validateQuery(query, queryValidator);
+            P[] preparedParams = params;
+            int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
+            if (namedParams == params.length) {
+                Map.Entry<String, Object[]> preparedQuery = prepareQuery(
+                        lowerQuery,
+                        Arrays.stream(params).map(p -> Pair.of(p.getName(), new P[]{p})).collect(Collectors.toList())
+                );
+                lowerQuery = preparedQuery.getKey();
+                preparedParams = (P[]) preparedQuery.getValue();
+            } else if (0 < namedParams && params.length > namedParams) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "Cannot combine named parameters(count=%s) with unnamed ones(count=%s).",
+                                namedParams, params.length - namedParams
+                        )
+                );
+            }
+            CallableStatement cs = requireOpened(conn).prepareCall(lowerQuery);
+            for (int i = 1; i <= preparedParams.length; i++) {
+                P p = params[i];
+                if (p.isOut() || p.isInOut()) {
+                    cs.registerOutParameter(i, JDBCType.JAVA_OBJECT);
+                }
+                if (p.isIn() || p.isInOut()) {
+                    cs.setObject(i, p.getValue());
+                }
+            }
+            return action.f(cs);
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Could not execute statement '%s' on connection '%s' due to '%s'",
+                            query, conn, e.getMessage()
+                    ), e
+            );
+        }
+    }
+
+    private static Connection requireOpened(Connection conn) throws SQLException {
+        if (Objects.requireNonNull(conn).isClosed()) {
+            throw new SQLException(String.format("Connection '%s' is closed", conn));
+        }
+        return conn;
+    }
+
+    private static String validateQuery(String query, @Nullable Consumer<String> validator) {
+        String lowerQuery = Objects.requireNonNull(query).trim().toLowerCase();
+        if (validator != null) {
+            validator.accept(lowerQuery);
+        }
+        return lowerQuery;
     }
 
 }

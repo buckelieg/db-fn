@@ -17,9 +17,7 @@ package buckelieg.simpletools.db;
 
 import org.apache.log4j.Logger;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -28,19 +26,24 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
 
     private static final Logger LOG = Logger.getLogger(ResultSetIterable.class);
 
-    private final PreparedStatement ps;
+    private Statement statement;
     private ResultSet rs;
     private boolean hasNext;
     private boolean hasMoved;
     private ImmutableResultSet wrapper;
 
-    ResultSetIterable(PreparedStatement ps) {
-        this.ps = Objects.requireNonNull(ps);
+    ResultSetIterable(Statement statement) {
+        this.statement = Objects.requireNonNull(statement);
         try {
-            this.rs = ps.executeQuery();
+            if (statement instanceof CallableStatement) {
+                ((CallableStatement) statement).execute();
+                this.rs = statement.getResultSet();
+            } else if (statement instanceof PreparedStatement) {
+                this.rs = ((PreparedStatement) statement).executeQuery();
+            }
             this.wrapper = new ImmutableResultSet(rs);
         } catch (SQLException e) {
-            LOG.warn(String.format("Could not execute statement '%s' due to '%s'", ps, e.getMessage()));
+            LOG.warn(String.format("Could not execute statement '%s' due to '%s'", statement, e.getMessage()));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(e);
             }
@@ -84,14 +87,14 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
 
     private void close() {
         try {
-            if (ps != null && !ps.isClosed()) {
+            if (statement != null && !statement.isClosed()) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("Closing prepared statement '%s'", ps));
+                    LOG.debug(String.format("Closing prepared statement '%s'", statement));
                 }
-                ps.close(); // subsequently closes all result sets opened by this prepared statement
+                statement.close(); // by JDBC spec: subsequently closes all result sets opened by this prepared statement
             }
         } catch (SQLException e) {
-            LOG.warn(String.format("Could not close the prepared statement '%s' due to '%s'", ps, e.getMessage()));
+            LOG.warn(String.format("Could not close the prepared statement '%s' due to '%s'", statement, e.getMessage()));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(e);
             }
