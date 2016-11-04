@@ -36,8 +36,9 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         this.statement = Objects.requireNonNull(statement);
         try {
             if (statement instanceof CallableStatement) {
-                ((CallableStatement) statement).execute();
-                this.rs = statement.getResultSet();
+                if (((CallableStatement) statement).execute()) {
+                    this.rs = statement.getResultSet();
+                }
             } else if (statement instanceof PreparedStatement) {
                 this.rs = ((PreparedStatement) statement).executeQuery();
             }
