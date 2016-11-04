@@ -36,20 +36,48 @@ public final class DBUtils {
     private DBUtils() {
     }
 
+    /**
+     * Calls stored procedure. Supplied params are considered as IN typed parameters
+     *
+     * @param conn   The Connection to operate on
+     * @param query  procedure call string
+     * @param params procedure IN parameters
+     * @return procedure call result as result set iterable
+     */
+    @Nonnull
+    public static Iterable<ResultSet> call(Connection conn, String query, Object... params) {
+        return call(conn, query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P[params.length]));
+    }
+
+    /**
+     * Calls stored procedure.
+     *
+     * @param conn   The Connection to operate on
+     * @param query  procedure call string
+     * @param params procedure parameters as declared (IN/OUT/INOUT)
+     * @return procedure call result as result set iterable
+     */
     @Nonnull
     public static Iterable<ResultSet> call(Connection conn, String query, P... params) {
         return call((lowerQuery) -> {
             Matcher matcher = STORED_PROCEDURE.matcher(lowerQuery);
             int found = 0;
             while (matcher.find()) {
-                ++found;
-                if (1 != found) {
+                if (1 != ++found) {
                     throw new IllegalArgumentException(String.format("Query '%s' is not a valid procedure call statement", query));
                 }
             }
         }, ResultSetIterable::new, conn, query, params);
     }
 
+    /**
+     * Executes SELECT statement on provided Connection
+     *
+     * @param conn   The Connection to operate on.
+     * @param query  SELECT query to execute. Can be WITH query
+     * @param params query parameters on the declared order of '?'
+     * @return query execution result as iterable result set
+     */
     @Nonnull
     public static Iterable<ResultSet> select(Connection conn, String query, Object... params) {
         return query((lowerQuery) -> {
@@ -59,33 +87,81 @@ public final class DBUtils {
         }, ResultSetIterable::new, conn, query, params);
     }
 
+    /**
+     * Executes SELECT statement on provided Connection
+     *
+     * @param conn        The Connection to operate on.
+     * @param query       SELECT query to execute. Can be WITH query
+     * @param namedParams query named parameters. Parameter name in the form of :name
+     * @return query execution result as iterable result set
+     */
     @Nonnull
     public static Iterable<ResultSet> select(Connection conn, String query, Map<String, ?> namedParams) {
         return select(conn, query, namedParams.entrySet());
     }
 
+    /**
+     * Executes SELECT statement on provided Connection
+     *
+     * @param conn        The Connection to operate on.
+     * @param query       SELECT query to execute. Can be WITH query
+     * @param namedParams query named parameters. Parameter name in the form of :name
+     * @return query execution result as iterable result set
+     */
     @Nonnull
     @SafeVarargs
     public static <T extends Map.Entry<String, ?>> Iterable<ResultSet> select(Connection conn, String query, T... namedParams) {
         return select(conn, query, Arrays.asList(namedParams));
     }
 
+    /**
+     * Executes SELECT statement on provided Connection
+     *
+     * @param conn   The Connection to operate on.
+     * @param select SELECT query to execute. Can be WITH query
+     * @param params query parameters on the declared order of '?'
+     * @return query execution result as stream
+     */
     @Nonnull
     public static Stream<ResultSet> stream(Connection conn, String select, Object... params) {
         return StreamSupport.stream(select(conn, select, params).spliterator(), false);
     }
 
+    /**
+     * Executes SELECT statement on provided Connection
+     *
+     * @param conn        The Connection to operate on.
+     * @param select      SELECT query to execute. Can be WITH query
+     * @param namedParams query named parameters. Parameter name in the form of :name
+     * @return query execution result as stream
+     */
     @Nonnull
     public static Stream<ResultSet> stream(Connection conn, String select, Map<String, ?> namedParams) {
         return StreamSupport.stream(select(conn, select, namedParams).spliterator(), false);
     }
 
+    /**
+     * Executes SELECT statement on provided Connection
+     *
+     * @param conn        The Connection to operate on.
+     * @param select      SELECT query to execute. Can be WITH query
+     * @param namedParams query named parameters. Parameter name in the form of :name
+     * @return query execution result as stream
+     */
     @Nonnull
     @SafeVarargs
     public static <T extends Map.Entry<String, ?>> Stream<ResultSet> stream(Connection conn, String select, T... namedParams) {
         return StreamSupport.stream(select(conn, select, namedParams).spliterator(), false);
     }
 
+    /**
+     * Executes one of DML statements: INSERT, UDATE or DELETE.
+     *
+     * @param conn   The Connection to operate on.
+     * @param query  INSERT/UPDATE/DELETE query to execute.
+     * @param params query parameters on the declared order of '?'
+     * @return count of updated rows
+     */
     public static int update(Connection conn, String query, Object... params) {
         return query((lowerQuery) -> {
             if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
@@ -94,11 +170,27 @@ public final class DBUtils {
         }, PreparedStatement::executeUpdate, conn, query, params);
     }
 
+    /**
+     * Executes one of DML statements: INSERT, UDATE or DELETE.
+     *
+     * @param conn        The Connection to operate on.
+     * @param query       INSERT/UPDATE/DELETE query to execute.
+     * @param namedParams query named parameters. Parameter name in the form of :name
+     * @return count of updated rows
+     */
     @SafeVarargs
     public static <T extends Map.Entry<String, ?>> int update(Connection conn, String query, T... namedParams) {
         return update(conn, query, Arrays.asList(namedParams));
     }
 
+    /**
+     * Executes one of DML statements: INSERT, UDATE or DELETE.
+     *
+     * @param conn        The Connection to operate on.
+     * @param query       INSERT/UPDATE/DELETE query to execute.
+     * @param namedParams query named parameters. Parameter name in the form of :name
+     * @return count of updated rows
+     */
     public static int update(Connection conn, String query, Map<String, ?> namedParams) {
         return update(conn, query, namedParams.entrySet());
     }

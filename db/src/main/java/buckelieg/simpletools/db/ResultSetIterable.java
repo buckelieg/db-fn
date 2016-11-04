@@ -90,12 +90,12 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         try {
             if (statement != null && !statement.isClosed()) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("Closing prepared statement '%s'", statement));
+                    LOG.debug(String.format("Closing statement '%s'", statement));
                 }
-                statement.close(); // by JDBC spec: subsequently closes all result sets opened by this prepared statement
+                statement.close(); // by JDBC spec: subsequently closes all result sets opened by this statement
             }
         } catch (SQLException e) {
-            LOG.warn(String.format("Could not close the prepared statement '%s' due to '%s'", statement, e.getMessage()));
+            LOG.warn(String.format("Could not close the statement '%s' due to '%s'", statement, e.getMessage()));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(e);
             }
