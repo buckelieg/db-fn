@@ -345,7 +345,7 @@ final class ImmutableResultSet implements ResultSet {
 
     @Override
     public void setFetchSize(int rows) throws SQLException {
-        delegate.setFetchDirection(rows);
+        delegate.setFetchSize(rows);
     }
 
     @Override

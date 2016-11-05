@@ -32,6 +32,7 @@ public final class DBUtils {
 
     private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
     private static final Pattern STORED_PROCEDURE = Pattern.compile("\\{?\\s*call\\s+");
+    private static final Pattern VOID_STORED_PROCEDURE = Pattern.compile("\\{?\\s*call\\s+");
 
     private DBUtils() {
     }
@@ -124,7 +125,7 @@ public final class DBUtils {
      */
     @Nonnull
     public static Stream<ResultSet> stream(Connection conn, String select, Object... params) {
-        return StreamSupport.stream(select(conn, select, params).spliterator(), false);
+        return asStream(select(conn, select, params));
     }
 
     /**
@@ -137,7 +138,7 @@ public final class DBUtils {
      */
     @Nonnull
     public static Stream<ResultSet> stream(Connection conn, String select, Map<String, ?> namedParams) {
-        return StreamSupport.stream(select(conn, select, namedParams).spliterator(), false);
+        return asStream(select(conn, select, namedParams));
     }
 
     /**
@@ -151,7 +152,7 @@ public final class DBUtils {
     @Nonnull
     @SafeVarargs
     public static <T extends Map.Entry<String, ?>> Stream<ResultSet> stream(Connection conn, String select, T... namedParams) {
-        return StreamSupport.stream(select(conn, select, namedParams).spliterator(), false);
+        return asStream(select(conn, select, namedParams));
     }
 
     /**
@@ -276,7 +277,7 @@ public final class DBUtils {
             if (namedParams == params.length) {
                 Map.Entry<String, Object[]> preparedQuery = prepareQuery(
                         lowerQuery,
-                        Arrays.stream(params).map(p -> Pair.of(p.getName(), new P[]{p})).collect(Collectors.toList())
+                        Arrays.stream(params).map(p -> Pair.of(p.getName(), p)).collect(Collectors.toList())
                 );
                 lowerQuery = preparedQuery.getKey();
                 preparedParams = (P[]) preparedQuery.getValue();
@@ -290,7 +291,7 @@ public final class DBUtils {
             }
             CallableStatement cs = requireOpened(conn).prepareCall(lowerQuery);
             for (int i = 1; i <= preparedParams.length; i++) {
-                P p = params[i];
+                P p = preparedParams[i];
                 if (p.isOut() || p.isInOut()) {
                     cs.registerOutParameter(i, JDBCType.JAVA_OBJECT);
                 }
@@ -322,6 +323,10 @@ public final class DBUtils {
             validator.accept(lowerQuery);
         }
         return lowerQuery;
+    }
+
+    private static Stream<ResultSet> asStream(Iterable<ResultSet> iterable) {
+        return StreamSupport.stream(iterable.spliterator(), false);
     }
 
 }
