@@ -28,13 +28,21 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @ParametersAreNonnullByDefault
-public final class DBUtils {
-
+public enum DBUtils { // Joshua Bloch style singleton :)
+    ;
     private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
-    private static final Pattern STORED_PROCEDURE = Pattern.compile("\\{?\\s*call\\s+");
-
-    private DBUtils() {
-    }
+    // Java regexp do not support conditional regexps. We will enumerate all possible variants.
+    private static final Pattern STORED_PROCEDURE = Pattern.compile(
+            String.format(
+                    "%s|%s|%s|%s|%s|%s",
+                    "(\\?\\s*=\\s*)?call\\s+\\w+\\s*(\\(\\s*)\\)",
+                    "(\\?\\s*=\\s*)?call\\s+\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)",
+                    "(\\?\\s*=\\s*)?call\\s+\\w+",
+                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+\\w+\\s*\\}",
+                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)\\s*\\}",
+                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+\\w+\\s*(\\(\\s*)\\)\\s*\\}"
+            )
+    );
 
     /**
      * Calls stored procedure. Supplied params are considered as IN typed parameters
@@ -60,12 +68,8 @@ public final class DBUtils {
     @Nonnull
     public static Iterable<ResultSet> call(Connection conn, String query, P... params) {
         return call((lowerQuery) -> {
-            Matcher matcher = STORED_PROCEDURE.matcher(lowerQuery);
-            int found = 0;
-            while (matcher.find()) {
-                if (1 != ++found) {
-                    throw new IllegalArgumentException(String.format("Query '%s' is not a valid procedure call statement", query));
-                }
+            if (!STORED_PROCEDURE.matcher(lowerQuery).matches()) {
+                throw new IllegalArgumentException(String.format("Query '%s' is not a valid procedure call statement", query));
             }
         }, ResultSetIterable::new, conn, query, params);
     }
