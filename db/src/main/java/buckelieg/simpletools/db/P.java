@@ -36,28 +36,6 @@ public final class P<T> {
         this.value = value;
     }
 
-    public boolean isIn() {
-        return mode == ParameterMetaData.parameterModeIn || mode == ParameterMetaData.parameterModeInOut;
-    }
-
-    public boolean isOut() {
-        return mode == ParameterMetaData.parameterModeOut || mode == ParameterMetaData.parameterModeInOut;
-    }
-
-    public boolean isInOut() {
-        return mode == ParameterMetaData.parameterModeInOut;
-    }
-
-    @Nonnull
-    public String getName() {
-        return name;
-    }
-
-    @Nullable
-    public T getValue() {
-        return value;
-    }
-
     public static <T> P<T> in(@Nonnull String name, T value) {
         return new P<>(ParameterMetaData.parameterModeIn, name, value);
     }
@@ -82,4 +60,45 @@ public final class P<T> {
         return inOut("", value);
     }
 
+    public boolean isIn() {
+        return mode == ParameterMetaData.parameterModeIn || mode == ParameterMetaData.parameterModeInOut;
+    }
+
+    public boolean isOut() {
+        return mode == ParameterMetaData.parameterModeOut || mode == ParameterMetaData.parameterModeInOut;
+    }
+
+    public boolean isInOut() {
+        return mode == ParameterMetaData.parameterModeInOut;
+    }
+
+    @Nonnull
+    public String getName() {
+        return name;
+    }
+
+    @Nullable
+    public T getValue() {
+        return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        P<?> p = (P<?>) o;
+        return mode == p.mode &&
+                Objects.equals(name, p.name) &&
+                Objects.equals(value, p.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mode, name, value);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s:%s=%s", isIn() ? "IN" : isOut() ? "OUT" : "INOUT", name, value);
+    }
 }

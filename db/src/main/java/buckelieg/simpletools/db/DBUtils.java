@@ -32,7 +32,6 @@ public final class DBUtils {
 
     private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
     private static final Pattern STORED_PROCEDURE = Pattern.compile("\\{?\\s*call\\s+");
-    private static final Pattern VOID_STORED_PROCEDURE = Pattern.compile("\\{?\\s*call\\s+");
 
     private DBUtils() {
     }
