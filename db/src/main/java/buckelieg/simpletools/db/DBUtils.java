@@ -67,11 +67,47 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      */
     @Nonnull
     public static Iterable<ResultSet> call(Connection conn, String query, P... params) {
-        return call((lowerQuery) -> {
+        try {
+            String lowerQuery = validateQuery(query, null);
+            P[] preparedParams = params;
+            int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
+            if (namedParams == params.length) {
+                Map.Entry<String, Object[]> preparedQuery = prepareQuery(
+                        lowerQuery,
+                        Arrays.stream(params).map(p -> Pair.of(p.getName(), new P[]{p})).collect(Collectors.toList())
+                );
+                lowerQuery = preparedQuery.getKey();
+                preparedParams = (P[]) preparedQuery.getValue();
+            } else if (0 < namedParams && namedParams < params.length) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "Cannot combine named parameters(count=%s) with unnamed ones(count=%s).",
+                                namedParams, params.length - namedParams
+                        )
+                );
+            }
             if (!STORED_PROCEDURE.matcher(lowerQuery).matches()) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not a valid procedure call statement", query));
             }
-        }, ResultSetIterable::new, conn, query, params);
+            CallableStatement cs = requireOpened(conn).prepareCall(lowerQuery);
+            for (int i = 1; i <= preparedParams.length; i++) {
+                P p = preparedParams[i];
+                if (p.isOut() || p.isInOut()) {
+                    cs.registerOutParameter(i, JDBCType.JAVA_OBJECT);
+                }
+                if (p.isIn() || p.isInOut()) {
+                    cs.setObject(i, p.getValue());
+                }
+            }
+            return new ResultSetIterable(cs);
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Could not execute statement '%s' on connection '%s' due to '%s'",
+                            query, conn, e.getMessage()
+                    ), e
+            );
+        }
     }
 
     /**
@@ -171,7 +207,15 @@ public enum DBUtils { // Joshua Bloch style singleton :)
             if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
             }
-        }, PreparedStatement::executeUpdate, conn, query, params);
+        }, (ps) -> {
+            int rows = 0;
+            try {
+                rows = ps.executeUpdate();
+            } finally {
+                ps.close();
+            }
+            return rows;
+        }, conn, query, params);
     }
 
     /**
@@ -259,50 +303,6 @@ public enum DBUtils { // Joshua Bloch style singleton :)
                 ps.setObject(++pNum, p);
             }
             return action.f(ps);
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    String.format(
-                            "Could not execute statement '%s' on connection '%s' due to '%s'",
-                            query, conn, e.getMessage()
-                    ), e
-            );
-        }
-    }
-
-    @Nonnull
-    private static <T> T call(Consumer<String> queryValidator,
-                              Try<CallableStatement, T, SQLException> action,
-                              Connection conn, String query, P... params) {
-        try {
-            String lowerQuery = validateQuery(query, queryValidator);
-            P[] preparedParams = params;
-            int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
-            if (namedParams == params.length) {
-                Map.Entry<String, Object[]> preparedQuery = prepareQuery(
-                        lowerQuery,
-                        Arrays.stream(params).map(p -> Pair.of(p.getName(), p)).collect(Collectors.toList())
-                );
-                lowerQuery = preparedQuery.getKey();
-                preparedParams = (P[]) preparedQuery.getValue();
-            } else if (0 < namedParams && params.length > namedParams) {
-                throw new IllegalArgumentException(
-                        String.format(
-                                "Cannot combine named parameters(count=%s) with unnamed ones(count=%s).",
-                                namedParams, params.length - namedParams
-                        )
-                );
-            }
-            CallableStatement cs = requireOpened(conn).prepareCall(lowerQuery);
-            for (int i = 1; i <= preparedParams.length; i++) {
-                P p = preparedParams[i];
-                if (p.isOut() || p.isInOut()) {
-                    cs.registerOutParameter(i, JDBCType.JAVA_OBJECT);
-                }
-                if (p.isIn() || p.isInOut()) {
-                    cs.setObject(i, p.getValue());
-                }
-            }
-            return action.f(cs);
         } catch (SQLException e) {
             throw new RuntimeException(
                     String.format(

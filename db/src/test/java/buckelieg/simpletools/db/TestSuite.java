@@ -1,3 +1,18 @@
+/*
+* Copyright 2016 Anatoly Kutyakov
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*    http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package buckelieg.simpletools.db;
 
 import org.junit.AfterClass;
@@ -5,8 +20,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static org.junit.Assert.assertTrue;
@@ -206,6 +224,39 @@ public class TestSuite {
                 e.printStackTrace();
             }
         });
+    }
+
+    @Test
+    public void testStoredProcedureRegexp() throws Exception {
+        Field f = DBUtils.class.getDeclaredField("STORED_PROCEDURE");
+        f.setAccessible(true);
+        Pattern STORED_PROCEDURE = (Pattern) f.get(null);
+        Stream.of(
+                "{call myProc()}",
+                "call myProc()",
+                "{call myProc}",
+                "call myProc",
+                "{?=call MyProc()}",
+                "?=call myProc()",
+                "{?=call MyProc}",
+                "?=call myProc",
+                "{call myProc(?)}",
+                "call myProc(?)",
+                "{?=call myProc(?)}",
+                "?=call myProc(?)",
+                "{call myProc(?,?)}",
+                "call myProc(?,?)",
+                "{?=call myProc(?,?)}",
+                "?=call myProc(?,?)",
+                "{call myProc(?,?,?)}",
+                "call=myProc(?,?,?)",
+                "{?=call myProc(?,?,?)}",
+                "?=call myProc(?,?,?)",
+                "{}",
+                "call ",
+                "{call}",
+                "call myProc(?,?,?,?,?)"
+        ).forEach(expr -> System.out.println(String.format("Expr='%s' matches: '%s'", expr, STORED_PROCEDURE.matcher(expr).matches())));
     }
 
 }
