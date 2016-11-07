@@ -40,8 +40,8 @@ public final class P<T> {
         return new P<>(ParameterMetaData.parameterModeIn, name, value);
     }
 
-    public static <T> P<T> out(@Nonnull String name, T value) {
-        return new P<>(ParameterMetaData.parameterModeOut, name, value);
+    public static <T> P<T> out(@Nonnull String name) {
+        return new P<>(ParameterMetaData.parameterModeOut, name, null);
     }
 
     public static <T> P<T> inOut(@Nonnull String name, T value) {
@@ -52,8 +52,8 @@ public final class P<T> {
         return in("", value);
     }
 
-    public static <T> P<T> out(T value) {
-        return out("", value);
+    public static <T> P<T> out() {
+        return out("");
     }
 
     public static <T> P<T> inOut(T value) {

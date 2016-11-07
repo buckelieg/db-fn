@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static buckelieg.simpletools.db.Pair.of;
 import static org.junit.Assert.assertTrue;
 
 public class TestSuite {
@@ -38,11 +39,14 @@ public class TestSuite {
         Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
         db = DriverManager.getConnection("jdbc:derby:memory:test;create=true");
         db.createStatement().execute("CREATE TABLE TEST(id int PRIMARY KEY generated always as IDENTITY, name varchar(255) not null)");
+        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW(NAME_TO_ADD VARCHAR(255), OUT RS) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA ");
+//        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW(NAME_TO_ADD VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA ");
     }
 
     @AfterClass
     public static void destroy() throws Exception {
         db.createStatement().execute("DROP TABLE TEST");
+        db.createStatement().execute("DROP PROCEDURE CREATETESTROW");
         db.close();
     }
 
@@ -186,6 +190,17 @@ public class TestSuite {
     }
 
     @Test
+    public void testStoredProcedure() throws Exception {
+        DBUtils.call(db, "{call CREATETESTROW(?, ?)}", P.in("new_name"), P.out()).forEach(rs -> {
+            try {
+                System.out.println(rs.getString(2));
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
     public void testImmutable() throws Exception {
         DBUtils.select(db, "SELECT * FROM TEST WHERE 1=1 AND ID=?", 1).forEach(rs -> {
             testImmutableAction(rs, ResultSet::next);
@@ -232,31 +247,37 @@ public class TestSuite {
         f.setAccessible(true);
         Pattern STORED_PROCEDURE = (Pattern) f.get(null);
         Stream.of(
-                "{call myProc()}",
-                "call myProc()",
-                "{call myProc}",
-                "call myProc",
-                "{?=call MyProc()}",
-                "?=call myProc()",
-                "{?=call MyProc}",
-                "?=call myProc",
-                "{call myProc(?)}",
-                "call myProc(?)",
-                "{?=call myProc(?)}",
-                "?=call myProc(?)",
-                "{call myProc(?,?)}",
-                "call myProc(?,?)",
-                "{?=call myProc(?,?)}",
-                "?=call myProc(?,?)",
-                "{call myProc(?,?,?)}",
-                "call=myProc(?,?,?)",
-                "{?=call myProc(?,?,?)}",
-                "?=call myProc(?,?,?)",
-                "{}",
-                "call ",
-                "{call}",
-                "call myProc(?,?,?,?,?)"
-        ).forEach(expr -> System.out.println(String.format("Expr='%s' matches: '%s'", expr, STORED_PROCEDURE.matcher(expr).matches())));
+                of("{call myProc()}", true),
+                of("call myProc()", true),
+                of("{call myProc}", true),
+                of("call myProc", true),
+                of("{?=call MyProc()}", true),
+                of("?=call myProc()", true),
+                of("{?=call MyProc}", true),
+                of("?=call myProc", true),
+                of("{call myProc(?)}", true),
+                of("call myProc(?)", true),
+                of("{?=call myProc(?)}", true),
+                of("?=call myProc(?)", true),
+                of("{call myProc(?,?)}", true),
+                of("call myProc(?,?)", true),
+                of("{?=call myProc(?,?)}", true),
+                of("?=call myProc(?,?)", true),
+                of("{call myProc(?,?,?)}", true),
+                of("call myProc(?,?,?)", true),
+                of("{?=call myProc(?,?,?)}", true),
+                of("?=call myProc(?,?,?)", true),
+                of("{}", false),
+                of("call ", false),
+                of("{call}", false),
+                of("call myProc(?,?,?,?,?)", true)
+                // TODO more cases here
+        ).forEach(testCase -> {
+            assertTrue(
+                    String.format("Test case '%s' failed", testCase.getKey()),
+                    testCase.getValue() == STORED_PROCEDURE.matcher(testCase.getKey()).matches()
+            );
+        });
     }
 
 }

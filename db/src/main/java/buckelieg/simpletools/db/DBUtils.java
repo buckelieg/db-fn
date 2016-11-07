@@ -54,7 +54,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      */
     @Nonnull
     public static Iterable<ResultSet> call(Connection conn, String query, Object... params) {
-        return call(conn, query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P[params.length]));
+        return call(conn, query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P<?>[params.length]));
     }
 
     /**
@@ -66,18 +66,18 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @return procedure call result as result set iterable
      */
     @Nonnull
-    public static Iterable<ResultSet> call(Connection conn, String query, P... params) {
+    public static Iterable<ResultSet> call(Connection conn, String query, P<?>... params) {
         try {
             String lowerQuery = validateQuery(query, null);
-            P[] preparedParams = params;
+            P<?>[] preparedParams = params;
             int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
             if (namedParams == params.length) {
                 Map.Entry<String, Object[]> preparedQuery = prepareQuery(
                         lowerQuery,
-                        Arrays.stream(params).map(p -> Pair.of(p.getName(), new P[]{p})).collect(Collectors.toList())
+                        Arrays.stream(params).map(p -> Pair.of(p.getName(), new P<?>[]{p})).collect(Collectors.toList())
                 );
                 lowerQuery = preparedQuery.getKey();
-                preparedParams = (P[]) preparedQuery.getValue();
+                preparedParams = (P<?>[]) preparedQuery.getValue();
             } else if (0 < namedParams && namedParams < params.length) {
                 throw new IllegalArgumentException(
                         String.format(
@@ -91,7 +91,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
             }
             CallableStatement cs = requireOpened(conn).prepareCall(lowerQuery);
             for (int i = 1; i <= preparedParams.length; i++) {
-                P p = preparedParams[i];
+                P<?> p = preparedParams[i-1];
                 if (p.isOut() || p.isInOut()) {
                     cs.registerOutParameter(i, JDBCType.JAVA_OBJECT);
                 }

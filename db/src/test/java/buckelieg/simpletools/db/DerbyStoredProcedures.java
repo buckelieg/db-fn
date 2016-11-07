@@ -17,6 +17,9 @@ package buckelieg.simpletools.db;
 
 import java.sql.*;
 
+/**
+ * @see @link http://carminedimascio.com/2013/07/java-stored-procedures-with-derby/
+ */
 public class DerbyStoredProcedures {
 
     public static void createTestRow(String name) throws SQLException {
@@ -28,22 +31,39 @@ public class DerbyStoredProcedures {
         PreparedStatement stmt = null;
         try {
             conn = DriverManager.getConnection("jdbc:default:connection");
-            String sql = "SELECT * FROM TEST";
-            stmt = conn.prepareStatement(sql);
+            stmt = conn.prepareStatement("INSERT INTO TEST(name) VALUES(?)");
+            stmt.setString(1, name);
+            stmt.executeQuery();
+            stmt = conn.prepareStatement("SELECT * FROM TEST");
             // set the result in OUT parameter
             // IMPORTANT: Notice that we never instantiate the customerLastName array.
             // The array is instead initialized and passed in by Derby, our SQL/JRT implementor
             updatedContents[0] = stmt.executeQuery();
         } finally {
             if (stmt != null) {
-                // close the statement
                 stmt.close();
             }
             if (conn != null) {
-                // close the db connection
                 conn.close();
             }
         }
+    }
 
+    public static void testProcedure(String name) throws SQLException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = DriverManager.getConnection("jdbc:default:connection");
+            stmt = conn.prepareStatement("INSERT INTO TEST(name) VALUES(?)");
+            stmt.setString(1, name);
+            stmt.executeUpdate();
+        } finally {
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (conn != null) {
+                conn.close();
+            }
+        }
     }
 }
