@@ -334,23 +334,23 @@ final class ImmutableResultSet implements ResultSet {
     }
 
     @Override
-    public void setFetchDirection(int direction) throws SQLException {
-        throw new SQLException(EXCEPTION_MESSAGE);
-    }
-
-    @Override
     public int getFetchDirection() throws SQLException {
-        throw new SQLException(EXCEPTION_MESSAGE);
+        return delegate.getFetchDirection();
     }
 
     @Override
-    public void setFetchSize(int rows) throws SQLException {
+    public void setFetchDirection(int direction) throws SQLException {
         throw new SQLException(EXCEPTION_MESSAGE);
     }
 
     @Override
     public int getFetchSize() throws SQLException {
         return delegate.getFetchSize();
+    }
+
+    @Override
+    public void setFetchSize(int rows) throws SQLException {
+        throw new SQLException(EXCEPTION_MESSAGE);
     }
 
     @Override

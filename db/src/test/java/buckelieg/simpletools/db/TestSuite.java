@@ -39,14 +39,14 @@ public class TestSuite {
         Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
         db = DriverManager.getConnection("jdbc:derby:memory:test;create=true");
         db.createStatement().execute("CREATE TABLE TEST(id int PRIMARY KEY generated always as IDENTITY, name varchar(255) not null)");
-        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW(NAME_TO_ADD VARCHAR(255), OUT RS) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA ");
+//        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW(NAME_TO_ADD VARCHAR(255), OUT RS) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA ");
 //        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW(NAME_TO_ADD VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA ");
     }
 
     @AfterClass
     public static void destroy() throws Exception {
         db.createStatement().execute("DROP TABLE TEST");
-        db.createStatement().execute("DROP PROCEDURE CREATETESTROW");
+//        db.createStatement().execute("DROP PROCEDURE CREATETESTROW");
         db.close();
     }
 
@@ -107,7 +107,9 @@ public class TestSuite {
 
     @Test
     public void testSelect() throws Exception {
-        Collection<?> results = DBUtils.stream(db, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
+        Collection<?> results = DBUtils.select(db, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
+                .stream()
+                .parallel()
                 .collect(
                         ArrayList<Pair<Integer, String>>::new,
                         (pList, rs) -> {
@@ -128,7 +130,9 @@ public class TestSuite {
         params.put("id", new Object[]{1, 2});
 //        params.put("id", Arrays.asList(1, 2));
         params.put("NaME", "name_5");
-        Collection<?> results = DBUtils.stream(db, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", params)
+        Collection<?> results = DBUtils.select(db, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", params)
+                .stream()
+                .parallel()
                 .collect(
                         LinkedList<Pair<Integer, String>>::new,
                         (pList, rs) -> {
@@ -153,35 +157,35 @@ public class TestSuite {
     public void testInsertNamed() throws Exception {
         int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(:name)", Pair.of("name", "New_Name"));
         assertTrue(res == 1);
-        assertTrue(DBUtils.stream(db, "SELECT * FROM TEST").count() == 11);
+        assertTrue(DBUtils.select(db, "SELECT * FROM TEST").stream().count() == 11);
     }
 
     @Test
     public void testUpdate() throws Exception {
         int res = DBUtils.update(db, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
         assertTrue(res == 1);
-        assertTrue(DBUtils.stream(db, "SELECT * FROM TEST WHERE name=?", "new_name_2").count() == 1);
+        assertTrue(DBUtils.select(db, "SELECT * FROM TEST WHERE name=?", "new_name_2").stream().count() == 1);
     }
 
     @Test
     public void testUpdateNamed() throws Exception {
         int res = DBUtils.update(db, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", Pair.of("name", "new_name_2"), Pair.of("new_name", "name_2"));
         assertTrue(res == 1);
-        assertTrue(DBUtils.stream(db, "SELECT * FROM TEST WHERE name=?", "new_name_2").count() == 1);
+        assertTrue(DBUtils.select(db, "SELECT * FROM TEST WHERE name=?", "new_name_2").stream().count() == 1);
     }
 
     @Test
     public void testDelete() throws Exception {
         int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=?", "name_2");
         assertTrue(res == 1);
-        assertTrue(DBUtils.stream(db, "SELECT * FROM TEST").count() == 9);
+        assertTrue(DBUtils.select(db, "SELECT * FROM TEST").stream().count() == 9);
     }
 
     @Test
     public void testDeleteNamed() throws Exception {
         int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=:name", Pair.of("name", "name_2"));
         assertTrue(res == 1);
-        assertTrue(DBUtils.stream(db, "SELECT * FROM TEST").count() == 9);
+        assertTrue(DBUtils.select(db, "SELECT * FROM TEST").stream().count() == 9);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -191,36 +195,40 @@ public class TestSuite {
 
     @Test
     public void testStoredProcedure() throws Exception {
-        DBUtils.call(db, "{call CREATETESTROW(?, ?)}", P.in("new_name"), P.out()).forEach(rs -> {
-            try {
-                System.out.println(rs.getString(2));
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
+        DBUtils.call(db, "{call CREATETESTROW(?, ?)}", P.in("new_name"), P.out())
+                .execute()
+                .forEach(rs -> {
+                    try {
+                        System.out.println(rs.getString(2));
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                });
     }
 
     @Test
     public void testImmutable() throws Exception {
-        DBUtils.select(db, "SELECT * FROM TEST WHERE 1=1 AND ID=?", 1).forEach(rs -> {
-            testImmutableAction(rs, ResultSet::next);
-            testImmutableAction(rs, (r) -> {
-                r.afterLast();
-                return null;
-            });
-            testImmutableAction(rs, (r) -> {
-                r.beforeFirst();
-                return null;
-            });
-            testImmutableAction(rs, ResultSet::previous);
-            testImmutableAction(rs, (r) -> r.absolute(1));
-            testImmutableAction(rs, (r) -> r.relative(1));
-            testImmutableAction(rs, (r) -> {
-                r.updateObject(1, "Updated_val");
-                return null;
-            });
-            // TODO test all unsupported actions
-        });
+        DBUtils.select(db, "SELECT * FROM TEST WHERE 1=1 AND ID=?", 1)
+                .execute()
+                .forEach(rs -> {
+                    testImmutableAction(rs, ResultSet::next);
+                    testImmutableAction(rs, (r) -> {
+                        r.afterLast();
+                        return null;
+                    });
+                    testImmutableAction(rs, (r) -> {
+                        r.beforeFirst();
+                        return null;
+                    });
+                    testImmutableAction(rs, ResultSet::previous);
+                    testImmutableAction(rs, (r) -> r.absolute(1));
+                    testImmutableAction(rs, (r) -> r.relative(1));
+                    testImmutableAction(rs, (r) -> {
+                        r.updateObject(1, "Updated_val");
+                        return null;
+                    });
+                    // TODO test all unsupported actions
+                });
     }
 
     private void testImmutableAction(ResultSet rs, Try<ResultSet, ?, SQLException> action) {
@@ -232,13 +240,15 @@ public class TestSuite {
     }
 
     private void printDb() {
-        DBUtils.stream(db, "SELECT * FROM TEST").forEach(rs -> {
-            try {
-                System.out.println(String.format("ID=%s NAME=%s", rs.getInt(1), rs.getString(2)));
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
+        DBUtils.select(db, "SELECT * FROM TEST")
+                .execute()
+                .forEach(rs -> {
+                    try {
+                        System.out.println(String.format("ID=%s NAME=%s", rs.getInt(1), rs.getString(2)));
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                });
     }
 
     @Test

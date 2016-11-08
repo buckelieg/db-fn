@@ -17,38 +17,30 @@ package buckelieg.simpletools.db;
 
 import org.apache.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.sql.*;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Spliterator;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
-final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet> {
+final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Query {
 
     private static final Logger LOG = Logger.getLogger(ResultSetIterable.class);
 
     private Statement statement;
     private ResultSet rs;
-    private boolean hasNext;
-    private boolean hasMoved;
+    private AtomicBoolean hasNext;
+    private AtomicBoolean hasMoved;
     private ImmutableResultSet wrapper;
+    private int batchSize = -1;
 
     ResultSetIterable(Statement statement) {
         this.statement = Objects.requireNonNull(statement);
-        try {
-            if (statement instanceof CallableStatement) {
-                if (((CallableStatement) statement).execute()) {
-                    this.rs = statement.getResultSet();
-                }
-            } else if (statement instanceof PreparedStatement) {
-                this.rs = ((PreparedStatement) statement).executeQuery();
-            }
-            this.wrapper = new ImmutableResultSet(rs);
-        } catch (SQLException e) {
-            LOG.warn(String.format("Could not execute statement '%s' due to '%s'", statement, e.getMessage()));
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(e);
-            }
-        }
+        this.hasMoved = new AtomicBoolean();
+        this.hasNext = new AtomicBoolean();
     }
 
     @Override
@@ -59,22 +51,22 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
     @Override
     public boolean hasNext() {
         try {
-            if (hasMoved) {
-                return hasNext;
+            if (hasMoved.get()) {
+                return hasNext.get();
             }
-            hasNext = rs != null && rs.next();
-            hasMoved = true;
+            hasNext.set(rs != null && rs.next());
+            hasMoved.set(true);
         } catch (SQLException e) {
             LOG.warn(String.format("Could not move result set on due to '%s'", e.getMessage()));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(e);
             }
-            hasNext = false;
+            hasNext.set(false);
         }
-        if (!hasNext) {
+        if (!hasNext.get()) {
             close();
         }
-        return hasNext;
+        return hasNext.get();
     }
 
     @Override
@@ -82,7 +74,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        hasMoved = false;
+        hasMoved.set(false);
         return wrapper.setDelegate(rs);
     }
 
@@ -100,5 +92,75 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
                 LOG.debug(e);
             }
         }
+    }
+
+    @Nonnull
+    @Override
+    public Iterable<ResultSet> execute() {
+        try {
+            if (batchSize >= 0) {
+                statement.setFetchSize(batchSize);
+            }
+            if (statement instanceof CallableStatement) {
+                if (((CallableStatement) statement).execute()) {
+                    this.rs = statement.getResultSet();
+                }
+            } else if (statement instanceof PreparedStatement) {
+                this.rs = ((PreparedStatement) statement).executeQuery();
+            }
+            this.wrapper = new ImmutableResultSet(rs);
+        } catch (SQLException e) {
+            LOG.warn(String.format("Could not execute statement '%s' due to '%s'", statement, e.getMessage()));
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(e);
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public Query batchSize(int size) {
+        try {
+            batchSize = rs != null ? rs.getFetchSize() > size ? rs.getFetchSize() : size : size;
+        } catch (SQLException e) {
+            batchSize = size > 0 ? size : 0; // 0 value is ignored by ResultSet.setFetchSize
+        }
+        return this;
+    }
+
+    @Override
+    public Spliterator<ResultSet> spliterator() {
+        return this;
+    }
+
+    @Override
+    public boolean tryAdvance(Consumer<? super ResultSet> action) {
+        Objects.requireNonNull(action);
+        if (hasNext()) {
+            action.accept(next());
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Spliterator<ResultSet> trySplit() {
+        return null; // TODO implement concurrent finctionality using fetched rows info.
+    }
+
+    @Override
+    public long estimateSize() {
+        return Long.MAX_VALUE;
+    }
+
+    @Override
+    public int characteristics() {
+        return Spliterator.IMMUTABLE | Spliterator.ORDERED | Spliterator.NONNULL;
+    }
+
+    @Override
+    public void forEachRemaining(Consumer<? super ResultSet> action) {
+        Objects.requireNonNull(action);
+        while (hasNext()) action.accept(next());
     }
 }

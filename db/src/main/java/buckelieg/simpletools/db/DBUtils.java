@@ -24,7 +24,6 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @ParametersAreNonnullByDefault
@@ -53,7 +52,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @return procedure call result as result set iterable
      */
     @Nonnull
-    public static Iterable<ResultSet> call(Connection conn, String query, Object... params) {
+    public static Query call(Connection conn, String query, Object... params) {
         return call(conn, query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P<?>[params.length]));
     }
 
@@ -66,7 +65,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @return procedure call result as result set iterable
      */
     @Nonnull
-    public static Iterable<ResultSet> call(Connection conn, String query, P<?>... params) {
+    public static Query call(Connection conn, String query, P<?>... params) {
         try {
             String lowerQuery = validateQuery(query, null);
             P<?>[] preparedParams = params;
@@ -91,7 +90,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
             }
             CallableStatement cs = requireOpened(conn).prepareCall(lowerQuery);
             for (int i = 1; i <= preparedParams.length; i++) {
-                P<?> p = preparedParams[i-1];
+                P<?> p = preparedParams[i - 1];
                 if (p.isOut() || p.isInOut()) {
                     cs.registerOutParameter(i, JDBCType.JAVA_OBJECT);
                 }
@@ -119,7 +118,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @return query execution result as iterable result set
      */
     @Nonnull
-    public static Iterable<ResultSet> select(Connection conn, String query, Object... params) {
+    public static Query select(Connection conn, String query, Object... params) {
         return query((lowerQuery) -> {
             if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not a select statement", query));
@@ -136,7 +135,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @return query execution result as iterable result set
      */
     @Nonnull
-    public static Iterable<ResultSet> select(Connection conn, String query, Map<String, ?> namedParams) {
+    public static Query select(Connection conn, String query, Map<String, ?> namedParams) {
         return select(conn, query, namedParams.entrySet());
     }
 
@@ -150,48 +149,8 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      */
     @Nonnull
     @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> Iterable<ResultSet> select(Connection conn, String query, T... namedParams) {
+    public static <T extends Map.Entry<String, ?>> Query select(Connection conn, String query, T... namedParams) {
         return select(conn, query, Arrays.asList(namedParams));
-    }
-
-    /**
-     * Executes SELECT statement on provided Connection
-     *
-     * @param conn   The Connection to operate on.
-     * @param select SELECT query to execute. Can be WITH query
-     * @param params query parameters on the declared order of '?'
-     * @return query execution result as stream
-     */
-    @Nonnull
-    public static Stream<ResultSet> stream(Connection conn, String select, Object... params) {
-        return asStream(select(conn, select, params));
-    }
-
-    /**
-     * Executes SELECT statement on provided Connection
-     *
-     * @param conn        The Connection to operate on.
-     * @param select      SELECT query to execute. Can be WITH query
-     * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return query execution result as stream
-     */
-    @Nonnull
-    public static Stream<ResultSet> stream(Connection conn, String select, Map<String, ?> namedParams) {
-        return asStream(select(conn, select, namedParams));
-    }
-
-    /**
-     * Executes SELECT statement on provided Connection
-     *
-     * @param conn        The Connection to operate on.
-     * @param select      SELECT query to execute. Can be WITH query
-     * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return query execution result as stream
-     */
-    @Nonnull
-    @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> Stream<ResultSet> stream(Connection conn, String select, T... namedParams) {
-        return asStream(select(conn, select, namedParams));
     }
 
     /**
@@ -244,7 +203,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
     }
 
     @Nonnull
-    private static Iterable<ResultSet> select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
+    private static Query select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return select(conn, preparedQuery.getKey(), preparedQuery.getValue());
     }
@@ -326,10 +285,6 @@ public enum DBUtils { // Joshua Bloch style singleton :)
             validator.accept(lowerQuery);
         }
         return lowerQuery;
-    }
-
-    private static Stream<ResultSet> asStream(Iterable<ResultSet> iterable) {
-        return StreamSupport.stream(iterable.spliterator(), false);
     }
 
 }
