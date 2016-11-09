@@ -99,6 +99,6 @@ public final class P<T> {
 
     @Override
     public String toString() {
-        return String.format("%s:%s=%s", isIn() ? "IN" : isOut() ? "OUT" : "INOUT", name, value);
+        return String.format("%s:%s=%s", isInOut() ? "INOUT" : isOut() ? "OUT" : "IN", name, value);
     }
 }
