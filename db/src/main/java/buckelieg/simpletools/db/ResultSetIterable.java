@@ -15,25 +15,29 @@
 */
 package buckelieg.simpletools.db;
 
+import com.sun.rowset.CachedRowSetImpl;
 import org.apache.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.sql.rowset.CachedRowSet;
 import java.sql.*;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Query {
 
     private static final Logger LOG = Logger.getLogger(ResultSetIterable.class);
 
-    private Statement statement;
+    private final Statement statement;
+    private final AtomicBoolean hasNext;
+    private final AtomicBoolean hasMoved;
+    private final AtomicInteger currentRow;
     private ResultSet rs;
-    private AtomicBoolean hasNext;
-    private AtomicBoolean hasMoved;
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
 
@@ -41,6 +45,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         this.statement = Objects.requireNonNull(statement);
         this.hasMoved = new AtomicBoolean();
         this.hasNext = new AtomicBoolean();
+        this.currentRow = new AtomicInteger();
     }
 
     @Override
@@ -66,6 +71,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         if (!hasNext.get()) {
             close();
         }
+        currentRow.incrementAndGet();
         return hasNext.get();
     }
 
@@ -145,6 +151,16 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
 
     @Override
     public Spliterator<ResultSet> trySplit() {
+        try {
+            int row = currentRow.get();
+            if (row < rs.getFetchSize() / 2 && rs.getFetchSize() > 0) {
+                CachedRowSet subSet = new CachedRowSetImpl();
+                subSet.populate(rs, row);
+                return new SpliteratorChunk(subSet);
+            }
+        } catch (SQLException e) {
+
+        }
         return null; // TODO implement concurrent finctionality using fetched rows info.
     }
 
