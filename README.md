@@ -26,10 +26,10 @@ Collection<SOME_TYPE> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE I
 ```
 or use named parameters:
 ```java
-Collection<SOME_TYPE> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
+Collection<SOME_TYPE> results = DBUtils.select(conn, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
             put("id", new Object[]{1, 2});
             put("NaME", "name_5");
-        }}).collect(
+        }}).stream().collect(
                 LinkedList<SOME_TYPE>::new,
                 (pList, rs) -> {
                     try {
@@ -71,9 +71,9 @@ and so on. Explore test suite for more examples.
 #### ETL
 implement simple ETL process:
 ```java
-long count = DBUtils.select(conn, "SELECT COUNT(*) FROM TEST").iterator().next().getLong(1);    
+long count = DBUtils.select(conn, "SELECT COUNT(*) FROM TEST").execute().iterator().next().getLong(1);    
 // calculate partitions here and split work to threads if needed
-Executors.newCachedThreadPool().submit(() -> DBUtils.stream(conn, " SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end).map(rs -> /*map result set here*/).forEach(obj -> {
+Executors.newCachedThreadPool().submit(() -> DBUtils.select(conn, " SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end).stream().map(rs -> /*map result set here*/).forEach(obj -> {
             // do things here...
         }));
 ```
