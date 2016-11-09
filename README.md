@@ -11,8 +11,8 @@ Operate on result set in a functional style.
 #### Select
 Use question marks:
 ```java
-Collection<SOME_TYPE> results = DBUtils.stream(conn, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
-                .collect(
+Collection<SOME_TYPE> results = DBUtils.select(conn, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
+                .stream().collect(
                         LinkedList<SOME_TYPE>::new,
                         (pList, rs) -> {
                             try {
