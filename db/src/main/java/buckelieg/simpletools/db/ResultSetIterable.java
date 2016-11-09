@@ -121,7 +121,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
     @Override
     public Query batchSize(int size) {
         try {
-            batchSize = rs != null ? rs.getFetchSize() > size ? rs.getFetchSize() : size : size;
+            batchSize = rs != null ? rs.getFetchSize() >= size ? rs.getFetchSize() : size : 0;
         } catch (SQLException e) {
             batchSize = size > 0 ? size : 0; // 0 value is ignored by ResultSet.setFetchSize
         }
@@ -161,6 +161,8 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
     @Override
     public void forEachRemaining(Consumer<? super ResultSet> action) {
         Objects.requireNonNull(action);
-        while (hasNext()) action.accept(next());
+        while (hasNext()) {
+            action.accept(next());
+        }
     }
 }
