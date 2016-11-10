@@ -121,7 +121,9 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
             } else if (statement instanceof PreparedStatement) {
                 this.rs = ((PreparedStatement) statement).executeQuery();
             }
-            this.wrapper = new ImmutableResultSet(rs);
+            if (rs != null) {
+                this.wrapper = new ImmutableResultSet(rs);
+            }
         } catch (SQLException e) {
             LOG.warn(String.format("Could not execute statement '%s' due to '%s'", statement, e.getMessage()));
             if (LOG.isDebugEnabled()) {

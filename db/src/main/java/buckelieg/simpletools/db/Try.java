@@ -19,10 +19,10 @@ package buckelieg.simpletools.db;
 public interface Try<I, O, E extends Exception> {
 
     /**
-     *
-     * @param input
-     * @return
-     * @throws E
+     * Represents some function which might throw an Exception
+     * @param input optional function input.
+     * @return optional value
+     * @throws E in case of something went wrong
      */
     O f(I input) throws E;
 

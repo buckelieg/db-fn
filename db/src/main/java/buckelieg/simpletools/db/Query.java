@@ -41,7 +41,10 @@ public interface Query {
     Iterable<ResultSet> execute();
 
     /**
-     * Shorthand fro streams.
+     * Shorthand for streams.
+     * Note:
+     * The same principle is applied to streams - whenever we left stream without
+     * calling some 'reduction' (terminal) operation we left resource freeing to JDBC
      * @return a Stream over Iterable.
      * @see #execute()
      */
