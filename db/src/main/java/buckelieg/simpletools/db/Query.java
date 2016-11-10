@@ -23,17 +23,38 @@ import java.util.stream.StreamSupport;
 /**
  * Query abstraction. Can be considered as builder for queries
  * Gives a control to set up statements and do other tunings in the future.
+ * Can be considered as builder.
  */
 public interface Query {
 
+    /**
+     * Iterable abstraction over ResultSet.
+     * Note:
+     * The code below does not iterate over all rows in the result set.
+     * </br><code>execute().iterator().next().get(...)</code></br>
+     * Thus there could be none or some rows more, but result set (and a statement) would not be closed forcibly.
+     * In such cases we rely on JDBC resources auto closing mechanism
+     *
+     * @return ResultSet as Iterable
+     */
     @Nonnull
     Iterable<ResultSet> execute();
 
+    /**
+     * Shorthand fro streams.
+     * @return a Stream over Iterable.
+     * @see #execute()
+     */
     @Nonnull
     default Stream<ResultSet> stream() {
         return StreamSupport.stream(execute().spliterator(), false);
     }
 
+    /**
+     * Configures ResultSet fetch size parameter
+     * @param size desired fetch size. Should be greater than 0.
+     * @return query builder
+     */
     Query batchSize(int size);
 
 }

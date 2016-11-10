@@ -49,7 +49,8 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @param conn   The Connection to operate on
      * @param query  procedure call string
      * @param params procedure IN parameters
-     * @return procedure call result as result set iterable
+     * @return procedure call builder
+     * @see ProcedureCall
      */
     @Nonnull
     public static ProcedureCall call(Connection conn, String query, Object... params) {
@@ -62,7 +63,8 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @param conn   The Connection to operate on
      * @param query  procedure call string
      * @param params procedure parameters as declared (IN/OUT/INOUT)
-     * @return procedure call result as result set iterable
+     * @return procedure call builder
+     * @see ProcedureCall
      */
     @Nonnull
     public static ProcedureCall call(Connection conn, String query, P<?>... params) {
@@ -115,7 +117,8 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @param conn   The Connection to operate on.
      * @param query  SELECT query to execute. Can be WITH query
      * @param params query parameters on the declared order of '?'
-     * @return query execution result as iterable result set
+     * @return query builder
+     * @see Query
      */
     @Nonnull
     public static Query select(Connection conn, String query, Object... params) {
@@ -132,7 +135,8 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @param conn        The Connection to operate on.
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return query execution result as iterable result set
+     * @return query builder
+     * @see Query
      */
     @Nonnull
     public static Query select(Connection conn, String query, Map<String, ?> namedParams) {
@@ -145,7 +149,8 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @param conn        The Connection to operate on.
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return query execution result as iterable result set
+     * @return query builder
+     * @see Query
      */
     @Nonnull
     @SafeVarargs
