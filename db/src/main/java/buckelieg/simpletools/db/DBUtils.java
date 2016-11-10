@@ -158,6 +158,22 @@ public enum DBUtils { // Joshua Bloch style singleton :)
         return select(conn, query, Arrays.asList(namedParams));
     }
 
+    @Nullable
+    public static <T> T selectSingle(Connection conn, String query, Object... params) {
+        return null; // TODO implement
+    }
+
+    @Nullable
+    @SafeVarargs
+    public static <T, P extends Map.Entry<String, ?>> T selectSingle(Connection conn, String query, P... namedParams) {
+        return null; // TODO implement
+    }
+
+    @Nullable
+    public static <T> T selectSingle(Connection conn, String query, Map<String, ?> namedParams) {
+        return null; // TODO implement
+    }
+
     /**
      * Executes one of DML statements: INSERT, UDATE or DELETE.
      *
