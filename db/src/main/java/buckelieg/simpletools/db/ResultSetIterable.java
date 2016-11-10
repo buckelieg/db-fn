@@ -26,7 +26,7 @@ import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Query {
+final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Query, ProcedureCall<T> {
 
     private static final Logger LOG = Logger.getLogger(ResultSetIterable.class);
 
@@ -36,6 +36,8 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
     private ResultSet rs;
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
+    private boolean isProcedureCall;
+    private Try<CallableStatement, T, SQLException> storedProcedureResultsHandler;
 
     ResultSetIterable(Statement statement) {
         this.statement = Objects.requireNonNull(statement);
@@ -64,7 +66,17 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
             hasNext.set(false);
         }
         if (!hasNext.get()) {
-            close();
+            if (isProcedureCall && storedProcedureResultsHandler != null) {
+                try {
+                    storedProcedureResultsHandler.f((CallableStatement) statement);
+                } catch (SQLException e) {
+                    throw new RuntimeException("Thrown in procedure results handler", e);
+                } finally {
+                    close();
+                }
+            } else {
+                close();
+            }
         }
         return hasNext.get();
     }
@@ -102,6 +114,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
                 statement.setFetchSize(batchSize);
             }
             if (statement instanceof CallableStatement) {
+                this.isProcedureCall = true;
                 if (((CallableStatement) statement).execute()) {
                     this.rs = statement.getResultSet();
                 }
@@ -121,11 +134,17 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
     @Override
     public Query batchSize(int size) {
         try {
-
             batchSize = rs != null && rs.getFetchSize() >= size ? rs.getFetchSize() : size > 0 ? size : 0;
         } catch (SQLException e) {
             batchSize = size > 0 ? size : 0; // 0 value is ignored by ResultSet.setFetchSize
         }
+        return this;
+    }
+
+    @Override
+    public Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> handler) {
+        this.isProcedureCall = true;
+        this.storedProcedureResultsHandler = Objects.requireNonNull(handler);
         return this;
     }
 
@@ -146,7 +165,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
 
     @Override
     public Spliterator<ResultSet> trySplit() {
-        return null;
+        return null; // not splittable. Parallel streams would not gain any benefits yet. May be implemented in future
     }
 
     @Override

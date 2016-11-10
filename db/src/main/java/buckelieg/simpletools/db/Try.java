@@ -15,8 +15,15 @@
 */
 package buckelieg.simpletools.db;
 
-interface Try<I, O, E extends Exception> {
+@FunctionalInterface
+public interface Try<I, O, E extends Exception> {
 
+    /**
+     *
+     * @param input
+     * @return
+     * @throws E
+     */
     O f(I input) throws E;
 
 }

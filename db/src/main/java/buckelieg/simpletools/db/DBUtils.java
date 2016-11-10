@@ -52,7 +52,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @return procedure call result as result set iterable
      */
     @Nonnull
-    public static Query call(Connection conn, String query, Object... params) {
+    public static ProcedureCall call(Connection conn, String query, Object... params) {
         return call(conn, query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P<?>[params.length]));
     }
 
@@ -65,7 +65,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @return procedure call result as result set iterable
      */
     @Nonnull
-    public static Query call(Connection conn, String query, P<?>... params) {
+    public static ProcedureCall call(Connection conn, String query, P<?>... params) {
         try {
             String lowerQuery = validateQuery(query, null);
             P<?>[] preparedParams = params;
