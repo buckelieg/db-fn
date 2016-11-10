@@ -18,6 +18,7 @@ package buckelieg.simpletools.db;
 import org.apache.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.*;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -26,6 +27,7 @@ import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+@NotThreadSafe
 final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Query, ProcedureCall<T> {
 
     private static final Logger LOG = Logger.getLogger(ResultSetIterable.class);
@@ -36,7 +38,6 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
     private ResultSet rs;
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
-    private boolean isProcedureCall;
     private Try<CallableStatement, T, SQLException> storedProcedureResultsHandler;
 
     ResultSetIterable(Statement statement) {
@@ -66,7 +67,7 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
             hasNext.set(false);
         }
         if (!hasNext.get()) {
-            if (isProcedureCall && storedProcedureResultsHandler != null) {
+            if (storedProcedureResultsHandler != null) {
                 try {
                     storedProcedureResultsHandler.f((CallableStatement) statement);
                 } catch (SQLException e) {
@@ -114,7 +115,6 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
                 statement.setFetchSize(batchSize);
             }
             if (statement instanceof CallableStatement) {
-                this.isProcedureCall = true;
                 if (((CallableStatement) statement).execute()) {
                     this.rs = statement.getResultSet();
                 }
@@ -143,7 +143,6 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
 
     @Override
     public Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> handler) {
-        this.isProcedureCall = true;
         this.storedProcedureResultsHandler = Objects.requireNonNull(handler);
         return this;
     }
