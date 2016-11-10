@@ -15,12 +15,16 @@
 */
 package buckelieg.simpletools.db;
 
+import org.apache.log4j.Logger;
+
 import java.sql.*;
 
 /**
  * @see @link http://carminedimascio.com/2013/07/java-stored-procedures-with-derby/
  */
 public class DerbyStoredProcedures {
+
+    private static final Logger LOG = Logger.getLogger(DerbyStoredProcedures.class);
 
     public static void createTestRow(String name) throws SQLException {
         DBUtils.update(DriverManager.getConnection("jdbc:default:connection"), "INSERT INTO TEST(name) VALUES(?)", "New_Name");
@@ -50,6 +54,7 @@ public class DerbyStoredProcedures {
     }
 
     public static void testProcedure(String name) throws SQLException {
+        LOG.debug("Calling testProcedure...");
         Connection conn = null;
         PreparedStatement stmt = null;
         try {

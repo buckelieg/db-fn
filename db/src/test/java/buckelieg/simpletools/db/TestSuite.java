@@ -25,7 +25,6 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static buckelieg.simpletools.db.Pair.of;
 import static org.junit.Assert.assertTrue;
@@ -39,14 +38,15 @@ public class TestSuite {
         Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
         db = DriverManager.getConnection("jdbc:derby:memory:test;create=true");
         db.createStatement().execute("CREATE TABLE TEST(id int PRIMARY KEY generated always as IDENTITY, name varchar(255) not null)");
-//        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW(NAME_TO_ADD VARCHAR(255), OUT RS) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA ");
-//        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW(NAME_TO_ADD VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA ");
+//        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW1(NAME_TO_ADD VARCHAR(255), OUT RS) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA ");
+        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW2(NAME_TO_ADD VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA ");
     }
 
     @AfterClass
     public static void destroy() throws Exception {
         db.createStatement().execute("DROP TABLE TEST");
-//        db.createStatement().execute("DROP PROCEDURE CREATETESTROW");
+//        db.createStatement().execute("DROP PROCEDURE CREATETESTROW1");
+        db.createStatement().execute("DROP PROCEDURE CREATETESTROW2");
         db.close();
     }
 
@@ -70,40 +70,6 @@ public class TestSuite {
             }
             assertTrue(rows == 10);
         }
-    }
-
-/*    @Test(expected = UnsupportedOperationException.class)
-    public void testResultSetImmutable() throws Exception {
-        DBUtils.stream(db, "SELECT * FROM TEST WHERE ID=?", 1).forEach(rs -> {
-            try {
-                rs.updateString(2, "NEW_NAME");
-            } catch (SQLException e) {
-                assertTrue("Unsupported operation".equals(e.getMessage()));
-                throw new UnsupportedOperationException(e);
-            }
-        });
-    }*/
-
-    @Test
-    public void testIterable() throws Exception {
-        Collection<Pair<Integer, String>> results = StreamSupport.stream(
-                new ResultSetIterable(db.prepareStatement("SELECT * FROM TEST")).execute().spliterator(), false)
-                .collect(
-                        LinkedList<Pair<Integer, String>>::new,
-                        (pList, rs) -> {
-                            try {
-                                if (rs.getInt(1) == 7) {
-                                    throw new SQLException("Exception here...");
-                                }
-                                pList.add(Pair.of(rs.getInt(1), rs.getString(2)));
-                            } catch (SQLException e) {
-//                                System.out.println(String.format("Caught exception '%s'", e.getMessage()));
-                                e.printStackTrace();
-                            }
-                        },
-                        Collection::addAll
-                );
-        assertTrue(results.size() == 9);
     }
 
     @Test
@@ -195,16 +161,10 @@ public class TestSuite {
     }
 
     @Test
-    public void testStoredProcedure() throws Exception {
-        DBUtils.call(db, "{call CREATETESTROW(?, ?)}", P.in("new_name"), P.out())
-                .execute()
-                .forEach(rs -> {
-                    try {
-                        System.out.println(rs.getString(2));
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                });
+    public void testVoidStoredProcedure() throws Exception {
+        Iterable<ResultSet> result = DBUtils.call(db, "{call CREATETESTROW2(?)}", "new_name").execute();
+        assertTrue(!result.iterator().hasNext());
+        assertTrue(DBUtils.select(db, "SELECT COUNT(*) FROM TEST").execute().iterator().next().getLong(1) == 11);
     }
 
     @Test
