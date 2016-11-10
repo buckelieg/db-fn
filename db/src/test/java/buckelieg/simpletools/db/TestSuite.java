@@ -87,7 +87,7 @@ public class TestSuite {
     @Test
     public void testIterable() throws Exception {
         Collection<Pair<Integer, String>> results = StreamSupport.stream(
-                new ResultSetIterable(db.prepareStatement("SELECT * FROM TEST")).spliterator(), false)
+                new ResultSetIterable(db.prepareStatement("SELECT * FROM TEST")).execute().spliterator(), false)
                 .collect(
                         LinkedList<Pair<Integer, String>>::new,
                         (pList, rs) -> {
@@ -98,6 +98,7 @@ public class TestSuite {
                                 pList.add(Pair.of(rs.getInt(1), rs.getString(2)));
                             } catch (SQLException e) {
 //                                System.out.println(String.format("Caught exception '%s'", e.getMessage()));
+                                e.printStackTrace();
                             }
                         },
                         Collection::addAll
