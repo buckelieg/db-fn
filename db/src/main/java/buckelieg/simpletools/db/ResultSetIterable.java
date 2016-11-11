@@ -110,10 +110,10 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
 
     @Nullable
     @Override
-    public <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) {
+    public <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) throws SQLException {
         try {
             return mapper.doTry(execute().iterator().next());
-        } catch (Exception e) {
+        } catch (NoSuchElementException e) {
             LOG.warn(String.format("Could not handle result set due to '%s'", e.getMessage()));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(e);

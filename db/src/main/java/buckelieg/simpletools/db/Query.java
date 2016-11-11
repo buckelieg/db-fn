@@ -19,6 +19,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -31,12 +32,30 @@ public interface Query {
 
     /**
      * In cases when single result of SELECT statement is expected.
+     *
      * @param mapper ResultSet mapper function
-     * @param <T> type bounds
+     * @param <T>    type bounds
      * @return mapped object
+     * @throws SQLException in case of result set processing errors
      */
     @Nullable
-    <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper);
+    <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) throws SQLException;
+
+    /**
+     * Single that silently suppresses Exceptions
+     *
+     * @param mapper result set mapper
+     * @param <T>    type bounds
+     * @return mapped object or null
+     */
+    @Nullable
+    default <T> T singleOrNull(@Nonnull Try<ResultSet, T, SQLException> mapper) {
+        try {
+            return single(mapper::doTry);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     /**
      * Iterable abstraction over ResultSet.
@@ -58,6 +77,7 @@ public interface Query {
      * Note:
      * The same principle is applied to streams - whenever we left stream without
      * calling some 'reduction' (terminal) operation we left resource freeing to JDBC
+     *
      * @return a Stream over Iterable.
      * @see #execute()
      */
@@ -68,6 +88,7 @@ public interface Query {
 
     /**
      * Configures ResultSet fetch size parameter
+     *
      * @param size desired fetch size. Should be greater than 0.
      * @return query builder
      */
