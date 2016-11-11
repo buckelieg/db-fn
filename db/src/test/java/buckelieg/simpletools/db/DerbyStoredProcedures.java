@@ -19,27 +19,19 @@ import org.apache.log4j.Logger;
 
 import java.sql.*;
 
-/**
- * @see @link http://carminedimascio.com/2013/07/java-stored-procedures-with-derby/
- */
 public class DerbyStoredProcedures {
 
     private static final Logger LOG = Logger.getLogger(DerbyStoredProcedures.class);
 
-/*    public static void createTestRow(String name) throws SQLException {
-        DBUtils.update(DriverManager.getConnection("jdbc:default:connection"), "INSERT INTO TEST(name) VALUES(?)", "New_Name");
-    }*/
-
     public static void createTestRow(String name, ResultSet[] updatedContents, ResultSet[] anotherContent) throws SQLException {
         LOG.debug("Calling createTestRow...");
         Connection conn = null;
-        PreparedStatement stmt = null;
+        PreparedStatement stmt;
         try {
             conn = DriverManager.getConnection("jdbc:default:connection");
             stmt = conn.prepareStatement("INSERT INTO TEST(name) VALUES(?)");
             stmt.setString(1, name);
             stmt.executeUpdate();
-            conn.commit();
             stmt = conn.prepareStatement("SELECT * FROM TEST");
             // set the result in OUT parameter
             // IMPORTANT: Notice that we never instantiate the customerLastName array.
@@ -50,9 +42,6 @@ public class DerbyStoredProcedures {
             e.printStackTrace();
             throw e;
         } finally {
-/*            if (stmt != null) {
-                stmt.close();
-            }*/
             if (conn != null) {
                 conn.close();
             }
@@ -77,4 +66,23 @@ public class DerbyStoredProcedures {
             }
         }
     }
+
+    public static void testProcedureWithResults(int id, String[] name) throws SQLException {
+        LOG.debug("Calling testProcedureWithResults...");
+        Connection conn = null;
+        PreparedStatement stmt;
+        try {
+            conn = DriverManager.getConnection("jdbc:default:connection");
+            stmt = conn.prepareStatement("SELECT NAME FROM TEST WHERE ID=?");
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            name[0] = rs.getString(1);
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
+
 }

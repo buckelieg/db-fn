@@ -29,6 +29,8 @@ import java.util.stream.Stream;
 import static buckelieg.simpletools.db.Pair.of;
 import static org.junit.Assert.assertTrue;
 
+
+// TODO more test suites for other RDBMS
 public class TestSuite {
 
     private static Connection db;
@@ -40,6 +42,7 @@ public class TestSuite {
         db.createStatement().execute("CREATE TABLE TEST(id int PRIMARY KEY generated always as IDENTITY, name varchar(255) not null)");
         db.createStatement().execute("CREATE PROCEDURE CREATETESTROW1(NAME_TO_ADD VARCHAR(255)) DYNAMIC RESULT SETS 2 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA ");
         db.createStatement().execute("CREATE PROCEDURE CREATETESTROW2(NAME_TO_ADD VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA ");
+        db.createStatement().execute("CREATE PROCEDURE GETNAMEBYID(NAME_ID INTEGER, OUT NAME_NAME CLOB) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedureWithResults' PARAMETER STYLE JAVA ");
     }
 
     @AfterClass
@@ -47,6 +50,7 @@ public class TestSuite {
         db.createStatement().execute("DROP TABLE TEST");
         db.createStatement().execute("DROP PROCEDURE CREATETESTROW1");
         db.createStatement().execute("DROP PROCEDURE CREATETESTROW2");
+        db.createStatement().execute("DROP PROCEDURE GETNAMEBYID");
         db.close();
     }
 
@@ -177,6 +181,18 @@ public class TestSuite {
             }
         });*/
         assertTrue(DBUtils.call(db, "{call CREATETESTROW1(?)}", "new_name").stream().count() == 13);
+    }
+
+    @Test
+    public void testResultSetWithResultsStoredProcedure() throws Exception {
+        final Object[] outName = new String[1];
+        long count = DBUtils.call(db, "call GETNAMEBYID(?, ?)", P.in(1), P.out()).withResultsHandler((cs) ->{
+            System.out.println("Handling results from callable statement!");
+            outName[0] = cs.getObject(2);
+            return outName;
+        }).stream().count();
+        assertTrue(count == 0);
+        assertTrue("name_1".equals(outName[0]));
     }
 
     @Test
