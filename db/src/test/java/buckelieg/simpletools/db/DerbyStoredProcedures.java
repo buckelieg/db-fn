@@ -26,23 +26,28 @@ public class DerbyStoredProcedures {
 
     private static final Logger LOG = Logger.getLogger(DerbyStoredProcedures.class);
 
-    public static void createTestRow(String name) throws SQLException {
+/*    public static void createTestRow(String name) throws SQLException {
         DBUtils.update(DriverManager.getConnection("jdbc:default:connection"), "INSERT INTO TEST(name) VALUES(?)", "New_Name");
-    }
+    }*/
 
     public static void createTestRow(String name, ResultSet[] updatedContents) throws SQLException {
+        LOG.debug("Calling createTestRow...");
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
             conn = DriverManager.getConnection("jdbc:default:connection");
             stmt = conn.prepareStatement("INSERT INTO TEST(name) VALUES(?)");
             stmt.setString(1, name);
-            stmt.executeQuery();
+            stmt.executeUpdate();
+            conn.commit();
             stmt = conn.prepareStatement("SELECT * FROM TEST");
             // set the result in OUT parameter
             // IMPORTANT: Notice that we never instantiate the customerLastName array.
             // The array is instead initialized and passed in by Derby, our SQL/JRT implementor
             updatedContents[0] = stmt.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e;
         } finally {
             if (stmt != null) {
                 stmt.close();
