@@ -27,15 +27,16 @@ import java.util.stream.StreamSupport;
  * Gives a control to set up statements and do other tunings in the future.
  * Can be considered as builder.
  */
-public interface Query<T> {
+public interface Query {
 
     /**
      * In cases when single result of SELECT statement is expected.
      * @param mapper ResultSet mapper function
+     * @param <T> type bounds
      * @return mapped object
      */
     @Nullable
-    T single(@Nonnull Try<ResultSet, T, SQLException> mapper);
+    <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper);
 
     /**
      * Iterable abstraction over ResultSet.

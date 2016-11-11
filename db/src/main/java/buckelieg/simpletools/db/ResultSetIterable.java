@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @NotThreadSafe
-final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Query<T>, ProcedureCall<T> {
+final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Query, ProcedureCall {
 
     private static final Logger LOG = Logger.getLogger(ResultSetIterable.class);
 
@@ -39,7 +39,7 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
     private ResultSet rs;
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
-    private Try<CallableStatement, T, SQLException> storedProcedureResultsHandler;
+    private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
 
     ResultSetIterable(Statement statement) {
         this.statement = Objects.requireNonNull(statement);
@@ -110,7 +110,7 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
 
     @Nullable
     @Override
-    public T single(@Nonnull Try<ResultSet, T, SQLException> mapper) {
+    public <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) {
         try {
             return mapper.doTry(execute().iterator().next());
         } catch (Exception e) {
@@ -161,7 +161,7 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
     }
 
     @Override
-    public Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper) {
+    public <T> Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper) {
         this.storedProcedureResultsHandler = Objects.requireNonNull(mapper);
         return this;
     }
