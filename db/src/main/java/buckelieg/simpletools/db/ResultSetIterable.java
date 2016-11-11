@@ -39,6 +39,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
     private ResultSet rs;
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
+    private boolean isProcedureCall;
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
 
     ResultSetIterable(Statement statement) {
@@ -68,6 +69,20 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
             hasNext.set(false);
         }
         if (!hasNext.get()) {
+            if (isProcedureCall) {
+                try {
+                    if(statement.getMoreResults()) {
+                        rs = statement.getResultSet();
+                        hasMoved.set(false);
+                        return hasNext();
+                    }
+                } catch (SQLException e) {
+                    LOG.warn(String.format("Could not move result set on due to '%s'", e.getMessage()));
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(e);
+                    }
+                }
+            }
             if (storedProcedureResultsHandler != null) {
                 try {
                     storedProcedureResultsHandler.doTry((CallableStatement) statement);
@@ -132,6 +147,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
                 statement.setFetchSize(batchSize);
             }
             if (statement instanceof CallableStatement) {
+                this.isProcedureCall = true;
                 if (((CallableStatement) statement).execute()) {
                     this.rs = statement.getResultSet();
                 }
@@ -202,5 +218,9 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         while (hasNext()) {
             action.accept(next());
         }
+    }
+
+    private void logSQLException(SQLException e) {
+
     }
 }
