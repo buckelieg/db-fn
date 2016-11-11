@@ -30,7 +30,7 @@ public class DerbyStoredProcedures {
         DBUtils.update(DriverManager.getConnection("jdbc:default:connection"), "INSERT INTO TEST(name) VALUES(?)", "New_Name");
     }*/
 
-    public static void createTestRow(String name, ResultSet[] updatedContents) throws SQLException {
+    public static void createTestRow(String name, ResultSet[] updatedContents, ResultSet[] anotherContent) throws SQLException {
         LOG.debug("Calling createTestRow...");
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -45,13 +45,14 @@ public class DerbyStoredProcedures {
             // IMPORTANT: Notice that we never instantiate the customerLastName array.
             // The array is instead initialized and passed in by Derby, our SQL/JRT implementor
             updatedContents[0] = stmt.executeQuery();
+            anotherContent[0] = conn.prepareStatement("SELECT * FROM TEST WHERE ID IN(1,2)").executeQuery();
         } catch (SQLException e) {
             e.printStackTrace();
             throw e;
         } finally {
-            if (stmt != null) {
+/*            if (stmt != null) {
                 stmt.close();
-            }
+            }*/
             if (conn != null) {
                 conn.close();
             }

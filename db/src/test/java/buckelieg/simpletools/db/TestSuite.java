@@ -38,7 +38,7 @@ public class TestSuite {
         Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
         db = DriverManager.getConnection("jdbc:derby:memory:test;create=true");
         db.createStatement().execute("CREATE TABLE TEST(id int PRIMARY KEY generated always as IDENTITY, name varchar(255) not null)");
-        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW1(NAME_TO_ADD VARCHAR(255)) DYNAMIC RESULT SETS 1 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA ");
+        db.createStatement().execute("CREATE PROCEDURE CREATETESTROW1(NAME_TO_ADD VARCHAR(255)) DYNAMIC RESULT SETS 2 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA ");
         db.createStatement().execute("CREATE PROCEDURE CREATETESTROW2(NAME_TO_ADD VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA ");
     }
 
@@ -169,7 +169,14 @@ public class TestSuite {
 
     @Test
     public void testResultSetStoredProcedure() throws Exception {
-        assertTrue(DBUtils.call(db, "{call CREATETESTROW1(?)}", "new_name").stream().count() == 11);
+/*        DBUtils.call(db, "{call CREATETESTROW1(?)}", "new_name").stream().forEach((rs) -> {
+            try {
+                System.out.println(String.format("ID='%s', NAME='%s'", rs.getInt(1), rs.getString(2)));
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });*/
+        assertTrue(DBUtils.call(db, "{call CREATETESTROW1(?)}", "new_name").stream().count() == 13);
     }
 
     @Test
