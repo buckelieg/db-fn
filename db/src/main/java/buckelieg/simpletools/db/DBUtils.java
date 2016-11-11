@@ -67,7 +67,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @see ProcedureCall
      */
     @Nonnull
-    public static ProcedureCall call(Connection conn, String query, P<?>... params) {
+    public static <T> ProcedureCall<T> call(Connection conn, String query, P<?>... params) {
         try {
             String lowerQuery = validateQuery(query, null);
             P<?>[] preparedParams = params;
@@ -100,7 +100,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
                     cs.setObject(i, p.getValue());
                 }
             }
-            return new ResultSetIterable(cs);
+            return new ResultSetIterable<>(cs);
         } catch (SQLException e) {
             throw new RuntimeException(
                     String.format(
@@ -121,7 +121,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @see Query
      */
     @Nonnull
-    public static Query select(Connection conn, String query, Object... params) {
+    public static <T> Query<T> select(Connection conn, String query, Object... params) {
         return query((lowerQuery) -> {
             if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not a select statement", query));
@@ -139,7 +139,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      * @see Query
      */
     @Nonnull
-    public static Query select(Connection conn, String query, Map<String, ?> namedParams) {
+    public static <T> Query<T> select(Connection conn, String query, Map<String, ?> namedParams) {
         return select(conn, query, namedParams.entrySet());
     }
 
@@ -154,24 +154,8 @@ public enum DBUtils { // Joshua Bloch style singleton :)
      */
     @Nonnull
     @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> Query select(Connection conn, String query, T... namedParams) {
+    public static <T extends Map.Entry<String, ?>, R> Query<R> select(Connection conn, String query, T... namedParams) {
         return select(conn, query, Arrays.asList(namedParams));
-    }
-
-    @Nullable
-    public static <T> T selectSingle(Connection conn, String query, Object... params) {
-        return null; // TODO implement
-    }
-
-    @Nullable
-    @SafeVarargs
-    public static <T, P extends Map.Entry<String, ?>> T selectSingle(Connection conn, String query, P... namedParams) {
-        return null; // TODO implement
-    }
-
-    @Nullable
-    public static <T> T selectSingle(Connection conn, String query, Map<String, ?> namedParams) {
-        return null; // TODO implement
     }
 
     /**
@@ -224,7 +208,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
     }
 
     @Nonnull
-    private static Query select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
+    private static <T> Query<T> select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return select(conn, preparedQuery.getKey(), preparedQuery.getValue());
     }
@@ -282,7 +266,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
             for (Object p : params) {
                 ps.setObject(++pNum, p);
             }
-            return action.f(ps);
+            return action.doTry(ps);
         } catch (SQLException e) {
             throw new RuntimeException(
                     String.format(

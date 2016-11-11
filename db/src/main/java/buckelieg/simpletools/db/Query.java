@@ -16,7 +16,9 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -25,7 +27,15 @@ import java.util.stream.StreamSupport;
  * Gives a control to set up statements and do other tunings in the future.
  * Can be considered as builder.
  */
-public interface Query {
+public interface Query<T> {
+
+    /**
+     * In cases when single result of SELECT statement is expected.
+     * @param mapper ResultSet mapper function
+     * @return mapped object
+     */
+    @Nullable
+    T single(@Nonnull Try<ResultSet, T, SQLException> mapper);
 
     /**
      * Iterable abstraction over ResultSet.
@@ -33,9 +43,11 @@ public interface Query {
      * The code below does not iterate over all rows in the result set.
      * </br><code>execute().iterator().next().get(...)</code></br>
      * Thus there could be none or some rows more, but result set (and a statement) would not be closed forcibly.
-     * In such cases we rely on JDBC resources auto closing mechanism
+     * In such cases we rely on JDBC resources auto closing mechanism.
+     * In such cases it is strongly recommended to use <code>single</code> method.
      *
      * @return ResultSet as Iterable
+     * @see #single(Try)
      */
     @Nonnull
     Iterable<ResultSet> execute();

@@ -24,6 +24,6 @@ public interface Try<I, O, E extends Exception> {
      * @return optional value
      * @throws E in case of something went wrong
      */
-    O f(I input) throws E;
+    O doTry(I input) throws E;
 
 }

@@ -18,6 +18,7 @@ package buckelieg.simpletools.db;
 import org.apache.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.*;
 import java.util.Iterator;
@@ -28,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @NotThreadSafe
-final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Query, ProcedureCall<T> {
+final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Query<T>, ProcedureCall<T> {
 
     private static final Logger LOG = Logger.getLogger(ResultSetIterable.class);
 
@@ -69,7 +70,7 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
         if (!hasNext.get()) {
             if (storedProcedureResultsHandler != null) {
                 try {
-                    storedProcedureResultsHandler.f((CallableStatement) statement);
+                    storedProcedureResultsHandler.doTry((CallableStatement) statement);
                 } catch (SQLException e) {
                     throw new RuntimeException("Thrown in procedure results handler", e);
                 } finally {
@@ -105,6 +106,22 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
                 LOG.debug(e);
             }
         }
+    }
+
+    @Nullable
+    @Override
+    public T single(@Nonnull Try<ResultSet, T, SQLException> mapper) {
+        try {
+            return mapper.doTry(execute().iterator().next());
+        } catch (Exception e) {
+            LOG.warn(String.format("Could not handle result set due to '%s'", e.getMessage()));
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(e);
+            }
+        } finally {
+            close();
+        }
+        return null;
     }
 
     @Nonnull
@@ -144,8 +161,8 @@ final class ResultSetIterable<T> implements Iterable<ResultSet>, Iterator<Result
     }
 
     @Override
-    public Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> handler) {
-        this.storedProcedureResultsHandler = Objects.requireNonNull(handler);
+    public Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper) {
+        this.storedProcedureResultsHandler = Objects.requireNonNull(mapper);
         return this;
     }
 
