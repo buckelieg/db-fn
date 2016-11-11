@@ -166,6 +166,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         return this;
     }
 
+    @Nonnull
     @Override
     public Query batchSize(int size) {
         try {
@@ -176,6 +177,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         return this;
     }
 
+    @Nonnull
     @Override
     public <T> Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper) {
         this.storedProcedureResultsHandler = Objects.requireNonNull(mapper);
@@ -220,7 +222,4 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         }
     }
 
-    private void logSQLException(SQLException e) {
-
-    }
 }

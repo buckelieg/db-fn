@@ -94,7 +94,8 @@ public enum DBUtils { // Joshua Bloch style singleton :)
             for (int i = 1; i <= preparedParams.length; i++) {
                 P<?> p = preparedParams[i - 1];
                 if (p.isOut() || p.isInOut()) {
-                    cs.registerOutParameter(i, JDBCType.JAVA_OBJECT);
+                    cs.registerOutParameter(i, JDBCType.JAVA_OBJECT); // TODO use TypeMapper here as no automatic conversion is done for stored procs
+//                    cs.registerOutParameter(i, JDBCType.OTHER);
                 }
                 if (p.isIn() || p.isInOut()) {
                     cs.setObject(i, p.getValue());

@@ -38,8 +38,7 @@ public interface Query {
      * @return mapped object
      * @throws SQLException in case of result set processing errors
      */
-    @Nullable
-    <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) throws SQLException;
+    @Nullable <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) throws SQLException;
 
     /**
      * Single that silently suppresses Exceptions
@@ -69,8 +68,7 @@ public interface Query {
      * @return ResultSet as Iterable
      * @see #single(Try)
      */
-    @Nonnull
-    Iterable<ResultSet> execute();
+    @Nonnull Iterable<ResultSet> execute();
 
     /**
      * Shorthand for streams.
@@ -92,6 +90,6 @@ public interface Query {
      * @param size desired fetch size. Should be greater than 0.
      * @return query builder
      */
-    Query batchSize(int size);
+    @Nonnull Query batchSize(int size);
 
 }

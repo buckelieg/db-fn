@@ -15,6 +15,6 @@ public interface ProcedureCall extends Query {
      * @param <T> type bounds
      * @return query builder
      */
-    <T> Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper);
+    @Nonnull <T> Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper);
 
 }
