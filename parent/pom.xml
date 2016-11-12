@@ -14,16 +14,19 @@
 
     <description>Simple-tools projects' parent</description>
 
+    <url>https://buckelieg.github.io/simple-tools/</url>
+
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
             <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
         </license>
     </licenses>
 
     <scm>
-        <url>https://github.com/buckelieg/simple-tools.git</url>
+        <url>https://github.com/buckelieg/simple-tools/tree/master</url>
+        <connection>scm:git:git://github.com/buckelieg/simple-tools.git</connection>
+        <developerConnection>scm:git:ssh://github.com:buckelieg/simple-tools.git</developerConnection>
     </scm>
 
     <developers>
@@ -137,11 +140,13 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
