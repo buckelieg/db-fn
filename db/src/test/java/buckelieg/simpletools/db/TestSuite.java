@@ -128,21 +128,21 @@ public class TestSuite {
     public void testInsertNamed() throws Exception {
         int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(:name)", of("name", "New_Name"));
         assertTrue(res == 1);
-        assertTrue(DBUtils.select(db, "SELECT * FROM TEST").stream().count() == 11);
+        assertTrue(Long.valueOf(11L).equals(DBUtils.<Long>select(db, "SELECT * FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testUpdate() throws Exception {
         int res = DBUtils.update(db, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
         assertTrue(res == 1);
-        assertTrue(DBUtils.select(db, "SELECT * FROM TEST WHERE name=?", "new_name_2").stream().count() == 1);
+        assertTrue(Long.valueOf(1L).equals(DBUtils.<Long>select(db, "SELECT * FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testUpdateNamed() throws Exception {
         int res = DBUtils.update(db, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", of("name", "new_name_2"), of("new_name", "name_2"));
         assertTrue(res == 1);
-        assertTrue(DBUtils.select(db, "SELECT * FROM TEST WHERE name=?", "new_name_2").stream().count() == 1);
+        assertTrue(Long.valueOf(1L).equals(DBUtils.<Long>select(db, "SELECT * FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
     }
 
     @Test
