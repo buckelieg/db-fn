@@ -51,7 +51,7 @@ public interface Query {
     default <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper, @Nullable T defaultValue) {
         try {
             return single(mapper);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             return defaultValue;
         }
     }
@@ -62,8 +62,7 @@ public interface Query {
      * The code below does not iterate over all rows in the result set.
      * </br><code>execute().iterator().next().get(...)</code></br>
      * Thus there could be none or some rows more, but result set (and a statement) would not be closed forcibly.
-     * In such cases we rely on JDBC resources auto closing mechanism.
-     * In such cases it is strongly recommended to use <code>single</code> method.
+     * In such cases we rely on JDBC resources auto closing mechanism and it is strongly recommended to use <code>single</code> method.
      *
      * @return ResultSet as Iterable
      * @see #single(Try)
