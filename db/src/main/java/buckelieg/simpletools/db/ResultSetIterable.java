@@ -43,7 +43,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
 
     ResultSetIterable(Statement statement) {
-        this.statement = Objects.requireNonNull(statement);
+        this.statement = Objects.requireNonNull(statement, "Statement must not be null");
         this.hasMoved = new AtomicBoolean();
         this.hasNext = new AtomicBoolean();
     }
@@ -176,7 +176,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
     @Nonnull
     @Override
     public <T> Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper) {
-        this.storedProcedureResultsHandler = Objects.requireNonNull(mapper);
+        this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Procedure results extractor must be provided");
         return this;
     }
 

@@ -36,7 +36,7 @@ public final class P<T> {
     private P(int mode, SQLType type, @Nonnull String name, T value) {
         this.mode = mode;
         this.type = type;
-        this.name = Objects.requireNonNull(name);
+        this.name = Objects.requireNonNull(name, "Name must not be null");
         this.value = value;
     }
 

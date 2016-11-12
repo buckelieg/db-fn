@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @ParametersAreNonnullByDefault
-public enum DBUtils { // Joshua Bloch style singleton :)
+public enum DBUtils {
     ;
     private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
     // Java regexp do not support conditional regexps. We will enumerate all possible variants.
@@ -97,8 +97,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
             for (int i = 1; i <= preparedParams.length; i++) {
                 P<?> p = preparedParams[i - 1];
                 if (p.isOut() || p.isInOut()) {
-                    cs.registerOutParameter(i, p.getType());
-//                    cs.registerOutParameter(i, JDBCType.OTHER);
+                    cs.registerOutParameter(i, Objects.requireNonNull(p.getType(), String.format("Parameter '%s' must have SQLType set.", p)));
                 }
                 if (p.isIn() || p.isInOut()) {
                     cs.setObject(i, p.getValue());
@@ -282,14 +281,14 @@ public enum DBUtils { // Joshua Bloch style singleton :)
     }
 
     private static Connection requireOpened(Connection conn) throws SQLException {
-        if (Objects.requireNonNull(conn).isClosed()) {
+        if (Objects.requireNonNull(conn, "Connection to Database has top be provided").isClosed()) {
             throw new SQLException(String.format("Connection '%s' is closed", conn));
         }
         return conn;
     }
 
     private static String validateQuery(String query, @Nullable Consumer<String> validator) {
-        String lowerQuery = Objects.requireNonNull(query).trim().toLowerCase();
+        String lowerQuery = Objects.requireNonNull(query, "SQL query has to be provided").trim().toLowerCase();
         if (validator != null) {
             validator.accept(lowerQuery);
         }

@@ -26,7 +26,7 @@ final class Pair<K, V> implements Map.Entry<K, V> {
     private final V val;
 
     private Pair(K key, @Nullable V val) {
-        this.key = Objects.requireNonNull(key);
+        this.key = Objects.requireNonNull(key, "Key must be provided");
         this.val = val;
     }
 

@@ -32,7 +32,7 @@ final class ImmutableResultSet implements ResultSet {
     private ResultSet delegate;
 
     ImmutableResultSet(@Nonnull ResultSet delegate) {
-        this.delegate = Objects.requireNonNull(delegate);
+        this.delegate = Objects.requireNonNull(delegate, "ResultSet must be provided");
     }
 
     @Override
