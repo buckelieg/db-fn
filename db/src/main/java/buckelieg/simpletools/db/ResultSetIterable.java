@@ -82,17 +82,17 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
                         LOG.debug(e);
                     }
                 }
-            }
-            if (storedProcedureResultsHandler != null) {
-                try {
-                    storedProcedureResultsHandler.doTry((CallableStatement) statement);
-                } catch (SQLException e) {
-                    throw new RuntimeException("Thrown in procedure results handler", e);
-                } finally {
+                if (storedProcedureResultsHandler != null) {
+                    try {
+                        storedProcedureResultsHandler.doTry((CallableStatement) statement);
+                    } catch (SQLException e) {
+                        throw new RuntimeException("Thrown in procedure results handler", e);
+                    } finally {
+                        close();
+                    }
+                } else {
                     close();
                 }
-            } else {
-                close();
             }
         }
         return hasNext.get();
