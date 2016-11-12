@@ -90,9 +90,9 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
                     } finally {
                         close();
                     }
-                } else {
-                    close();
                 }
+            } else {
+                close();
             }
         }
         return hasNext.get();
