@@ -50,7 +50,7 @@ public interface Query {
     @Nullable
     default <T> T singleOrNull(@Nonnull Try<ResultSet, T, SQLException> mapper) {
         try {
-            return single(mapper::doTry);
+            return single(mapper);
         } catch (Exception e) {
             return null;
         }
