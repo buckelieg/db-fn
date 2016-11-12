@@ -19,26 +19,26 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
  * Query abstraction. Can be considered as builder for queries
  * Gives a control to set up statements and do other tunings in the future.
- * Can be considered as builder.
  */
 public interface Query {
 
     /**
      * In cases when single result of SELECT statement is expected.
+     * Like SELECT COUNT(*) FROM TABLE_NAME etc...
      *
      * @param mapper ResultSet mapper function
      * @param <T>    type bounds
      * @return mapped object
      * @throws SQLException in case of result set processing errors
      */
-    @Nullable <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) throws SQLException;
+    @Nullable
+    <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) throws SQLException;
 
     /**
      * Single that silently suppresses Exceptions
@@ -68,7 +68,8 @@ public interface Query {
      * @return ResultSet as Iterable
      * @see #single(Try)
      */
-    @Nonnull Iterable<ResultSet> execute();
+    @Nonnull
+    Iterable<ResultSet> execute();
 
     /**
      * Shorthand for streams.
@@ -90,6 +91,7 @@ public interface Query {
      * @param size desired fetch size. Should be greater than 0.
      * @return query builder
      */
-    @Nonnull Query batchSize(int size);
+    @Nonnull
+    Query batchSize(int size);
 
 }
