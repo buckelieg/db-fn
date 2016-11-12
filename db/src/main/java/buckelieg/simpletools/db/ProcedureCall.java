@@ -6,6 +6,8 @@ import java.sql.SQLException;
 
 public interface ProcedureCall extends Query {
 
+    // TODO introduce ResultsHolder which will contain deferred callable statement processing results.
+
     /**
      * Registers a mapper for procedure results processing which is expected in the OUT/INOUT parameters.
      * If registered - it will be invoked AFTER result set is iterated over.
