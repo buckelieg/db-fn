@@ -168,7 +168,7 @@ public class TestSuite {
     public void testVoidStoredProcedure() throws Exception {
         Iterable<ResultSet> result = DBUtils.call(db, "{call CREATETESTROW2(?)}", "new_name").execute();
         assertTrue(!result.iterator().hasNext());
-        assertTrue(Long.valueOf(11L).equals(DBUtils.select(db, "SELECT COUNT(*) FROM TEST").singleOrNull((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(11L).equals(DBUtils.select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test

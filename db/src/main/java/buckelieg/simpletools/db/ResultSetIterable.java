@@ -71,7 +71,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         if (!hasNext.get()) {
             if (isProcedureCall) {
                 try {
-                    if(statement.getMoreResults()) {
+                    if (statement.getMoreResults()) {
                         rs = statement.getResultSet();
                         hasMoved.set(false);
                         return hasNext();
@@ -129,14 +129,10 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         try {
             return mapper.doTry(execute().iterator().next());
         } catch (NoSuchElementException e) {
-            LOG.warn(String.format("Could not handle result set due to '%s'", e.getMessage()));
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(e);
-            }
+            throw new SQLException(e);
         } finally {
             close();
         }
-        return null;
     }
 
     @Nonnull

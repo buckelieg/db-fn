@@ -48,11 +48,11 @@ public interface Query {
      * @return mapped object or null
      */
     @Nullable
-    default <T> T singleOrNull(@Nonnull Try<ResultSet, T, SQLException> mapper) {
+    default <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper, @Nullable T defaultValue) {
         try {
             return single(mapper);
         } catch (Exception e) {
-            return null;
+            return defaultValue;
         }
     }
 
