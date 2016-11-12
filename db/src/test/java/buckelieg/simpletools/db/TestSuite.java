@@ -42,7 +42,7 @@ public class TestSuite {
         db.createStatement().execute("CREATE TABLE TEST(id int PRIMARY KEY generated always as IDENTITY, name varchar(255) not null)");
         db.createStatement().execute("CREATE PROCEDURE CREATETESTROW1(NAME_TO_ADD VARCHAR(255)) DYNAMIC RESULT SETS 2 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA ");
         db.createStatement().execute("CREATE PROCEDURE CREATETESTROW2(NAME_TO_ADD VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA ");
-        db.createStatement().execute("CREATE PROCEDURE GETNAMEBYID(NAME_ID INTEGER, OUT NAME_NAME CLOB) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedureWithResults' PARAMETER STYLE JAVA ");
+        db.createStatement().execute("CREATE PROCEDURE GETNAMEBYID(NAME_ID INTEGER, OUT NAME_NAME VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedureWithResults' PARAMETER STYLE JAVA ");
     }
 
     @AfterClass
@@ -149,14 +149,14 @@ public class TestSuite {
     public void testDelete() throws Exception {
         int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=?", "name_2");
         assertTrue(res == 1);
-        assertTrue(DBUtils.select(db, "SELECT * FROM TEST").stream().count() == 9);
+        assertTrue(Long.valueOf(9L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testDeleteNamed() throws Exception {
         int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=:name", of("name", "name_2"));
         assertTrue(res == 1);
-        assertTrue(DBUtils.select(db, "SELECT * FROM TEST").stream().count() == 9);
+        assertTrue(Long.valueOf(9L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -186,8 +186,7 @@ public class TestSuite {
     @Test
     public void testResultSetWithResultsStoredProcedure() throws Exception {
         final Object[] outName = new String[1];
-        long count = DBUtils.call(db, "call GETNAMEBYID(?, ?)", P.in(1), P.out()).withResultsHandler((cs) ->{
-            System.out.println("Handling results from callable statement!");
+        long count = DBUtils.call(db, "call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR)).withResultsHandler((cs) -> {
             outName[0] = cs.getObject(2);
             return outName;
         }).stream().count();

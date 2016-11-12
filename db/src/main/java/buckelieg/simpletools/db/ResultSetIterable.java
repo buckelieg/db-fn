@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @NotThreadSafe
-final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Query, ProcedureCall {
+final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, ProcedureCall {
 
     private static final Logger LOG = Logger.getLogger(ResultSetIterable.class);
 
@@ -104,7 +104,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
             throw new NoSuchElementException();
         }
         hasMoved.set(false);
-        return wrapper.setDelegate(rs);
+        return wrapper;
     }
 
     private void close() {
@@ -201,7 +201,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
 
     @Override
     public Spliterator<ResultSet> trySplit() {
-        return null; // not splittable. Parallel streams would not gain any benefits yet. May be implemented in future
+        return null; // not splittable. Parallel streams would not gain any performance benefits yet. May be implemented in future
     }
 
     @Override

@@ -18,7 +18,10 @@ package buckelieg.simpletools.db;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -94,7 +97,7 @@ public enum DBUtils { // Joshua Bloch style singleton :)
             for (int i = 1; i <= preparedParams.length; i++) {
                 P<?> p = preparedParams[i - 1];
                 if (p.isOut() || p.isInOut()) {
-                    cs.registerOutParameter(i, JDBCType.JAVA_OBJECT); // TODO use TypeMapper here as no automatic conversion is done for stored procs
+                    cs.registerOutParameter(i, p.getType());
 //                    cs.registerOutParameter(i, JDBCType.OTHER);
                 }
                 if (p.isIn() || p.isInOut()) {

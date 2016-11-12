@@ -18,7 +18,9 @@ package buckelieg.simpletools.db;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNullableByDefault;
+import java.sql.JDBCType;
 import java.sql.ParameterMetaData;
+import java.sql.SQLType;
 import java.util.Objects;
 
 @ParametersAreNullableByDefault
@@ -29,35 +31,41 @@ public final class P<T> {
     private final int mode;
     private final String name;
     private final T value;
+    private final SQLType type;
 
-    private P(int mode, @Nonnull String name, T value) {
+    private P(int mode, SQLType type, @Nonnull String name, T value) {
         this.mode = mode;
+        this.type = type;
         this.name = Objects.requireNonNull(name);
         this.value = value;
     }
 
-    public static <T> P<T> in(@Nonnull String name, T value) {
-        return new P<>(ParameterMetaData.parameterModeIn, name, value);
+    public static <T> P<T> in(SQLType type, @Nonnull String name, T value) {
+        return new P<>(ParameterMetaData.parameterModeIn, type, name, value);
     }
 
-    public static <T> P<T> out(@Nonnull String name) {
-        return new P<>(ParameterMetaData.parameterModeOut, name, null);
+    public static <T> P<T> out(SQLType type, @Nonnull String name) {
+        return new P<>(ParameterMetaData.parameterModeOut, type, name, null);
     }
 
-    public static <T> P<T> inOut(@Nonnull String name, T value) {
-        return new P<>(ParameterMetaData.parameterModeInOut, name, value);
+    public static <T> P<T> inOut(SQLType type, @Nonnull String name, T value) {
+        return new P<>(ParameterMetaData.parameterModeInOut, type, name, value);
     }
 
     public static <T> P<T> in(T value) {
-        return in("", value);
+        return in(JDBCType.JAVA_OBJECT, "", value);
     }
 
-    public static <T> P<T> out() {
-        return out("");
+    public static <T> P<T> in(SQLType type, T value) {
+        return in(type, "", value);
     }
 
-    public static <T> P<T> inOut(T value) {
-        return inOut("", value);
+    public static <T> P<T> out(SQLType type) {
+        return out(type, "");
+    }
+
+    public static <T> P<T> inOut(SQLType type, T value) {
+        return inOut(type, "", value);
     }
 
     public boolean isIn() {
@@ -80,6 +88,11 @@ public final class P<T> {
     @Nullable
     public T getValue() {
         return value;
+    }
+
+    @Nullable
+    public SQLType getType() {
+        return type;
     }
 
     @Override
