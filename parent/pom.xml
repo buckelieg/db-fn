@@ -24,7 +24,7 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/buckelieg/simple-tools/tree/master</url>
+        <url>http://buckelieg.github.io/simple-tools/</url>
         <connection>scm:git:git@github.com:buckelieg/simple-tools.git</connection>
         <developerConnection>scm:git:git@github.com:buckelieg/simple-tools.git</developerConnection>
     </scm>
