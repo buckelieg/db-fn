@@ -25,8 +25,8 @@
 
     <scm>
         <url>https://github.com/buckelieg/simple-tools/tree/master</url>
-        <connection>scm:git:git://github.com/buckelieg/simple-tools.git</connection>
-        <developerConnection>scm:git:ssh://github.com:buckelieg/simple-tools.git</developerConnection>
+        <connection>scm:git:git@github.com:buckelieg/simple-tools.git</connection>
+        <developerConnection>scm:git:git@github.com:buckelieg/simple-tools.git</developerConnection>
     </scm>
 
     <developers>
