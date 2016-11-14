@@ -120,41 +120,41 @@ public class TestSuite {
 
     @Test
     public void testInsert() throws Exception {
-        int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
+        int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(?)", "New_Name").execute();
         assertTrue(res == 1);
     }
 
     @Test
     public void testInsertNamed() throws Exception {
-        int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(:name)", of("name", "New_Name"));
+        int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(:name)", of("name", "New_Name")).execute();
         assertTrue(res == 1);
         assertTrue(Long.valueOf(11L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testUpdate() throws Exception {
-        int res = DBUtils.update(db, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
+        int res = DBUtils.update(db, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute();
         assertTrue(res == 1);
         assertTrue(Long.valueOf(1L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testUpdateNamed() throws Exception {
-        int res = DBUtils.update(db, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", of("name", "new_name_2"), of("new_name", "name_2"));
+        int res = DBUtils.update(db, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", of("name", "new_name_2"), of("new_name", "name_2")).execute();
         assertTrue(res == 1);
         assertTrue(Long.valueOf(1L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testDelete() throws Exception {
-        int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=?", "name_2");
+        int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=?", "name_2").execute();
         assertTrue(res == 1);
         assertTrue(Long.valueOf(9L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testDeleteNamed() throws Exception {
-        int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=:name", of("name", "name_2"));
+        int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=:name", of("name", "name_2")).execute();
         assertTrue(res == 1);
         assertTrue(Long.valueOf(9L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
