@@ -175,7 +175,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
 
     @Nonnull
     @Override
-    public <T> Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper) {
+    public <T> Select withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper) {
         this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Procedure results extractor must be provided");
         return this;
     }

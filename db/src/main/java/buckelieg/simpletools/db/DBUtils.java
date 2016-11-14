@@ -124,7 +124,7 @@ public enum DBUtils {
      * @see Query
      */
     @Nonnull
-    public static Query select(Connection conn, String query, Object... params) {
+    public static Select select(Connection conn, String query, Object... params) {
         return query((lowerQuery) -> {
             if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not a select statement", query));
@@ -142,7 +142,7 @@ public enum DBUtils {
      * @see Query
      */
     @Nonnull
-    public static Query select(Connection conn, String query, Map<String, ?> namedParams) {
+    public static Select select(Connection conn, String query, Map<String, ?> namedParams) {
         return select(conn, query, namedParams.entrySet());
     }
 
@@ -157,7 +157,7 @@ public enum DBUtils {
      */
     @Nonnull
     @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> Query select(Connection conn, String query, T... namedParams) {
+    public static <T extends Map.Entry<String, ?>> Select select(Connection conn, String query, T... namedParams) {
         return select(conn, query, Arrays.asList(namedParams));
     }
 
@@ -169,7 +169,7 @@ public enum DBUtils {
      * @param params query parameters on the declared order of '?'
      * @return count of updated rows
      */
-    public static int update(Connection conn, String query, Object... params) {
+    public static Update update(Connection conn, String query, Object... params) {
         return query((lowerQuery) -> {
             if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
@@ -181,7 +181,8 @@ public enum DBUtils {
             } finally {
                 ps.close();
             }
-            return rows;
+            int finalRows = rows;
+            return () -> finalRows;
         }, conn, query, params);
     }
 
@@ -194,7 +195,7 @@ public enum DBUtils {
      * @return count of updated rows
      */
     @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> int update(Connection conn, String query, T... namedParams) {
+    public static <T extends Map.Entry<String, ?>> Update update(Connection conn, String query, T... namedParams) {
         return update(conn, query, Arrays.asList(namedParams));
     }
 
@@ -206,17 +207,17 @@ public enum DBUtils {
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return count of updated rows
      */
-    public static int update(Connection conn, String query, Map<String, ?> namedParams) {
+    public static Update update(Connection conn, String query, Map<String, ?> namedParams) {
         return update(conn, query, namedParams.entrySet());
     }
 
     @Nonnull
-    private static Query select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
+    private static Select select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return select(conn, preparedQuery.getKey(), preparedQuery.getValue());
     }
 
-    private static int update(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
+    private static Update update(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return update(conn, preparedQuery.getKey(), preparedQuery.getValue());
     }

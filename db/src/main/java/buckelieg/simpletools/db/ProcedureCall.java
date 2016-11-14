@@ -4,7 +4,10 @@ import javax.annotation.Nonnull;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
-public interface ProcedureCall extends Query {
+/**
+ * An abstraction of STORED PROCEDURE CALL.
+ */
+public interface ProcedureCall extends Select {
 
     /*
      TODO introduce ResultsHolder which will contain deferred callable statement processing results
@@ -22,6 +25,6 @@ public interface ProcedureCall extends Query {
      * @return query builder
      */
     @Nonnull
-    <T> Query withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper);
+    <T> Select withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper);
 
 }
