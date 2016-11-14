@@ -11,7 +11,7 @@ Operate on result set in a functional style.
 #### Select
 Use question marks:
 ```java
-Collection<SOME_TYPE> results = DBUtils.select(conn, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
+Collection<SOME_TYPE> results = Queries.select(conn, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
                 .stream().collect(
                         LinkedList<SOME_TYPE>::new,
                         (pList, rs) -> {
@@ -26,7 +26,7 @@ Collection<SOME_TYPE> results = DBUtils.select(conn, "SELECT * FROM TEST WHERE I
 ```
 or use named parameters:
 ```java
-Collection<SOME_TYPE> results = DBUtils.select(conn, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
+Collection<SOME_TYPE> results = Queries.select(conn, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
             put("id", new Object[]{1, 2});
             put("NaME", "name_5");
         }}).stream().collect(
@@ -47,33 +47,33 @@ Collection<SOME_TYPE> results = DBUtils.select(conn, "SELECT * FROM TEST WHERE 1
 
 with question marks:
 ```java
-int res = DBUtils.executeUpdate(conn, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
+int res = Queries.executeUpdate(conn, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
 ```
 Or with named parameters:
 ```java
-int res = DBUtils.executeUpdate(conn, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
+int res = Queries.executeUpdate(conn, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
 ```
 ##### Update
 ```java
-int res = DBUtils.executeUpdate(conn, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
+int res = Queries.executeUpdate(conn, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
 ```
 or
 ```java
-int res = DBUtils.executeUpdate(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
+int res = Queries.executeUpdate(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
 ```
         
 ##### Delete
 ```java
-int res = DBUtils.executeUpdate(conn, "DELETE FROM TEST WHERE name=?", "name_2");
+int res = Queries.executeUpdate(conn, "DELETE FROM TEST WHERE name=?", "name_2");
 ```
 and so on. Explore test suite for more examples.
 
 #### ETL
 implement simple ETL process:
 ```java
-long count = DBUtils.<Long>select(conn, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1));
+long count = Queries.<Long>select(conn, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1));
 // calculate partitions here and split work to threads if needed
-Executors.newCachedThreadPool().submit(() -> DBUtils.select(conn, " SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end).stream().map(rs -> /*map result set here*/).forEach(obj -> {
+Executors.newCachedThreadPool().submit(() -> Queries.select(conn, " SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end).stream().map(rs -> /*map result set here*/).forEach(obj -> {
             // do things here...
         }));
 ```
