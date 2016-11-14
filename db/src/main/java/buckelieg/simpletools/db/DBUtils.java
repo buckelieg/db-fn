@@ -120,8 +120,8 @@ public enum DBUtils {
      * @param conn   The Connection to operate on.
      * @param query  SELECT query to execute. Can be WITH query
      * @param params query parameters on the declared order of '?'
-     * @return query builder
-     * @see Query
+     * @return select query builder
+     * @see Select
      */
     @Nonnull
     public static Select select(Connection conn, String query, Object... params) {
@@ -138,8 +138,8 @@ public enum DBUtils {
      * @param conn        The Connection to operate on.
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return query builder
-     * @see Query
+     * @return select query builder
+     * @see Select
      */
     @Nonnull
     public static Select select(Connection conn, String query, Map<String, ?> namedParams) {
@@ -152,8 +152,8 @@ public enum DBUtils {
      * @param conn        The Connection to operate on.
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return query builder
-     * @see Query
+     * @return select query builder
+     * @see Select
      */
     @Nonnull
     @SafeVarargs
@@ -162,12 +162,35 @@ public enum DBUtils {
     }
 
     /**
+     * Shorthand for {@link #update(Connection, String, Object...)}
+     */
+    public static int executeUpdate(Connection conn, String query, Object... params) {
+        return update(conn, query, params).execute();
+    }
+
+    /**
+     * Shorthand for {@link #update(Connection, String, Map.Entry[])}
+     */
+    @SafeVarargs
+    public static <T extends Map.Entry<String, ?>> int executeUpdate(Connection conn, String query, T... namedParams) {
+        return update(conn, query, Arrays.asList(namedParams)).execute();
+    }
+
+    /**
+     * Shorthand for {@link #update(Connection, String, Map)}
+     */
+    public static int executeUpdate(Connection conn, String query, Map<String, ?> namedParams) {
+        return update(conn, query, namedParams.entrySet()).execute();
+    }
+
+    /**
      * Executes one of DML statements: INSERT, UDATE or DELETE.
      *
      * @param conn   The Connection to operate on.
      * @param query  INSERT/UPDATE/DELETE query to execute.
      * @param params query parameters on the declared order of '?'
-     * @return count of updated rows
+     * @return Update query to execute
+     * @see Update
      */
     public static Update update(Connection conn, String query, Object... params) {
         return query((lowerQuery) -> {
@@ -192,7 +215,8 @@ public enum DBUtils {
      * @param conn        The Connection to operate on.
      * @param query       INSERT/UPDATE/DELETE query to execute.
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return count of updated rows
+     * @return Update query to execute
+     * @see Update
      */
     @SafeVarargs
     public static <T extends Map.Entry<String, ?>> Update update(Connection conn, String query, T... namedParams) {
@@ -205,7 +229,8 @@ public enum DBUtils {
      * @param conn        The Connection to operate on.
      * @param query       INSERT/UPDATE/DELETE query to execute.
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return count of updated rows
+     * @return Update query to execute
+     * @see Update
      */
     public static Update update(Connection conn, String query, Map<String, ?> namedParams) {
         return update(conn, query, namedParams.entrySet());

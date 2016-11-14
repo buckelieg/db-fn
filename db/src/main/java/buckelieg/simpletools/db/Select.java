@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * An abstraction of SELECT statement
+ * An abstraction for SELECT statement
  */
 public interface Select extends Query<Iterable<ResultSet>> {
 
@@ -76,5 +76,22 @@ public interface Select extends Query<Iterable<ResultSet>> {
      */
     @Nonnull
     Query batchSize(int size);
+
+    /**
+     * Shorthand for stream mapping.
+     * @param mapper result set mapper which is not required to handle {@link SQLException}
+     * @param <T> type of the mapped object
+     * @return mapped object
+     */
+    @Nonnull
+    default <T> Stream<T> map(Try<ResultSet, T, SQLException> mapper) {
+        return stream().map((rs) -> {
+            try {
+                return mapper.doTry(rs);
+            } catch (SQLException e) {
+                return null;
+            }
+        });
+    }
 
 }
