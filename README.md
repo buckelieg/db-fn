@@ -47,19 +47,19 @@ Collection<SOME_TYPE> results = DBUtils.select(conn, "SELECT * FROM TEST WHERE 1
 
 with question marks:
 ```java
-int res = DBUtils.update(conn, "INSERT INTO TEST(name) VALUES(?)", "New_Name").execute();
+int res = DBUtils.executeUpdate(conn, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
 ```
 Or with named parameters:
 ```java
-int res = DBUtils.update(conn, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name")).execute();
+int res = DBUtils.executeUpdate(conn, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
 ```
 ##### Update
 ```java
-int res = DBUtils.update(conn, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute();
+int res = DBUtils.executeUpdate(conn, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
 ```
 or
 ```java
-int res = DBUtils.update(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2")).execute();
+int res = DBUtils.executeUpdate(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
 ```
         
 ##### Delete
