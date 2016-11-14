@@ -41,11 +41,11 @@ public interface Query {
     <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) throws SQLException;
 
     /**
-     * Single that silently suppresses Exceptions
+     * Single that silently suppresses Exceptions.
      *
      * @param mapper result set mapper
      * @param <T>    type bounds
-     * @return mapped object or null
+     * @return mapped object or provided value in case of errors
      */
     @Nullable
     default <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper, @Nullable T defaultValue) {
