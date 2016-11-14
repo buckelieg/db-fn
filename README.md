@@ -47,24 +47,24 @@ Collection<SOME_TYPE> results = DBUtils.select(conn, "SELECT * FROM TEST WHERE 1
 
 with question marks:
 ```java
-int res = DBUtils.update(conn, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
+int res = DBUtils.update(conn, "INSERT INTO TEST(name) VALUES(?)", "New_Name").execute();
 ```
 Or with named parameters:
 ```java
-int res = DBUtils.update(conn, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
+int res = DBUtils.update(conn, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name")).execute();
 ```
 ##### Update
 ```java
-int res = DBUtils.update(conn, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
+int res = DBUtils.update(conn, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute();
 ```
 or
 ```java
-int res = DBUtils.update(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
+int res = DBUtils.update(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2")).execute();
 ```
         
 ##### Delete
 ```java
-int res = DBUtils.update(conn, "DELETE FROM TEST WHERE name=?", "name_2");
+int res = DBUtils.update(conn, "DELETE FROM TEST WHERE name=?", "name_2").execute();
 ```
 and so on. Explore test suite for more examples.
 
