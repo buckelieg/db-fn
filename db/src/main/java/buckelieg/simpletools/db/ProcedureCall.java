@@ -3,9 +3,11 @@ package buckelieg.simpletools.db;
 import javax.annotation.Nonnull;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * An abstraction of STORED PROCEDURE CALL.
+ * An abstraction for STORED PROCEDURE CALL.
  */
 public interface ProcedureCall extends Select {
 
@@ -27,4 +29,15 @@ public interface ProcedureCall extends Select {
     @Nonnull
     <T> Select withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper);
 
+    /**
+     * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
+     * @param mapper function that constructs from {@link CallableStatement}
+     * @param <T> type of the result object
+     * @return mapped result
+     */
+    default <T> T getResult(@Nonnull Try<CallableStatement, T, SQLException> mapper) {
+        List<T> results = new ArrayList<T>();
+        withResultsHandler((cs) -> results.add(mapper.doTry(cs))).execute();
+        return results.get(0);
+    }
 }
