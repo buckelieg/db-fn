@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @ParametersAreNonnullByDefault
-public enum DBUtils {
+public enum Queries {
     ;
     private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
     // Java regexp do not support conditional regexps. We will enumerate all possible variants.
