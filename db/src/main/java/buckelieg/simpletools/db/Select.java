@@ -2,6 +2,7 @@ package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.stream.Stream;
@@ -10,6 +11,7 @@ import java.util.stream.StreamSupport;
 /**
  * An abstraction for SELECT statement
  */
+@ParametersAreNonnullByDefault
 public interface Select extends Query<Iterable<ResultSet>> {
 
     /**
@@ -22,7 +24,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @throws SQLException in case of result set processing errors
      */
     @Nullable
-    <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) throws SQLException;
+    <T> T single(Try<ResultSet, T, SQLException> mapper) throws SQLException;
 
     /**
      * Iterable abstraction over ResultSet.
@@ -89,7 +91,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @return mapped object or provided value in case of errors
      */
     @Nullable
-    default <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper, @Nullable T defaultValue) {
+    default <T> T single(Try<ResultSet, T, SQLException> mapper, @Nullable T defaultValue) {
         try {
             return single(mapper);
         } catch (SQLException e) {

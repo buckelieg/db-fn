@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.*;
 import java.util.Iterator;
@@ -29,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @NotThreadSafe
+@ParametersAreNonnullByDefault
 final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, ProcedureCall {
 
     private static final Logger LOG = Logger.getLogger(ResultSetIterable.class);
@@ -125,7 +127,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
 
     @Nullable
     @Override
-    public <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) throws SQLException {
+    public <T> T single(Try<ResultSet, T, SQLException> mapper) throws SQLException {
         try {
             return mapper.doTry(execute().iterator().next());
         } catch (NoSuchElementException e) {
@@ -175,7 +177,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
 
     @Nonnull
     @Override
-    public <T> Select withResultsHandler(@Nonnull Try<CallableStatement, T, SQLException> mapper) {
+    public <T> Select withResultsHandler(Try<CallableStatement, T, SQLException> mapper) {
         this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Procedure results extractor must be provided");
         return this;
     }
