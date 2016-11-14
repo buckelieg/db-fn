@@ -25,22 +25,6 @@ public interface Select extends Query<Iterable<ResultSet>> {
     <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper) throws SQLException;
 
     /**
-     * Single that silently suppresses Exceptions.
-     *
-     * @param mapper result set mapper
-     * @param <T>    type bounds
-     * @return mapped object or provided value in case of errors
-     */
-    @Nullable
-    default <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper, @Nullable T defaultValue) {
-        try {
-            return single(mapper);
-        } catch (SQLException e) {
-            return defaultValue;
-        }
-    }
-
-    /**
      * Iterable abstraction over ResultSet.
      * Note:
      * The code below does not iterate over all rows in the result set.
@@ -53,6 +37,15 @@ public interface Select extends Query<Iterable<ResultSet>> {
      */
     @Nonnull
     Iterable<ResultSet> execute();
+
+    /**
+     * Configures ResultSet fetch size parameter
+     *
+     * @param size desired fetch size. Should be greater than 0.
+     * @return query builder
+     */
+    @Nonnull
+    Query batchSize(int size);
 
     /**
      * Shorthand for streams.
@@ -69,16 +62,10 @@ public interface Select extends Query<Iterable<ResultSet>> {
     }
 
     /**
-     * Configures ResultSet fetch size parameter
-     *
-     * @param size desired fetch size. Should be greater than 0.
-     * @return query builder
-     */
-    @Nonnull
-    Query batchSize(int size);
-
-    /**
      * Shorthand for stream mapping.
+     * Note:
+     * This method silently skips row in case of any mapping error occurred.
+     *
      * @param mapper result set mapper which is not required to handle {@link SQLException}
      * @param <T> type of the mapped object
      * @return mapped object
@@ -92,6 +79,22 @@ public interface Select extends Query<Iterable<ResultSet>> {
                 return null;
             }
         });
+    }
+
+    /**
+     * Single that silently suppresses Exceptions.
+     *
+     * @param mapper result set mapper
+     * @param <T>    type bounds
+     * @return mapped object or provided value in case of errors
+     */
+    @Nullable
+    default <T> T single(@Nonnull Try<ResultSet, T, SQLException> mapper, @Nullable T defaultValue) {
+        try {
+            return single(mapper);
+        } catch (SQLException e) {
+            return defaultValue;
+        }
     }
 
 }
