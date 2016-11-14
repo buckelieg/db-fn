@@ -2,6 +2,7 @@ package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
 import java.sql.CallableStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,13 +32,17 @@ public interface ProcedureCall extends Select {
 
     /**
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
+     * Throws {@link IndexOutOfBoundsException} in cese of non empty results which could be obtained through {@link ResultSet} object.
      * @param mapper function that constructs from {@link CallableStatement}
      * @param <T> type of the result object
      * @return mapped result
      */
     default <T> T getResult(@Nonnull Try<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<T>();
-        withResultsHandler((cs) -> results.add(mapper.doTry(cs))).execute();
+        long count = withResultsHandler((cs) -> results.add(mapper.doTry(cs))).stream().count();
+        if(count != 0) {
+            throw new IndexOutOfBoundsException("Procedure produces not 0-sized Result Set!");
+        }
         return results.get(0);
     }
 }
