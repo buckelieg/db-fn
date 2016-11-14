@@ -64,7 +64,7 @@ int res = DBUtils.executeUpdate(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:ne
         
 ##### Delete
 ```java
-int res = DBUtils.update(conn, "DELETE FROM TEST WHERE name=?", "name_2").execute();
+int res = DBUtils.executeUpdate(conn, "DELETE FROM TEST WHERE name=?", "name_2");
 ```
 and so on. Explore test suite for more examples.
 
