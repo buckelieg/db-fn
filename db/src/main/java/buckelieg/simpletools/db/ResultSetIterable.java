@@ -33,16 +33,17 @@ final class ResultSetIterable extends AbstractQuery implements Iterable<ResultSe
 
     private final AtomicBoolean hasNext;
     private final AtomicBoolean hasMoved;
+    private final boolean isProcedureCall;
     private ResultSet rs;
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
-    private boolean isProcedureCall;
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
 
     ResultSetIterable(Statement statement) {
         super(statement);
         this.hasMoved = new AtomicBoolean();
         this.hasNext = new AtomicBoolean();
+        this.isProcedureCall = statement instanceof CallableStatement;
     }
 
     @Override
@@ -117,12 +118,11 @@ final class ResultSetIterable extends AbstractQuery implements Iterable<ResultSe
             if (batchSize >= 0) {
                 statement.setFetchSize(batchSize);
             }
-            if (statement instanceof CallableStatement) {
-                this.isProcedureCall = true;
+            if (isProcedureCall) {
                 if (((CallableStatement) statement).execute()) {
                     this.rs = statement.getResultSet();
                 }
-            } else if (statement instanceof PreparedStatement) {
+            } else {
                 this.rs = ((PreparedStatement) statement).executeQuery();
             }
             if (rs != null) {
