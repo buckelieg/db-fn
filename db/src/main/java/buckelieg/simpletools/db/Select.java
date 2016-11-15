@@ -47,7 +47,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @return query builder
      */
     @Nonnull
-    Query batchSize(int size);
+    Query<Iterable<ResultSet>> batchSize(int size);
 
     /**
      * Shorthand for streams.

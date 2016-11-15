@@ -136,7 +136,7 @@ final class ResultSetIterable extends AbstractQuery implements Iterable<ResultSe
 
     @Nonnull
     @Override
-    public Query batchSize(int size) {
+    public Query<Iterable<ResultSet>> batchSize(int size) {
         try {
             batchSize = rs != null && rs.getFetchSize() >= size ? rs.getFetchSize() : size > 0 ? size : 0;
         } catch (SQLException e) {

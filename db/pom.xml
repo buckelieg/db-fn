@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -28,8 +29,20 @@
         <url>http://buckelieg.github.io/simple-tools/</url>
         <connection>scm:git:git@github.com:buckelieg/simple-tools.git</connection>
         <developerConnection>scm:git:git@github.com:buckelieg/simple-tools.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>buckelieg</id>
+            <name>Anatoly Kutyakov</name>
+            <timezone>+3</timezone>
+            <roles>
+                <role>Owner</role>
+                <role>Developer</role>
+            </roles>
+        </developer>
+    </developers>
 
     <dependencies>
         <dependency>
