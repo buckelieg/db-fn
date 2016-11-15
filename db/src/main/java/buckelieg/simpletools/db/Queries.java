@@ -197,16 +197,7 @@ public enum Queries {
             if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
             }
-        }, (ps) -> {
-            int rows = 0;
-            try {
-                rows = ps.executeUpdate();
-            } finally {
-                ps.close();
-            }
-            int finalRows = rows;
-            return () -> finalRows;
-        }, conn, query, params);
+        }, UpdateQuery::new, conn, query, params);
     }
 
     /**

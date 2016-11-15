@@ -15,8 +15,6 @@
 */
 package buckelieg.simpletools.db;
 
-import org.apache.log4j.Logger;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,11 +29,8 @@ import java.util.function.Consumer;
 
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, ProcedureCall {
+final class ResultSetIterable extends AbstractQuery implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, ProcedureCall {
 
-    private static final Logger LOG = Logger.getLogger(ResultSetIterable.class);
-
-    private final Statement statement;
     private final AtomicBoolean hasNext;
     private final AtomicBoolean hasMoved;
     private ResultSet rs;
@@ -45,7 +40,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
 
     ResultSetIterable(Statement statement) {
-        this.statement = Objects.requireNonNull(statement, "Statement must not be null");
+        super(statement);
         this.hasMoved = new AtomicBoolean();
         this.hasNext = new AtomicBoolean();
     }
@@ -64,10 +59,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
             hasNext.set(rs != null && rs.next());
             hasMoved.set(true);
         } catch (SQLException e) {
-            LOG.warn(String.format("Could not move result set on due to '%s'", e.getMessage()));
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(e);
-            }
+            logSQLException("Could not move result set on", e);
             hasNext.set(false);
         }
         if (!hasNext.get()) {
@@ -79,10 +71,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
                         return hasNext();
                     }
                 } catch (SQLException e) {
-                    LOG.warn(String.format("Could not move result set on due to '%s'", e.getMessage()));
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(e);
-                    }
+                    logSQLException("Could not move result set on", e);
                 }
                 if (storedProcedureResultsHandler != null) {
                     try {
@@ -107,22 +96,6 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
         }
         hasMoved.set(false);
         return wrapper;
-    }
-
-    private void close() {
-        try {
-            if (statement != null && !statement.isClosed()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("Closing statement '%s'", statement));
-                }
-                statement.close(); // by JDBC spec: subsequently closes all result sets opened by this statement
-            }
-        } catch (SQLException e) {
-            LOG.warn(String.format("Could not close the statement '%s' due to '%s'", statement, e.getMessage()));
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(e);
-            }
-        }
     }
 
     @Nullable
@@ -156,10 +129,7 @@ final class ResultSetIterable implements Iterable<ResultSet>, Iterator<ResultSet
                 this.wrapper = new ImmutableResultSet(rs);
             }
         } catch (SQLException e) {
-            LOG.warn(String.format("Could not execute statement '%s' due to '%s'", statement, e.getMessage()));
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(e);
-            }
+            logSQLException(String.format("Could not execute statement '%s'", statement), e);
         }
         return this;
     }
