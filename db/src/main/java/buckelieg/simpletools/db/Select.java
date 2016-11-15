@@ -30,7 +30,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * Iterable abstraction over ResultSet.
      * Note:
      * The code below does not iterate over all rows in the result set.
-     * <br/><code>execute().iterator().next().get(...)</code><br/>
+     * <code>execute().iterator().next().get(...)</code>
      * Thus there could be none or some rows more, but result set (and a statement) would not be closed forcibly.
      * In such cases we rely on JDBC resources auto closing mechanism and it is strongly recommended to use <code>single</code> method.
      *
