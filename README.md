@@ -73,7 +73,8 @@ implement simple ETL process:
 ```java
 long count = Queries.<Long>select(conn, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1));
 // calculate partitions here and split work to threads if needed
-Executors.newCachedThreadPool().submit(() -> Queries.select(conn, " SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end).stream().map(rs -> /*map result set here*/).forEach(obj -> {
+Executors.newCachedThreadPool().submit(() -> Queries.select(conn, " SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end)
+.map(rs -> /*map result set here*/).forEach(obj -> {
             // do things here...
         }));
 ```
