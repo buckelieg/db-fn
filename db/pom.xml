@@ -19,6 +19,19 @@
 
     <description>Simple-tools project for database</description>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>http://buckelieg.github.io/simple-tools/</url>
+        <connection>scm:git:git@github.com:buckelieg/simple-tools.git</connection>
+        <developerConnection>scm:git:git@github.com:buckelieg/simple-tools.git</developerConnection>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.derby</groupId>
