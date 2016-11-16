@@ -73,7 +73,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @return mapped object
      */
     @Nonnull
-    default <T> Stream<T> map(Try<ResultSet, T, SQLException> mapper) {
+    default <T> Stream<T> stream(Try<ResultSet, T, SQLException> mapper) {
         return stream().map((rs) -> {
             try {
                 return mapper.doTry(rs);
