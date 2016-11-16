@@ -118,10 +118,8 @@ final class ResultSetIterable extends AbstractQuery implements Iterable<ResultSe
             if (batchSize >= 0) {
                 statement.setFetchSize(batchSize);
             }
-            if (isProcedureCall) {
-                if (((CallableStatement) statement).execute()) {
-                    this.rs = statement.getResultSet();
-                }
+            if (isProcedureCall && ((CallableStatement) statement).execute()) {
+                this.rs = statement.getResultSet();
             } else {
                 this.rs = ((PreparedStatement) statement).executeQuery();
             }
