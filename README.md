@@ -3,6 +3,7 @@ Simple dev tools for common day-to-day tasks.
 Project intended to simplify the things for java developer. 
 
 ## Getting Started with...
+### db-tools
 Add maven dependency:
 ```
 <dependency>
@@ -11,8 +12,6 @@ Add maven dependency:
   <version>0.2</version>
 </dependency>
 ```
-
-### db-tools
 Operate on result set in a functional style.
 #### Select
 Use question marks:
