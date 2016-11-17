@@ -55,7 +55,7 @@ public interface ProcedureCall extends Select {
      * @return mapped result
      */
     default <T> T getResult(Try<CallableStatement, T, SQLException> mapper) {
-        List<T> results = new ArrayList<>();
+        List<T> results = new ArrayList<>(1);
         long count = withResultsHandler((cs) -> results.add(mapper.doTry(cs))).stream().count();
         if(count != 0) {
             throw new IndexOutOfBoundsException("Procedure produces not 0-sized Result Set!");
