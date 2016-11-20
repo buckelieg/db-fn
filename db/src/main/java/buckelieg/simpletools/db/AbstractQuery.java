@@ -31,7 +31,7 @@ abstract class AbstractQuery {
         this.statement = Objects.requireNonNull(statement, "Statement must not be null");
     }
 
-    final void close() {
+    protected void close() {
         try {
             if (statement != null && !statement.isClosed()) {
                 if (LOG.isDebugEnabled()) {

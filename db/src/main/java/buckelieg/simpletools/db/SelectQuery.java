@@ -15,6 +15,8 @@
 */
 package buckelieg.simpletools.db;
 
+import org.apache.log4j.Logger;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -33,6 +35,8 @@ import java.util.function.Consumer;
 @NotThreadSafe
 @ParametersAreNonnullByDefault
 class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
+
+    private static final Logger LOG = Logger.getLogger(SelectQuery.class);
 
     private final AtomicBoolean hasNext;
     private final AtomicBoolean hasMoved;
@@ -164,4 +168,20 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
         }
     }
 
+    @Override
+    protected final void close() {
+        try {
+            if (rs != null && !rs.isClosed()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(String.format("Closing Result Set '%s'", rs));
+                }
+                rs.close();
+            }
+        } catch (SQLException e) {
+            logSQLException("Could not close ResultSet", e);
+        } finally {
+            super.close();
+        }
+
+    }
 }
