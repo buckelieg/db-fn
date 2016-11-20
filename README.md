@@ -87,7 +87,7 @@ Executors.newCachedThreadPool().submit(() -> Queries.select(conn, " SELECT * FRO
 #### Stored Procedures
 Invoking stored procedures is also quite simple:
 ```java
-String name = Queries.call(db, "{call GETNAMEBYID(?,?)}", P.in(1983), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2));
+String name = Queries.call(conn, "{call GETNAMEBYID(?,?)}", P.in(1983), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2));
 ```
 Note that in the latter case stored procedure must not return any result sets.
 If stored procedure is considered to return result sets it is handled similar to reqular selects (see above).
