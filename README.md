@@ -12,7 +12,7 @@ Add maven dependency:
   <version>0.3</version>
 </dependency>
 ```
-Operate on result set in a functional style.
+Operate on result set in a functional way.
 #### Select
 Use question marks:
 ```java
