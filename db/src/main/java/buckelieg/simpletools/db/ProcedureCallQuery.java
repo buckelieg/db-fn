@@ -40,8 +40,6 @@ class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
     protected void doExecute() throws SQLException {
         if (((CallableStatement) statement).execute()) {
             this.rs = statement.getResultSet();
-        } else {
-            this.rs = null;
         }
     }
 
