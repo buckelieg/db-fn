@@ -195,6 +195,12 @@ public class TestSuite {
     }
 
     @Test
+    public void testGetResult() throws Exception {
+        String name = Queries.call(db, "{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2));
+        assertTrue("name_1".equals(name));
+    }
+
+    @Test
     public void testImmutable() throws Exception {
         Queries.select(db, "SELECT * FROM TEST WHERE 1=1 AND ID=?", 1)
                 .execute()

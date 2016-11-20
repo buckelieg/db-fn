@@ -19,7 +19,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -29,21 +32,18 @@ import java.util.function.Consumer;
 
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-final class ResultSetIterable extends AbstractQuery implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, ProcedureCall {
+class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
     private final AtomicBoolean hasNext;
     private final AtomicBoolean hasMoved;
-    private final boolean isProcedureCall;
-    private ResultSet rs;
+    ResultSet rs;
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
-    private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
 
-    ResultSetIterable(Statement statement) {
+    SelectQuery(Statement statement) {
         super(statement);
         this.hasMoved = new AtomicBoolean();
         this.hasNext = new AtomicBoolean();
-        this.isProcedureCall = statement instanceof CallableStatement;
     }
 
     @Override
@@ -57,37 +57,20 @@ final class ResultSetIterable extends AbstractQuery implements Iterable<ResultSe
             if (hasMoved.get()) {
                 return hasNext.get();
             }
-            hasNext.set(rs != null && rs.next());
+            hasNext.set(doMove());
             hasMoved.set(true);
         } catch (SQLException e) {
             logSQLException("Could not move result set on", e);
             hasNext.set(false);
         }
         if (!hasNext.get()) {
-            if (isProcedureCall) {
-                try {
-                    if (statement.getMoreResults()) {
-                        rs = statement.getResultSet();
-                        hasMoved.set(false);
-                        return hasNext();
-                    }
-                } catch (SQLException e) {
-                    logSQLException("Could not move result set on", e);
-                }
-                if (storedProcedureResultsHandler != null) {
-                    try {
-                        storedProcedureResultsHandler.doTry((CallableStatement) statement);
-                    } catch (SQLException e) {
-                        throw new RuntimeException("Thrown in procedure results handler", e);
-                    } finally {
-                        close();
-                    }
-                }
-            } else {
-                close();
-            }
+            close();
         }
         return hasNext.get();
+    }
+
+    protected boolean doMove() throws SQLException {
+        return rs != null && rs.next();
     }
 
     @Override
@@ -118,11 +101,7 @@ final class ResultSetIterable extends AbstractQuery implements Iterable<ResultSe
             if (batchSize >= 0) {
                 statement.setFetchSize(batchSize);
             }
-            if (isProcedureCall && ((CallableStatement) statement).execute()) {
-                this.rs = statement.getResultSet();
-            } else {
-                this.rs = ((PreparedStatement) statement).executeQuery();
-            }
+            doExecute();
             if (rs != null) {
                 this.wrapper = new ImmutableResultSet(rs);
             }
@@ -130,6 +109,10 @@ final class ResultSetIterable extends AbstractQuery implements Iterable<ResultSe
             logSQLException(String.format("Could not execute statement '%s'", statement), e);
         }
         return this;
+    }
+
+    protected void doExecute() throws SQLException {
+        this.rs = ((PreparedStatement) statement).executeQuery();
     }
 
     @Nonnull
@@ -140,13 +123,6 @@ final class ResultSetIterable extends AbstractQuery implements Iterable<ResultSe
         } catch (SQLException e) {
             batchSize = size > 0 ? size : 0; // 0 value is ignored by ResultSet.setFetchSize
         }
-        return this;
-    }
-
-    @Nonnull
-    @Override
-    public <T> Select withResultsHandler(Try<CallableStatement, T, SQLException> mapper) {
-        this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Procedure results extractor must be provided");
         return this;
     }
 

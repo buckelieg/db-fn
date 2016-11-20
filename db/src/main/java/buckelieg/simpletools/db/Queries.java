@@ -103,7 +103,7 @@ public enum Queries {
                     cs.setObject(i, p.getValue());
                 }
             }
-            return new ResultSetIterable(cs);
+            return new ProcedureCallQuery(cs);
         } catch (SQLException e) {
             throw new RuntimeException(
                     String.format(
@@ -129,7 +129,7 @@ public enum Queries {
             if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not a select statement", query));
             }
-        }, ResultSetIterable::new, conn, query, params);
+        }, SelectQuery::new, conn, query, params);
     }
 
     /**
