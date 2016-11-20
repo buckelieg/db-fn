@@ -16,9 +16,9 @@ Operate on result set in a functional way.
 #### Select
 Use question marks:
 ```java
-Collection<SOME_TYPE> results = Queries.select(conn, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
+Collection<T> results = Queries.select(conn, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
                 .stream().collect(
-                        LinkedList<SOME_TYPE>::new,
+                        LinkedList<T>::new,
                         (pList, rs) -> {
                             try {
                                 pList.add(...);
@@ -31,11 +31,11 @@ Collection<SOME_TYPE> results = Queries.select(conn, "SELECT * FROM TEST WHERE I
 ```
 or use named parameters:
 ```java
-Collection<SOME_TYPE> results = Queries.select(conn, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
+Collection<T> results = Queries.select(conn, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
             put("id", new Object[]{1, 2});
             put("NaME", "name_5");
         }}).stream().collect(
-                LinkedList<SOME_TYPE>::new,
+                LinkedList<T>::new,
                 (pList, rs) -> {
                     try {
                         pList.add(...);
