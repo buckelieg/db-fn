@@ -20,6 +20,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -84,11 +85,12 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * This method silently skips row in case of any mapping error occurred.
      *
      * @param mapper result set mapper which is not required to handle {@link SQLException}
-     * @param <T> type of the mapped object
+     * @param <T>    type of the mapped object
      * @return mapped object
      */
     @Nonnull
     default <T> Stream<T> stream(Try<ResultSet, T, SQLException> mapper) {
+        Objects.requireNonNull(mapper, "Mapper must be provided");
         return stream().map((rs) -> {
             try {
                 return mapper.doTry(rs);
