@@ -173,7 +173,7 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
         try {
             if (rs != null && !rs.isClosed()) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("Closing Result Set '%s'", rs));
+                    LOG.debug(String.format("Closing ResultSet '%s'", rs));
                 }
                 rs.close();
             }

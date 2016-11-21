@@ -266,10 +266,10 @@ public enum Queries {
 
     private static Iterable<?> asIterable(Object o) {
         Iterable<?> iterable;
-        if (Iterable.class.isAssignableFrom(o.getClass())) {
-            iterable = (Iterable<?>) o;
-        } else if (o.getClass().isArray()) {
+        if (o.getClass().isArray()) {
             iterable = Arrays.asList((Object[]) o);
+        } else if (o instanceof Iterable) {
+            iterable = (Iterable<?>) o;
         } else {
             iterable = Collections.singletonList(o);
         }
