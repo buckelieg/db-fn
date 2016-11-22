@@ -23,7 +23,7 @@ import java.sql.Statement;
 import java.util.Objects;
 
 @ParametersAreNonnullByDefault
-class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
+final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
 
@@ -33,8 +33,8 @@ class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     @Nonnull
     @Override
-    public <T> Select withResultsHandler(Try<CallableStatement, T, SQLException> mapper) {
-        this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Procedure results extractor must be provided");
+    public <T> Select withResultHandler(Try<CallableStatement, T, SQLException> mapper) {
+        this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Mapper must be provided");
         return this;
     }
 

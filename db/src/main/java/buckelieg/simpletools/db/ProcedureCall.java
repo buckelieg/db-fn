@@ -45,7 +45,7 @@ public interface ProcedureCall extends Select {
      * @return query builder
      */
     @Nonnull
-    <T> Select withResultsHandler(Try<CallableStatement, T, SQLException> mapper);
+    <T> Select withResultHandler(Try<CallableStatement, T, SQLException> mapper);
 
     /**
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
@@ -56,7 +56,7 @@ public interface ProcedureCall extends Select {
      */
     default <T> T getResult(Try<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
-        long count = withResultsHandler((cs) -> results.add(mapper.doTry(cs))).stream().count();
+        long count = withResultHandler((cs) -> results.add(mapper.doTry(cs))).stream().count();
         if(count != 0) {
             throw new IndexOutOfBoundsException("Procedure produces not 0-sized Result Set!");
         }

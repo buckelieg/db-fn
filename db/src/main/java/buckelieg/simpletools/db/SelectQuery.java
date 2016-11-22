@@ -51,12 +51,12 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
     }
 
     @Override
-    public Iterator<ResultSet> iterator() {
+    public final Iterator<ResultSet> iterator() {
         return this;
     }
 
     @Override
-    public boolean hasNext() {
+    public final boolean hasNext() {
         try {
             if (hasMoved.get()) {
                 return hasNext.get();
@@ -78,7 +78,7 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
     }
 
     @Override
-    public ResultSet next() {
+    public final ResultSet next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
@@ -88,9 +88,9 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
 
     @Nullable
     @Override
-    public <T> T single(Try<ResultSet, T, SQLException> mapper) throws SQLException {
+    public final <T> T single(Try<ResultSet, T, SQLException> mapper) throws SQLException {
         try {
-            return mapper.doTry(execute().iterator().next());
+            return Objects.requireNonNull(mapper, "Mapper must be provided").doTry(execute().iterator().next());
         } catch (NoSuchElementException e) {
             throw new SQLException(e);
         } finally {
@@ -100,7 +100,7 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
 
     @Nonnull
     @Override
-    public Iterable<ResultSet> execute() {
+    public final Iterable<ResultSet> execute() {
         try {
             if (batchSize >= 0) {
                 statement.setFetchSize(batchSize);
@@ -121,7 +121,7 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
 
     @Nonnull
     @Override
-    public Select batchSize(int size) {
+    public final Select batchSize(int size) {
         try {
             batchSize = rs != null && rs.getFetchSize() >= size ? rs.getFetchSize() : size > 0 ? size : 0;
         } catch (SQLException e) {
@@ -131,12 +131,12 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
     }
 
     @Override
-    public Spliterator<ResultSet> spliterator() {
+    public final Spliterator<ResultSet> spliterator() {
         return this;
     }
 
     @Override
-    public boolean tryAdvance(Consumer<? super ResultSet> action) {
+    public final boolean tryAdvance(Consumer<? super ResultSet> action) {
         Objects.requireNonNull(action);
         if (hasNext()) {
             action.accept(next());
@@ -146,17 +146,17 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
     }
 
     @Override
-    public Spliterator<ResultSet> trySplit() {
+    public final Spliterator<ResultSet> trySplit() {
         return null; // not splittable. Parallel streams would not gain any performance benefits yet. May be implemented in future
     }
 
     @Override
-    public long estimateSize() {
+    public final long estimateSize() {
         return Long.MAX_VALUE;
     }
 
     @Override
-    public int characteristics() {
+    public final int characteristics() {
         return Spliterator.IMMUTABLE | Spliterator.ORDERED | Spliterator.NONNULL;
     }
 

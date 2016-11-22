@@ -186,7 +186,7 @@ public class TestSuite {
     @Test
     public void testResultSetWithResultsStoredProcedure() throws Exception {
         final Object[] outName = new String[1];
-        long count = Queries.call(db, "call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR)).withResultsHandler((cs) -> {
+        long count = Queries.call(db, "call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR)).withResultHandler((cs) -> {
             outName[0] = cs.getObject(2);
             return outName;
         }).stream().count();
