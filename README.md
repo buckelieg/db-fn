@@ -90,7 +90,7 @@ Invoking stored procedures is also quite simple:
 String name = Queries.call(conn, "{call GETNAMEBYID(?,?)}", P.in(12), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2));
 ```
 Note that in the latter case stored procedure must not return any result sets.
-If stored procedure is considered to return result sets it is handled similar to reqular selects (see above).
+If stored procedure is considered to return result sets it is handled similar to regular selects (see above).
 
 ### Prerequisites
 Java8, Git, Maven.
