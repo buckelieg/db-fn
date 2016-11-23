@@ -22,7 +22,7 @@ import java.sql.SQLException;
 import java.util.Objects;
 
 @ParametersAreNonnullByDefault
-final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements ProcedureCall {
+final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
 
