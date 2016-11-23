@@ -21,13 +21,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Objects;
 
-abstract class AbstractQuery {
+abstract class AbstractQuery<T extends Statement> {
 
     private static final Logger LOG = Logger.getLogger(AbstractQuery.class);
 
-    final Statement statement;
+    final T statement;
 
-    AbstractQuery(Statement statement) {
+    AbstractQuery(T statement) {
         this.statement = Objects.requireNonNull(statement, "Statement must not be null");
     }
 

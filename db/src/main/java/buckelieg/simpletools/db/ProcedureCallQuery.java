@@ -19,15 +19,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Objects;
 
 @ParametersAreNonnullByDefault
-final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
+final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements ProcedureCall {
 
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
 
-    ProcedureCallQuery(Statement statement) {
+    ProcedureCallQuery(CallableStatement statement) {
         super(statement);
     }
 
@@ -40,7 +39,7 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     @Override
     protected void doExecute() throws SQLException {
-        if (((CallableStatement) statement).execute()) {
+        if (statement.execute()) {
             this.rs = statement.getResultSet();
         }
     }

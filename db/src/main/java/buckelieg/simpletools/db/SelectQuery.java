@@ -24,7 +24,6 @@ import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -34,7 +33,7 @@ import java.util.function.Consumer;
 
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
+class SelectQuery<T> extends AbstractQuery<PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
     private static final Logger LOG = Logger.getLogger(SelectQuery.class);
 
@@ -44,7 +43,7 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
 
-    SelectQuery(Statement statement) {
+    SelectQuery(PreparedStatement statement) {
         super(statement);
         this.hasMoved = new AtomicBoolean();
         this.hasNext = new AtomicBoolean();
@@ -116,7 +115,7 @@ class SelectQuery extends AbstractQuery implements Iterable<ResultSet>, Iterator
     }
 
     protected void doExecute() throws SQLException {
-        this.rs = ((PreparedStatement) statement).executeQuery();
+        this.rs = statement.executeQuery();
     }
 
     @Nonnull

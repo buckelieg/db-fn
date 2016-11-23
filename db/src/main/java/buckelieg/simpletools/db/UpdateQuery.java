@@ -17,11 +17,10 @@ package buckelieg.simpletools.db;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 
-final class UpdateQuery extends AbstractQuery implements Update {
+final class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
 
-    UpdateQuery(Statement statement) {
+    UpdateQuery(PreparedStatement statement) {
         super(statement);
     }
 
@@ -29,7 +28,7 @@ final class UpdateQuery extends AbstractQuery implements Update {
     public Integer execute() {
         int rows = 0;
         try {
-            rows = ((PreparedStatement) statement).executeUpdate();
+            rows = statement.executeUpdate();
         } catch (SQLException e) {
             logSQLException(String.format("Could not execute statement '%s'", statement), e);
         } finally {
