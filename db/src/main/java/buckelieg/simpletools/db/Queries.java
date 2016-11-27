@@ -312,4 +312,35 @@ public enum Queries {
         return lowerQuery;
     }
 
+    //TODO to be used within multiple DML statements
+    private static <T> T doInTransaction(Consumer<String> queryValidator,
+                                         Try<PreparedStatement, T, SQLException> action,
+                                         Connection conn, String query, Object... params) throws SQLException {
+        boolean transacted = false;
+        switch (conn.getTransactionIsolation()) {
+            case Connection.TRANSACTION_READ_COMMITTED:
+            case Connection.TRANSACTION_READ_UNCOMMITTED:
+            case Connection.TRANSACTION_REPEATABLE_READ:
+            case Connection.TRANSACTION_SERIALIZABLE: {
+                transacted = true;
+            }
+        }
+        if (transacted) {
+            conn.setAutoCommit(false);
+        }
+        try {
+            return query(queryValidator, action, conn, query, params);
+        } catch (Exception e) {
+            if (transacted) {
+                conn.rollback();
+                transacted = false;
+            }
+            throw e;
+        } finally {
+            if (transacted) {
+                conn.commit();
+            }
+        }
+    }
+
 }
