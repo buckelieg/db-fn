@@ -20,12 +20,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
-    private ResultHandler callback;
+    private Consumer callback;
 
     ProcedureCallQuery(CallableStatement statement) {
         super(statement);
@@ -33,9 +34,9 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     @Nonnull
     @Override
-    public <T> Select withResultHandler(Try<CallableStatement, T, SQLException> mapper, ResultHandler<T> callback) {
+    public <T> Select withResultHandler(Try<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
         this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Mapper must be provided");
-        this.callback = Objects.requireNonNull(callback, "Callback must be provided");
+        this.callback = Objects.requireNonNull(consumer, "Callback must be provided");
         return this;
     }
 
@@ -60,7 +61,7 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
             }
             try {
                 if (storedProcedureResultsHandler != null && callback != null) {
-                    callback.onResult(storedProcedureResultsHandler.doTry((CallableStatement) statement));
+                    callback.accept(storedProcedureResultsHandler.doTry((CallableStatement) statement));
                 }
             } catch (SQLException e) {
                 throw new RuntimeException("Thrown in procedure results handler", e);
