@@ -153,7 +153,6 @@ public final class Queries {
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @param batch an array of query parameters on the declared order of '?'
      * @return affected rows
-     * @throws SQLException
      */
     public static int update(Connection conn, String query, Object[]... batch) {
         int rowsAffected = 0;
