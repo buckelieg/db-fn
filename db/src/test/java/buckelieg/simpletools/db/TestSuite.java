@@ -156,10 +156,10 @@ public class TestSuite {
 
     @Test
     public void testUpdateBatchNamed() throws Exception {
-        Map<String, String> params1 = new HashMap<String, String>(){{
+        Map<String, String> params1 = new HashMap<String, String>() {{
             put("names", "name1");
         }};
-        Map<String, String> params2 = new HashMap<String, String>(){{
+        Map<String, String> params2 = new HashMap<String, String>() {{
             put("names", "name2");
         }};
         int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(:names)", params1, params2);
@@ -206,13 +206,11 @@ public class TestSuite {
 
     @Test
     public void testResultSetWithResultsStoredProcedure() throws Exception {
-        final Object[] outName = new String[1];
-        long count = Queries.call(db, "call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR)).withResultHandler((cs) -> {
-            outName[0] = cs.getObject(2);
-            return outName;
-        }).stream().count();
+        List<String> name = new ArrayList<>(1);
+        long count = Queries.call(db, "call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
+                .withResultHandler((cs) -> cs.getString(2), name::add).stream().count();
         assertTrue(count == 0);
-        assertTrue("name_1".equals(outName[0]));
+        assertTrue("name_1".equals(name.get(0)));
     }
 
     @Test
