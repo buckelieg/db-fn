@@ -29,10 +29,10 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 public interface ProcedureCall extends Select {
 
-    /*
-     TODO introduce ResultsHolder which will contain deferred callable statement processing results
-     or implement callback that is called after results has been processed.
-      */
+    @FunctionalInterface
+    interface ResultHandler<T> {
+        void onResult(T result);
+    }
 
     /**
      * Registers a mapper for procedure results processing which is expected in the OUT/INOUT parameters.
@@ -45,20 +45,21 @@ public interface ProcedureCall extends Select {
      * @return query builder
      */
     @Nonnull
-    <T> Select withResultHandler(Try<CallableStatement, T, SQLException> mapper);
+    <T> Select withResultHandler(Try<CallableStatement, T, SQLException> mapper, ResultHandler<T> callback);
 
     /**
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
      * Throws {@link IndexOutOfBoundsException} in case of non empty results which could be obtained through {@link ResultSet} object.
+     *
      * @param mapper function that constructs from {@link CallableStatement}
-     * @param <T> type of the result object
+     * @param <T>    type of the result object
      * @return mapped result
      */
     default <T> T getResult(Try<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
-        long count = withResultHandler((cs) -> results.add(mapper.doTry(cs))).stream().count();
-        if(count != 0) {
-            throw new IndexOutOfBoundsException("Procedure produces not 0-sized Result Set!");
+        long count = withResultHandler(mapper, results::add).stream().count();
+        if (count != 0) {
+            throw new IndexOutOfBoundsException("Procedure has non empty result set!");
         }
         return results.get(0);
     }

@@ -25,6 +25,7 @@ import java.util.Objects;
 final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
+    private ResultHandler callback;
 
     ProcedureCallQuery(CallableStatement statement) {
         super(statement);
@@ -32,8 +33,9 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     @Nonnull
     @Override
-    public <T> Select withResultHandler(Try<CallableStatement, T, SQLException> mapper) {
+    public <T> Select withResultHandler(Try<CallableStatement, T, SQLException> mapper, ResultHandler<T> callback) {
         this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Mapper must be provided");
+        this.callback = Objects.requireNonNull(callback, "Callback must be provided");
         return this;
     }
 
@@ -44,6 +46,7 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
         }
     }
 
+    @SuppressWarnings("unchecked")
     protected boolean doMove() throws SQLException {
         boolean moved = super.doMove();
         if (!moved) {
@@ -55,14 +58,14 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
             } catch (SQLException e) {
                 logSQLException("Could not move result set on", e);
             }
-            if (storedProcedureResultsHandler != null) {
-                try {
-                    storedProcedureResultsHandler.doTry((CallableStatement) statement);
-                } catch (SQLException e) {
-                    throw new RuntimeException("Thrown in procedure results handler", e);
-                } finally {
-                    close();
+            try {
+                if (storedProcedureResultsHandler != null && callback != null) {
+                    callback.onResult(storedProcedureResultsHandler.doTry((CallableStatement) statement));
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException("Thrown in procedure results handler", e);
+            } finally {
+                close();
             }
         }
         return moved;
