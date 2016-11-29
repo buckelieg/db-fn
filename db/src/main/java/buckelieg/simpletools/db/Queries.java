@@ -30,8 +30,8 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @ParametersAreNonnullByDefault
-public enum Queries {
-    ;
+public final class Queries {
+
     private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
     // Java regexp do not support conditional regexps. We will enumerate all possible variants.
     private static final Pattern STORED_PROCEDURE = Pattern.compile(
@@ -45,6 +45,9 @@ public enum Queries {
                     "\\{\\s*(\\?\\s*=\\s*)?call\\s+\\w+\\s*(\\(\\s*)\\)\\s*\\}"
             )
     );
+
+    private Queries() {
+    }
 
     /**
      * Calls stored procedure. Supplied params are considered as IN typed parameters
@@ -125,11 +128,22 @@ public enum Queries {
      */
     @Nonnull
     public static Select select(Connection conn, String query, Object... params) {
-        return query((lowerQuery) -> {
-            if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
-                throw new IllegalArgumentException(String.format("Query '%s' is not a select statement", query));
-            }
-        }, SelectQuery::new, conn, query, params);
+        try {
+            PreparedStatement ps = requireOpened(conn).prepareStatement(validateQuery(query, (lowerQuery) -> {
+                if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
+                    throw new IllegalArgumentException(String.format("Query '%s' is not a select statement", query));
+                }
+            }));
+            setParameters(ps, params);
+            return new SelectQuery(ps);
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Could not execute statement '%s' on connection '%s' due to '%s'",
+                            query, conn, e.getMessage()
+                    ), e
+            );
+        }
     }
 
     /**
@@ -161,43 +175,49 @@ public enum Queries {
         return select(conn, query, Arrays.asList(namedParams));
     }
 
-    /**
-     * Shorthand for {@link #update(Connection, String, Object...)}
-     */
-    public static int executeUpdate(Connection conn, String query, Object... params) {
-        return update(conn, query, params).execute();
+    public static int update(Connection conn, String query, Object[]... batch) throws SQLException {
+        boolean autoCommit = conn.getAutoCommit();
+        int rowsAffected = 0;
+        try {
+            PreparedStatement ps = requireOpened(conn).prepareStatement(validateQuery(query, (lowerQuery) -> {
+                if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
+                    throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
+                }
+            }));
+            conn.setAutoCommit(false);
+            for (Object[] params : batch) {
+                setParameters(ps, params);
+                rowsAffected += ps.executeUpdate();
+            }
+            ps.close();
+            conn.commit();
+            conn.setAutoCommit(autoCommit);
+            return rowsAffected;
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        }
     }
 
     /**
-     * Shorthand for {@link #update(Connection, String, Map.Entry[])}
-     */
-    @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> int executeUpdate(Connection conn, String query, T... namedParams) {
-        return update(conn, query, Arrays.asList(namedParams)).execute();
-    }
-
-    /**
-     * Shorthand for {@link #update(Connection, String, Map)}
-     */
-    public static int executeUpdate(Connection conn, String query, Map<String, ?> namedParams) {
-        return update(conn, query, namedParams.entrySet()).execute();
-    }
-
-    /**
-     * Executes one of DML statements: INSERT, UDATE or DELETE.
+     * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
      * @param conn   The Connection to operate on.
      * @param query  INSERT/UPDATE/DELETE query to execute.
      * @param params query parameters on the declared order of '?'
-     * @return Update query to execute
-     * @see Update
+     * @return affected rows
      */
-    public static Update update(Connection conn, String query, Object... params) {
-        return query((lowerQuery) -> {
-            if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
-                throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
-            }
-        }, UpdateQuery::new, conn, query, params);
+    public static int update(Connection conn, String query, Object... params) {
+        try {
+            return update(conn, query, new Object[][]{params});
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Could not execute statement '%s' on connection '%s' due to '%s'",
+                            query, conn, e.getMessage()
+                    ), e
+            );
+        }
     }
 
     /**
@@ -206,11 +226,10 @@ public enum Queries {
      * @param conn        The Connection to operate on.
      * @param query       INSERT/UPDATE/DELETE query to execute.
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return Update query to execute
-     * @see Update
+     * @return affected rows
      */
     @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> Update update(Connection conn, String query, T... namedParams) {
+    public static <T extends Map.Entry<String, ?>> int update(Connection conn, String query, T... namedParams) {
         return update(conn, query, Arrays.asList(namedParams));
     }
 
@@ -220,20 +239,19 @@ public enum Queries {
      * @param conn        The Connection to operate on.
      * @param query       INSERT/UPDATE/DELETE query to execute.
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return Update query to execute
-     * @see Update
+     * @return affected rows
      */
-    public static Update update(Connection conn, String query, Map<String, ?> namedParams) {
+
+    public static int update(Connection conn, String query, Map<String, ?> namedParams) {
         return update(conn, query, namedParams.entrySet());
     }
 
-    @Nonnull
     private static Select select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return select(conn, preparedQuery.getKey(), preparedQuery.getValue());
     }
 
-    private static Update update(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
+    private static int update(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return update(conn, preparedQuery.getKey(), preparedQuery.getValue());
     }
@@ -276,27 +294,6 @@ public enum Queries {
         return iterable;
     }
 
-    @Nonnull
-    private static <T> T query(Consumer<String> queryValidator,
-                               Try<PreparedStatement, T, SQLException> action,
-                               Connection conn, String query, Object... params) {
-        try {
-            PreparedStatement ps = requireOpened(conn).prepareStatement(validateQuery(query, queryValidator));
-            int pNum = 0;
-            for (Object p : params) {
-                ps.setObject(++pNum, p);
-            }
-            return action.doTry(ps);
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    String.format(
-                            "Could not execute statement '%s' on connection '%s' due to '%s'",
-                            query, conn, e.getMessage()
-                    ), e
-            );
-        }
-    }
-
     private static Connection requireOpened(Connection conn) throws SQLException {
         if (Objects.requireNonNull(conn, "Connection to Database has top be provided").isClosed()) {
             throw new SQLException(String.format("Connection '%s' is closed", conn));
@@ -312,34 +309,10 @@ public enum Queries {
         return lowerQuery;
     }
 
-    //TODO to be used within multiple DML statements
-    private static <T> T doInTransaction(Consumer<String> queryValidator,
-                                         Try<PreparedStatement, T, SQLException> action,
-                                         Connection conn, String query, Object... params) throws SQLException {
-        boolean transacted = false;
-        switch (conn.getTransactionIsolation()) {
-            case Connection.TRANSACTION_READ_COMMITTED:
-            case Connection.TRANSACTION_READ_UNCOMMITTED:
-            case Connection.TRANSACTION_REPEATABLE_READ:
-            case Connection.TRANSACTION_SERIALIZABLE: {
-                transacted = true;
-            }
-        }
-        if (transacted) {
-            conn.setAutoCommit(false);
-        }
-        try {
-            return query(queryValidator, action, conn, query, params);
-        } catch (Exception e) {
-            if (transacted) {
-                conn.rollback();
-                transacted = false;
-            }
-            throw e;
-        } finally {
-            if (transacted) {
-                conn.commit();
-            }
+    private static void setParameters(PreparedStatement ps, Object... params) throws SQLException {
+        int pNum = 0;
+        for (Object p : params) {
+            ps.setObject(++pNum, p);
         }
     }
 
