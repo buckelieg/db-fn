@@ -18,10 +18,7 @@ package buckelieg.simpletools.db;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -156,24 +153,30 @@ public final class Queries {
      */
     public static int update(Connection conn, String query, Object[]... batch) {
         int rowsAffected = 0;
+        boolean autoCommit = true;
+        Savepoint savepoint = null;
         try {
-            boolean autoCommit = conn.getAutoCommit();
             PreparedStatement ps = requireOpened(conn).prepareStatement(validateQuery(query, (lowerQuery) -> {
                 if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
                     throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
                 }
             }));
+            autoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
+            savepoint = conn.setSavepoint();
             for (Object[] params : Objects.requireNonNull(batch, "Batch must not be null")) {
                 setParameters(ps, params);
                 rowsAffected += ps.executeUpdate();
             }
             ps.close();
             conn.commit();
-            conn.setAutoCommit(autoCommit);
         } catch (SQLException e) {
             try {
-                conn.rollback();
+                if (savepoint != null) {
+                    conn.rollback(savepoint);
+                } else {
+                    conn.rollback();
+                }
             } catch (SQLException ex) {
                 // ignore
             }
@@ -183,6 +186,15 @@ public final class Queries {
                             query, conn, e.getMessage()
                     ), e
             );
+        } finally {
+            try {
+                conn.setAutoCommit(autoCommit);
+                if (savepoint != null) {
+                    conn.releaseSavepoint(savepoint);
+                }
+            } catch (SQLException e) {
+                // ignore
+            }
         }
         return rowsAffected;
     }
