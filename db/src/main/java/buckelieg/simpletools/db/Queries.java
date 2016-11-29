@@ -147,6 +147,44 @@ public final class Queries {
     }
 
     /**
+     * Executes one of DML statements: INSERT, UPDATE or DELETE.
+     *
+     * @param conn  The Connection to operate on.
+     * @param query INSERT/UPDATE/DELETE query to execute.
+     * @param batch an array of query parameters on the declared order of '?'
+     * @return affected rows
+     * @throws SQLException
+     */
+    public static int update(Connection conn, String query, Object[]... batch) {
+        int rowsAffected = 0;
+        try {
+            boolean autoCommit = conn.getAutoCommit();
+            PreparedStatement ps = requireOpened(conn).prepareStatement(validateQuery(query, (lowerQuery) -> {
+                if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
+                    throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
+                }
+            }));
+            conn.setAutoCommit(false);
+            for (Object[] params : batch) {
+                setParameters(ps, params);
+                rowsAffected += ps.executeUpdate();
+            }
+            ps.close();
+            conn.commit();
+            conn.setAutoCommit(autoCommit);
+            conn.rollback();
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Could not execute statement '%s' on connection '%s' due to '%s'",
+                            query, conn, e.getMessage()
+                    ), e
+            );
+        }
+        return rowsAffected;
+    }
+
+    /**
      * Executes SELECT statement on provided Connection
      *
      * @param conn        The Connection to operate on.
@@ -175,30 +213,6 @@ public final class Queries {
         return select(conn, query, Arrays.asList(namedParams));
     }
 
-    public static int update(Connection conn, String query, Object[]... batch) throws SQLException {
-        boolean autoCommit = conn.getAutoCommit();
-        int rowsAffected = 0;
-        try {
-            PreparedStatement ps = requireOpened(conn).prepareStatement(validateQuery(query, (lowerQuery) -> {
-                if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
-                    throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
-                }
-            }));
-            conn.setAutoCommit(false);
-            for (Object[] params : batch) {
-                setParameters(ps, params);
-                rowsAffected += ps.executeUpdate();
-            }
-            ps.close();
-            conn.commit();
-            conn.setAutoCommit(autoCommit);
-            return rowsAffected;
-        } catch (SQLException e) {
-            conn.rollback();
-            throw e;
-        }
-    }
-
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
@@ -208,16 +222,8 @@ public final class Queries {
      * @return affected rows
      */
     public static int update(Connection conn, String query, Object... params) {
-        try {
-            return update(conn, query, new Object[][]{params});
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    String.format(
-                            "Could not execute statement '%s' on connection '%s' due to '%s'",
-                            query, conn, e.getMessage()
-                    ), e
-            );
-        }
+        return update(conn, query, new Object[][]{params});
+
     }
 
     /**
