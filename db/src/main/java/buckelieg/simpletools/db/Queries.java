@@ -273,9 +273,10 @@ public final class Queries {
      * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return affected rows
      */
+    @SafeVarargs
     public static int update(Connection conn, String query, Map<String, ?>... batch) {
-        List<Object[]> params = Arrays.stream(batch).map((np) -> prepareQuery(query, np.entrySet()).getValue()).collect(Collectors.toList());
-        return update(conn, query, params.toArray(new Object[params.size()][]));
+        List<Map.Entry<String, Object[]>> params = Arrays.stream(batch).map((np) -> prepareQuery(query, np.entrySet())).collect(Collectors.toList());
+        return update(conn, params.get(0).getKey(), params.stream().map(Map.Entry::getValue).collect(Collectors.toList()).toArray(new Object[params.size()][]));
     }
 
     private static Select select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
