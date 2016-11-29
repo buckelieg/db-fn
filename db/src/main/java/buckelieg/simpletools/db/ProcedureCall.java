@@ -16,6 +16,7 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -52,6 +53,7 @@ public interface ProcedureCall extends Select {
      * @param <T>    type of the result object
      * @return mapped result
      */
+    @Nullable
     default <T> T getResult(Try<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
         long count = withResultHandler(mapper, results::add).stream().count();
