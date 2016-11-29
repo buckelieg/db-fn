@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
-final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
+final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements ProcedureCall {
 
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
     private Consumer callback;

@@ -33,18 +33,19 @@ import java.util.function.Consumer;
 
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
+class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
     private static final Logger LOG = Logger.getLogger(SelectQuery.class);
 
+    final S statement;
+    ResultSet rs;
     private final AtomicBoolean hasNext;
     private final AtomicBoolean hasMoved;
-    ResultSet rs;
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
 
-    SelectQuery(PreparedStatement statement) {
-        super(statement);
+    SelectQuery(S statement) {
+        this.statement = Objects.requireNonNull(statement, "Statement must not be null");
         this.hasMoved = new AtomicBoolean();
         this.hasNext = new AtomicBoolean();
     }
@@ -167,8 +168,7 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
         }
     }
 
-    @Override
-    protected final void close() {
+    final void close() {
         try {
             if (rs != null && !rs.isClosed()) {
                 if (LOG.isDebugEnabled()) {
@@ -179,8 +179,23 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
         } catch (SQLException e) {
             logSQLException("Could not close ResultSet", e);
         } finally {
-            super.close();
+            try {
+                if (statement != null && !statement.isClosed()) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(String.format("Closing statement '%s'", statement));
+                    }
+                    statement.close(); // by JDBC spec: subsequently closes all result sets opened by this statement
+                }
+            } catch (SQLException e) {
+                logSQLException(String.format("Could not close the statement '%s'", statement), e);
+            }
         }
+    }
 
+    final void logSQLException(String prepend, SQLException e) {
+        LOG.warn(String.format(prepend == null || prepend.isEmpty() ? "Caught '%s'" : prepend + " due to '%s'", e.getMessage()));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(e);
+        }
     }
 }

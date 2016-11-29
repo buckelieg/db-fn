@@ -132,7 +132,7 @@ public final class Queries {
                     throw new IllegalArgumentException(String.format("Query '%s' is not a select statement", query));
                 }
             }));
-            return new SelectQuery(setParameters(ps, params));
+            return new SelectQuery<>(setParameters(ps, params));
         } catch (SQLException e) {
             throw new RuntimeException(
                     String.format(
