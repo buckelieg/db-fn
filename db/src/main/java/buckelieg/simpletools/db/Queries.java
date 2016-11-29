@@ -132,8 +132,7 @@ public final class Queries {
                     throw new IllegalArgumentException(String.format("Query '%s' is not a select statement", query));
                 }
             }));
-            setParameters(ps, params);
-            return new SelectQuery(ps);
+            return new SelectQuery(setParameters(ps, params));
         } catch (SQLException e) {
             throw new RuntimeException(
                     String.format(
@@ -166,8 +165,7 @@ public final class Queries {
             conn.setAutoCommit(false);
             savepoint = conn.setSavepoint();
             for (Object[] params : Objects.requireNonNull(batch, "Batch must not be null")) {
-                setParameters(ps, params);
-                rowsAffected += ps.executeUpdate();
+                rowsAffected += setParameters(ps, params).executeUpdate();
             }
             ps.close();
             conn.commit();
@@ -343,11 +341,12 @@ public final class Queries {
         return lowerQuery;
     }
 
-    private static void setParameters(PreparedStatement ps, Object... params) throws SQLException {
+    private static PreparedStatement setParameters(PreparedStatement ps, Object... params) throws SQLException {
         int pNum = 0;
         for (Object p : Objects.requireNonNull(params, "Parameters must not be null")) {
             ps.setObject(++pNum, p);
         }
+        return ps;
     }
 
 }
