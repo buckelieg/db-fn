@@ -268,13 +268,14 @@ public final class Queries {
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
-     * @param conn        The Connection to operate on.
-     * @param query       INSERT/UPDATE/DELETE query to execute.
-     * @param namedParams an array of query named parameters. Parameter name in the form of :name
+     * @param conn  The Connection to operate on.
+     * @param query INSERT/UPDATE/DELETE query to execute.
+     * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return affected rows
      */
-    public static int update(Connection conn, String query, Map<String, ?>... namedParams) {
-        return 0;
+    public static int update(Connection conn, String query, Map<String, ?>... batch) {
+        List<Object[]> params = Arrays.stream(batch).map((np) -> prepareQuery(query, np.entrySet()).getValue()).collect(Collectors.toList());
+        return update(conn, query, params.toArray(new Object[params.size()][]));
     }
 
     private static Select select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
