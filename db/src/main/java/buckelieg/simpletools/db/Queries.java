@@ -164,15 +164,19 @@ public final class Queries {
                 }
             }));
             conn.setAutoCommit(false);
-            for (Object[] params : batch) {
+            for (Object[] params : Objects.requireNonNull(batch, "Batch must not be null")) {
                 setParameters(ps, params);
                 rowsAffected += ps.executeUpdate();
             }
             ps.close();
             conn.commit();
             conn.setAutoCommit(autoCommit);
-            conn.rollback();
         } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                // ignore
+            }
             throw new RuntimeException(
                     String.format(
                             "Could not execute statement '%s' on connection '%s' due to '%s'",
@@ -222,11 +226,10 @@ public final class Queries {
      */
     public static int update(Connection conn, String query, Object... params) {
         return update(conn, query, new Object[][]{params});
-
     }
 
     /**
-     * Executes one of DML statements: INSERT, UDATE or DELETE.
+     * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
      * @param conn        The Connection to operate on.
      * @param query       INSERT/UPDATE/DELETE query to execute.
@@ -239,16 +242,27 @@ public final class Queries {
     }
 
     /**
-     * Executes one of DML statements: INSERT, UDATE or DELETE.
+     * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
      * @param conn        The Connection to operate on.
      * @param query       INSERT/UPDATE/DELETE query to execute.
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return affected rows
      */
-
     public static int update(Connection conn, String query, Map<String, ?> namedParams) {
         return update(conn, query, namedParams.entrySet());
+    }
+
+    /**
+     * Executes one of DML statements: INSERT, UPDATE or DELETE.
+     *
+     * @param conn        The Connection to operate on.
+     * @param query       INSERT/UPDATE/DELETE query to execute.
+     * @param namedParams an array of query named parameters. Parameter name in the form of :name
+     * @return affected rows
+     */
+    public static int update(Connection conn, String query, Map<String, ?>... namedParams) {
+        return 0;
     }
 
     private static Select select(Connection conn, String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
@@ -316,7 +330,7 @@ public final class Queries {
 
     private static void setParameters(PreparedStatement ps, Object... params) throws SQLException {
         int pNum = 0;
-        for (Object p : params) {
+        for (Object p : Objects.requireNonNull(params, "Parameters must not be null")) {
             ps.setObject(++pNum, p);
         }
     }
