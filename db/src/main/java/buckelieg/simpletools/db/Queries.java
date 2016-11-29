@@ -24,13 +24,14 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+
+import static java.util.stream.StreamSupport.stream;
 
 @ParametersAreNonnullByDefault
 public final class Queries {
 
     private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
-    // Java regexp do not support conditional regexps. We will enumerate all possible variants.
+    // Java regexp does not support conditional regexps. We will enumerate all possible variants.
     private static final Pattern STORED_PROCEDURE = Pattern.compile(
             String.format(
                     "%s|%s|%s|%s|%s|%s",
@@ -292,7 +293,7 @@ public final class Queries {
     private static Map.Entry<String, Object[]> prepareQuery(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         String lowerQuery = validateQuery(query, null);
         Map<Integer, Object> indicesToValues = new TreeMap<>();
-        Map<String, ?> transformedParams = StreamSupport.stream(namedParams.spliterator(), false).collect(Collectors.toMap(
+        Map<String, ?> transformedParams = stream(namedParams.spliterator(), false).collect(Collectors.toMap(
                 k -> k.getKey().startsWith(":") ? k.getKey().toLowerCase() : String.format(":%s", k.getKey().toLowerCase()),
                 Map.Entry::getValue
         ));
@@ -309,7 +310,7 @@ public final class Queries {
         for (Map.Entry<String, ?> e : transformedParams.entrySet()) {
             lowerQuery = lowerQuery.replaceAll(
                     e.getKey(),
-                    StreamSupport.stream(asIterable(e.getValue()).spliterator(), false).map(o -> "?").collect(Collectors.joining(", "))
+                    stream(asIterable(e.getValue()).spliterator(), false).map(o -> "?").collect(Collectors.joining(", "))
             );
         }
         return Pair.of(lowerQuery, indicesToValues.values().toArray(new Object[indicesToValues.size()]));

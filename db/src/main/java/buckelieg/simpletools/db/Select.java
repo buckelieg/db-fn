@@ -51,6 +51,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * In such cases we rely on JDBC resources auto closing mechanism and it is strongly recommended to use <code>single</code> method.
      *
      * @return ResultSet as Iterable
+     *
      * @see #single(Try)
      */
     @Nonnull
@@ -61,6 +62,8 @@ public interface Select extends Query<Iterable<ResultSet>> {
      *
      * @param size desired fetch size. Should be greater than 0.
      * @return query builder
+     *
+     * @see ResultSet#setFetchSize(int)
      */
     @Nonnull
     Select batchSize(int size);
@@ -72,6 +75,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * calling some 'reduction' (terminal) operation we left resource freeing to JDBC
      *
      * @return a Stream over Iterable.
+     *
      * @see #execute()
      */
     @Nonnull
@@ -87,6 +91,8 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @param mapper result set mapper which is not required to handle {@link SQLException}
      * @param <T>    type of the mapped object
      * @return mapped object
+     *
+     * @see #stream()
      */
     @Nonnull
     default <T> Stream<T> stream(Try<ResultSet, T, SQLException> mapper) {
@@ -106,9 +112,12 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @param mapper result set mapper
      * @param <T>    type bounds
      * @return mapped object or provided value in case of errors
+     *
+     * @see #single(Try)
      */
     @Nullable
     default <T> T single(Try<ResultSet, T, SQLException> mapper, @Nullable T defaultValue) {
+        Objects.requireNonNull(mapper, "Mapper must be provided");
         try {
             return single(mapper);
         } catch (SQLException e) {
