@@ -155,6 +155,18 @@ public class TestSuite {
     }
 
     @Test
+    public void testUpdateBatchNamed() throws Exception {
+        Map<String, String> params1 = new HashMap<String, String>(){{
+            put("names", "name1");
+        }};
+        Map<String, String> params2 = new HashMap<String, String>(){{
+            put("names", "name2");
+        }};
+        int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(:names)", params1, params2);
+        assertTrue(2 == res);
+    }
+
+    @Test
     public void testDelete() throws Exception {
         int res = Queries.update(db, "DELETE FROM TEST WHERE name=?", "name_2");
         assertTrue(res == 1);
