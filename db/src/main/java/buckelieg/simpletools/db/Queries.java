@@ -48,7 +48,7 @@ public final class Queries {
     }
 
     /**
-     * Calls stored procedure. Supplied params are considered as IN typed parameters
+     * Calls stored procedure. Supplied params are considered as IN parameters
      *
      * @param conn   The Connection to operate on
      * @param query  procedure call string
