@@ -161,20 +161,23 @@ public final class Queries {
                     throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
                 }
             }));
-            autoCommit = conn.getAutoCommit();
-            conn.setAutoCommit(false);
-            savepoint = conn.setSavepoint();
+            boolean transacted = batch.length > 1;
+            if (transacted) {
+                autoCommit = conn.getAutoCommit();
+                conn.setAutoCommit(false);
+                savepoint = conn.setSavepoint();
+            }
             for (Object[] params : Objects.requireNonNull(batch, "Batch must not be null")) {
                 rowsAffected += setParameters(ps, params).executeUpdate();
             }
             ps.close();
-            conn.commit();
+            if (transacted) {
+                conn.commit();
+            }
         } catch (SQLException e) {
             try {
                 if (savepoint != null) {
                     conn.rollback(savepoint);
-                } else {
-                    conn.rollback();
                 }
             } catch (SQLException ex) {
                 // ignore
@@ -187,8 +190,8 @@ public final class Queries {
             );
         } finally {
             try {
-                conn.setAutoCommit(autoCommit);
                 if (savepoint != null) {
+                    conn.setAutoCommit(autoCommit);
                     conn.releaseSavepoint(savepoint);
                 }
             } catch (SQLException e) {
