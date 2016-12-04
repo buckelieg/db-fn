@@ -258,18 +258,6 @@ public final class Queries {
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
-     * @param conn        The Connection to operate on.
-     * @param query       INSERT/UPDATE/DELETE query to execute.
-     * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return affected rows
-     */
-    public static int update(Connection conn, String query, Map<String, ?> namedParams) {
-        return update(conn, query, namedParams.entrySet());
-    }
-
-    /**
-     * Executes one of DML statements: INSERT, UPDATE or DELETE.
-     *
      * @param conn  The Connection to operate on.
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @param batch an array of query named parameters. Parameter name in the form of :name
