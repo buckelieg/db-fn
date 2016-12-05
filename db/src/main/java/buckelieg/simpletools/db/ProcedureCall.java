@@ -47,7 +47,7 @@ public interface ProcedureCall extends Select {
 
     /**
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
-     * Throws {@link IndexOutOfBoundsException} in case of non empty results which could be obtained through {@link ResultSet} object.
+     * Throws {@link SQLRuntimeException} in case of non empty results which could be obtained through {@link ResultSet} object.
      *
      * @param mapper function that constructs from {@link CallableStatement}
      * @param <T>    type of the result object
