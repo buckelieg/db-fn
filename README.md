@@ -9,7 +9,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-tools</artifactId>
-  <version>0.3</version>
+  <version>0.4</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -48,25 +48,33 @@ Collection<T> results = Queries.select(conn, "SELECT * FROM TEST WHERE 1=1 AND I
 ```
 #### Update/Insert/Delete
 
+These operations could be run in batch mode. Just supply Array of parameters and it will be processed in a single transaction.
+
 ##### Insert 
 
 with question marks:
 ```java
-int res = Queries.executeUpdate(conn, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
+int res = Queries.update(conn, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
 ```
 Or with named parameters:
 ```java
-int res = Queries.executeUpdate(conn, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
+int res = Queries.update(conn, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
 ```
 ##### Update
 ```java
-int res = Queries.executeUpdate(conn, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
+int res = Queries.update(conn, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
 ```
 or
 ```java
-int res = Queries.executeUpdate(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
+int res = Queries.update(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
 ```
-        
+For batch operation use:
+```java
+Object[][] names = new Object[2][1];
+        names[0] = new Object[]{"name1"};
+        names[1] = new Object[]{"name2"};
+        int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(?)", names);
+```  
 ##### Delete
 ```java
 int res = Queries.executeUpdate(conn, "DELETE FROM TEST WHERE name=?", "name_2");
