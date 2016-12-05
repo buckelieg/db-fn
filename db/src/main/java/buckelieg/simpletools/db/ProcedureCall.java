@@ -56,8 +56,7 @@ public interface ProcedureCall extends Select {
     @Nullable
     default <T> T getResult(Try<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
-        ResultSet result = withResultHandler(mapper, results::add).single((rs) -> rs, null);
-        if (result != null) {
+        if (withResultHandler(mapper, results::add).single((rs) -> rs, null) != null) {
             throw new SQLRuntimeException("Procedure has non empty result set!");
         }
         return results.get(0);
