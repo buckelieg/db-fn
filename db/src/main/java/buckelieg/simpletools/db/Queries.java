@@ -221,6 +221,7 @@ public final class Queries {
      * @param conn        The Connection to operate on.
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
+     * @param <T>         type bounds
      * @return select query builder
      * @see Select
      */
@@ -248,6 +249,7 @@ public final class Queries {
      * @param conn        The Connection to operate on.
      * @param query       INSERT/UPDATE/DELETE query to execute.
      * @param namedParams query named parameters. Parameter name in the form of :name
+     * @param <T>         type bounds
      * @return affected rows
      */
     @SafeVarargs

@@ -102,8 +102,9 @@ public interface Select extends Query<Iterable<ResultSet>> {
     /**
      * Single that silently suppresses Exceptions.
      *
-     * @param mapper result set mapper
-     * @param <T>    type bounds
+     * @param mapper       result set mapper
+     * @param defaultValue a value to return if an exception occurs
+     * @param <T>          type bounds
      * @return mapped object or provided value in case of errors
      * @see #single(Try)
      */
