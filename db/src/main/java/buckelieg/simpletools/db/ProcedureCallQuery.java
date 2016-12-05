@@ -63,8 +63,6 @@ final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements
                 if (storedProcedureResultsHandler != null && callback != null) {
                     callback.accept(storedProcedureResultsHandler.doTry((CallableStatement) statement));
                 }
-            } catch (SQLException e) {
-                throw new RuntimeException("Thrown in procedure results handler", e);
             } finally {
                 close();
             }

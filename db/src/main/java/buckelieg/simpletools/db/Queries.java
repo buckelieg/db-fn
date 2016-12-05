@@ -106,7 +106,7 @@ public final class Queries {
             }
             return new ProcedureCallQuery(cs);
         } catch (SQLException e) {
-            throw new RuntimeException(
+            throw new SQLRuntimeException(
                     String.format(
                             "Could not execute statement '%s' on connection '%s' due to '%s'",
                             query, conn, e.getMessage()
@@ -134,7 +134,7 @@ public final class Queries {
             }));
             return new SelectQuery<>(setParameters(ps, params));
         } catch (SQLException e) {
-            throw new RuntimeException(
+            throw new SQLRuntimeException(
                     String.format(
                             "Could not execute statement '%s' on connection '%s' due to '%s'",
                             query, conn, e.getMessage()
@@ -182,7 +182,7 @@ public final class Queries {
             } catch (SQLException ex) {
                 // ignore
             }
-            throw new RuntimeException(
+            throw new SQLRuntimeException(
                     String.format(
                             "Could not execute statement '%s' on connection '%s' due to '%s'",
                             query, conn, e.getMessage()

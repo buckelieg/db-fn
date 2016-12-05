@@ -88,11 +88,11 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
 
     @Nullable
     @Override
-    public final <T> T single(Try<ResultSet, T, SQLException> mapper) throws SQLException {
+    public final <T> T single(Try<ResultSet, T, SQLException> mapper) {
         try {
             return Objects.requireNonNull(mapper, "Mapper must be provided").doTry(execute().iterator().next());
-        } catch (NoSuchElementException e) {
-            throw new SQLException(e);
+        } catch (SQLException | NoSuchElementException e) {
+            throw new SQLRuntimeException(e);
         } finally {
             close();
         }

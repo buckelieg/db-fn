@@ -37,10 +37,9 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @param mapper ResultSet mapper function
      * @param <T>    type bounds
      * @return mapped object
-     * @throws SQLException in case of result set processing errors
      */
     @Nullable
-    <T> T single(Try<ResultSet, T, SQLException> mapper) throws SQLException;
+    <T> T single(Try<ResultSet, T, SQLException> mapper);
 
     /**
      * Iterable abstraction over ResultSet.
@@ -51,7 +50,6 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * In such cases we rely on JDBC resources auto closing mechanism and it is strongly recommended to use <code>single</code> method.
      *
      * @return ResultSet as Iterable
-     *
      * @see #single(Try)
      */
     @Nonnull
@@ -62,7 +60,6 @@ public interface Select extends Query<Iterable<ResultSet>> {
      *
      * @param size desired fetch size. Should be greater than 0.
      * @return query builder
-     *
      * @see ResultSet#setFetchSize(int)
      */
     @Nonnull
@@ -75,7 +72,6 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * calling some 'reduction' (terminal) operation we left resource freeing to JDBC
      *
      * @return a Stream over Iterable.
-     *
      * @see #execute()
      */
     @Nonnull
@@ -85,13 +81,10 @@ public interface Select extends Query<Iterable<ResultSet>> {
 
     /**
      * Shorthand for stream mapping.
-     * Note:
-     * This method silently skips row in case of any mapping error occurred.
      *
      * @param mapper result set mapper which is not required to handle {@link SQLException}
      * @param <T>    type of the mapped object
      * @return mapped object
-     *
      * @see #stream()
      */
     @Nonnull
@@ -101,7 +94,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
             try {
                 return mapper.doTry(rs);
             } catch (SQLException e) {
-                return null;
+                throw new SQLRuntimeException(e);
             }
         });
     }
@@ -112,7 +105,6 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @param mapper result set mapper
      * @param <T>    type bounds
      * @return mapped object or provided value in case of errors
-     *
      * @see #single(Try)
      */
     @Nullable
@@ -120,7 +112,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
         Objects.requireNonNull(mapper, "Mapper must be provided");
         try {
             return single(mapper);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             return defaultValue;
         }
     }
