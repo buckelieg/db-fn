@@ -48,7 +48,7 @@ Collection<T> results = Queries.select(conn, "SELECT * FROM TEST WHERE 1=1 AND I
 ```
 #### Update/Insert/Delete
 
-These operations could be run in batch mode. Just supply Array of parameters and it will be processed in a single transaction.
+These operations could be run in batch mode. Just supply an array of parameters and it will be processed in a single transaction.
 
 ##### Insert 
 
