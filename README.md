@@ -77,7 +77,7 @@ int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(?)", names);
 ```  
 ##### Delete
 ```java
-int res = Queries.executeUpdate(conn, "DELETE FROM TEST WHERE name=?", "name_2");
+int res = Queries.update(conn, "DELETE FROM TEST WHERE name=?", "name_2");
 ```
 and so on. Explore test suite for more examples.
 
