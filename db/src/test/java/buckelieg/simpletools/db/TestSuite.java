@@ -147,11 +147,7 @@ public class TestSuite {
 
     @Test
     public void testUpdateBatch() throws Exception {
-        Object[][] names = new Object[2][1];
-        names[0] = new Object[]{"name1"};
-        names[1] = new Object[]{"name2"};
-        int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(?)", names);
-        assertTrue(2 == res);
+        assertTrue(2 == Queries.update(db, "INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}));
     }
 
     @Test
