@@ -36,7 +36,7 @@ Project intended to simplify the things for java developer. </p>
 <pre><code>&lt;dependency&gt;
   &lt;groupId&gt;com.github.buckelieg&lt;/groupId&gt;
   &lt;artifactId&gt;db-tools&lt;/artifactId&gt;
-  &lt;version&gt;0.3&lt;/version&gt;
+  &lt;version&gt;0.4&lt;/version&gt;
 &lt;/dependency&gt;
 </code></pre>
 
@@ -80,30 +80,36 @@ Project intended to simplify the things for java developer. </p>
 <h4>
 <a id="updateinsertdelete" class="anchor" href="#updateinsertdelete" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Update/Insert/Delete</h4>
 
+<p>These operations could be run in batch mode. Just supply an array of parameters and it will be processed in a single transaction.</p>
+
 <h5>
 <a id="insert" class="anchor" href="#insert" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Insert</h5>
 
 <p>with question marks:</p>
 
-<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>executeUpdate(conn, <span class="pl-s"><span class="pl-pds">"</span>INSERT INTO TEST(name) VALUES(?)<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>New_Name<span class="pl-pds">"</span></span>);</pre></div>
+<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>update(conn, <span class="pl-s"><span class="pl-pds">"</span>INSERT INTO TEST(name) VALUES(?)<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>New_Name<span class="pl-pds">"</span></span>);</pre></div>
 
 <p>Or with named parameters:</p>
 
-<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>executeUpdate(conn, <span class="pl-s"><span class="pl-pds">"</span>INSERT INTO TEST(name) VALUES(:name)<span class="pl-pds">"</span></span>, <span class="pl-k">new</span> <span class="pl-k">Pair&lt;&gt;</span>(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>New_Name<span class="pl-pds">"</span></span>));</pre></div>
+<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>update(conn, <span class="pl-s"><span class="pl-pds">"</span>INSERT INTO TEST(name) VALUES(:name)<span class="pl-pds">"</span></span>, <span class="pl-k">new</span> <span class="pl-k">Pair&lt;&gt;</span>(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>New_Name<span class="pl-pds">"</span></span>));</pre></div>
 
 <h5>
 <a id="update" class="anchor" href="#update" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Update</h5>
 
-<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>executeUpdate(conn, <span class="pl-s"><span class="pl-pds">"</span>UPDATE TEST SET NAME=? WHERE NAME=?<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>new_name_2<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>name_2<span class="pl-pds">"</span></span>);</pre></div>
+<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>update(conn, <span class="pl-s"><span class="pl-pds">"</span>UPDATE TEST SET NAME=? WHERE NAME=?<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>new_name_2<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>name_2<span class="pl-pds">"</span></span>);</pre></div>
 
 <p>or</p>
 
-<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>executeUpdate(conn, <span class="pl-s"><span class="pl-pds">"</span>UPDATE TEST SET NAME=:name WHERE NAME=:new_name<span class="pl-pds">"</span></span>, <span class="pl-k">new</span> <span class="pl-k">Pair&lt;&gt;</span>(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>new_name_2<span class="pl-pds">"</span></span>), <span class="pl-k">new</span> <span class="pl-k">Pair&lt;&gt;</span>(<span class="pl-s"><span class="pl-pds">"</span>new_name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>name_2<span class="pl-pds">"</span></span>));</pre></div>
+<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>update(conn, <span class="pl-s"><span class="pl-pds">"</span>UPDATE TEST SET NAME=:name WHERE NAME=:new_name<span class="pl-pds">"</span></span>, <span class="pl-k">new</span> <span class="pl-k">Pair&lt;&gt;</span>(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>new_name_2<span class="pl-pds">"</span></span>), <span class="pl-k">new</span> <span class="pl-k">Pair&lt;&gt;</span>(<span class="pl-s"><span class="pl-pds">"</span>new_name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>name_2<span class="pl-pds">"</span></span>));</pre></div>
+
+<p>For batch operation use:</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>update(db, <span class="pl-s"><span class="pl-pds">"</span>INSERT INTO TEST(name) VALUES(?)<span class="pl-pds">"</span></span>, <span class="pl-k">new</span> <span class="pl-smi">Object</span>[][]{{<span class="pl-s"><span class="pl-pds">"</span>name1<span class="pl-pds">"</span></span>}, {<span class="pl-s"><span class="pl-pds">"</span>name2<span class="pl-pds">"</span></span>}})</pre></div>
 
 <h5>
 <a id="delete" class="anchor" href="#delete" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Delete</h5>
 
-<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>executeUpdate(conn, <span class="pl-s"><span class="pl-pds">"</span>DELETE FROM TEST WHERE name=?<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>name_2<span class="pl-pds">"</span></span>);</pre></div>
+<div class="highlight highlight-source-java"><pre><span class="pl-k">int</span> res <span class="pl-k">=</span> <span class="pl-smi">Queries</span><span class="pl-k">.</span>update(conn, <span class="pl-s"><span class="pl-pds">"</span>DELETE FROM TEST WHERE name=?<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>name_2<span class="pl-pds">"</span></span>);</pre></div>
 
 <p>and so on. Explore test suite for more examples.</p>
 
