@@ -182,12 +182,7 @@ public final class Queries {
             } catch (SQLException ex) {
                 // ignore
             }
-            throw new SQLRuntimeException(
-                    String.format(
-                            "Could not execute statement '%s' on connection '%s' due to '%s'",
-                            query, conn, e.getMessage()
-                    ), e
-            );
+            throw new SQLRuntimeException(e);
         } finally {
             try {
                 if (savepoint != null) {

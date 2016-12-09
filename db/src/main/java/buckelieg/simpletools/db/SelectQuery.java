@@ -38,9 +38,9 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
     private static final Logger LOG = Logger.getLogger(SelectQuery.class);
 
     final S statement;
-    ResultSet rs;
     private final AtomicBoolean hasNext;
     private final AtomicBoolean hasMoved;
+    ResultSet rs;
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
 
@@ -170,26 +170,16 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
 
     final void close() {
         try {
-            if (rs != null && !rs.isClosed()) {
+            if (statement != null && !statement.isClosed()) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("Closing ResultSet '%s'", rs));
+                    LOG.debug(String.format("Closing statement '%s'", statement));
                 }
-                rs.close();
+                statement.close(); // by JDBC spec: subsequently closes all result sets opened by this statement
             }
         } catch (SQLException e) {
-            logSQLException("Could not close ResultSet", e);
-        } finally {
-            try {
-                if (statement != null && !statement.isClosed()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(String.format("Closing statement '%s'", statement));
-                    }
-                    statement.close(); // by JDBC spec: subsequently closes all result sets opened by this statement
-                }
-            } catch (SQLException e) {
-                logSQLException(String.format("Could not close the statement '%s'", statement), e);
-            }
+            logSQLException(String.format("Could not close the statement '%s'", statement), e);
         }
+
     }
 
     final void logSQLException(String prepend, SQLException e) {

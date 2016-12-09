@@ -15,6 +15,8 @@
 */
 package buckelieg.simpletools.db;
 
+import org.apache.log4j.Logger;
+
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.CallableStatement;
@@ -24,6 +26,8 @@ import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements ProcedureCall {
+
+    private static final Logger LOG = Logger.getLogger(ProcedureCallQuery.class);
 
     private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
     private Consumer callback;
@@ -53,6 +57,7 @@ final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements
         if (!moved) {
             try {
                 if (statement.getMoreResults()) {
+                    closeResultSet();
                     rs = statement.getResultSet();
                     return super.doMove();
                 }
@@ -68,6 +73,19 @@ final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements
             }
         }
         return moved;
+    }
+
+    private void closeResultSet() {
+        try {
+            if (rs != null && !rs.isClosed()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(String.format("Closing ResultSet '%s'", rs));
+                }
+                rs.close();
+            }
+        } catch (SQLException e) {
+            logSQLException("Could not close ResultSet", e);
+        }
     }
 
 }
