@@ -70,7 +70,7 @@ int res = Queries.update(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name"
 ```
 For batch operation use:
 ```java
-int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}})
+int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}});
 ```  
 ##### Delete
 ```java
