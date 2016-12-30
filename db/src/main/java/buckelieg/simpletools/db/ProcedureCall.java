@@ -52,6 +52,8 @@ public interface ProcedureCall extends Select {
      * @param mapper function that constructs from {@link CallableStatement}
      * @param <T>    type of the result object
      * @return mapped result
+     *
+     * @see #setResultHandler(Try, Consumer)
      */
     @Nullable
     default <T> T getResult(Try<CallableStatement, T, SQLException> mapper) {

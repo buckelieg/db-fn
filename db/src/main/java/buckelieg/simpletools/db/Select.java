@@ -50,6 +50,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * In such cases we rely on JDBC resources auto closing mechanism and it is strongly recommended to use <code>single</code> method.
      *
      * @return ResultSet as Iterable
+     *
      * @see #single(Try)
      */
     @Nonnull
@@ -60,6 +61,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      *
      * @param size desired fetch size. Should be greater than 0.
      * @return query builder
+     *
      * @see ResultSet#setFetchSize(int)
      */
     @Nonnull
@@ -72,6 +74,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * calling some 'reduction' (terminal) operation we left resource freeing to JDBC
      *
      * @return a Stream over Iterable.
+     *
      * @see #execute()
      */
     @Nonnull
@@ -85,6 +88,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @param mapper result set mapper which is not required to handle {@link SQLException}
      * @param <T>    type of the mapped object
      * @return mapped object
+     *
      * @see #stream()
      */
     @Nonnull
@@ -106,6 +110,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @param defaultValue a value to return if an exception occurs
      * @param <T>          type bounds
      * @return mapped object or provided value in case of errors
+     *
      * @see #single(Try)
      */
     @Nullable
@@ -114,6 +119,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
         try {
             return single(mapper);
         } catch (Exception e) {
+            // TODO use try monad here?
             if (DBUtils.LOG.isDebugEnabled()) {
                 DBUtils.LOG.debug(e);
             }

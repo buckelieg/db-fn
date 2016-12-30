@@ -30,6 +30,7 @@ public interface DB {
      * @param query  procedure call string
      * @param params procedure IN parameters
      * @return procedure call builder
+
      * @see ProcedureCall
      */
     @Nonnull
@@ -43,6 +44,7 @@ public interface DB {
      * @param query  procedure call string
      * @param params procedure parameters as declared (IN/OUT/INOUT)
      * @return procedure call builder
+     *
      * @see ProcedureCall
      */
     @Nonnull
@@ -54,6 +56,7 @@ public interface DB {
      * @param query  SELECT query to execute. Can be WITH query
      * @param params query parameters on the declared order of '?'
      * @return select query builder
+     *
      * @see Select
      */
     @Nonnull
@@ -65,6 +68,7 @@ public interface DB {
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return select query builder
+     *
      * @see Select
      */
     @Nonnull
@@ -79,6 +83,7 @@ public interface DB {
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @param <T>         type bounds
      * @return select query builder
+     *
      * @see Select
      */
     @Nonnull
@@ -92,6 +97,8 @@ public interface DB {
      * @param query  INSERT/UPDATE/DELETE query to execute.
      * @param params query parameters on the declared order of '?'
      * @return update query builder
+     *
+     * @see Update
      */
     Update update(String query, Object... params);
 
@@ -102,6 +109,8 @@ public interface DB {
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @param <T>         type bounds
      * @return update query builder
+     *
+     * @see Update
      */
     <T extends Map.Entry<String, ?>> Update update(String query, T... namedParams);
 
@@ -111,6 +120,8 @@ public interface DB {
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return update query builder
+     *
+     * @see Update
      */
     Update update(String query, Map<String, ?>... batch);
 
@@ -120,6 +131,8 @@ public interface DB {
      * @param query  INSERT/UPDATE/DELETE query to execute.
      * @param params query parameters on the declared order of '?'
      * @return affected rows
+     *
+     * @see #update(String, Object...)
      */
     default int executeUpdate(String query, Object... params) {
         return update(query, params).execute();
@@ -132,6 +145,8 @@ public interface DB {
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @param <T>         type bounds
      * @return affected rows
+     *
+     * @see #update(String, Map.Entry[])
      */
     default <T extends Map.Entry<String, ?>> int executeUpdate(String query, T... namedParams) {
         return update(query, namedParams).execute();
