@@ -16,7 +16,7 @@
 package buckelieg.simpletools.db;
 
 /**
- * An abstraction for Update queries (INSERT/UPDATE/DELETE)
+ * An abstraction for DML queries (INSERT/UPDATE/DELETE)
  */
 public interface Update extends Query<Integer> {
 

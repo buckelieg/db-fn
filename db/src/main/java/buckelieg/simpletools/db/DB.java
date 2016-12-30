@@ -17,7 +17,9 @@ package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @ParametersAreNonnullByDefault
 public interface DB {
@@ -31,7 +33,9 @@ public interface DB {
      * @see ProcedureCall
      */
     @Nonnull
-    ProcedureCall call(String query, Object... params);
+    default ProcedureCall call(String query, Object... params) {
+        return call(query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P<?>[params.length]));
+    }
 
     /**
      * Calls stored procedure.
@@ -64,7 +68,9 @@ public interface DB {
      * @see Select
      */
     @Nonnull
-    Select select(String query, Map<String, ?> namedParams);
+    default Select select(String query, Map<String, ?> namedParams) {
+        return select(query, namedParams.entrySet());
+    }
 
     /**
      * Executes SELECT statement on provided Connection
@@ -76,7 +82,37 @@ public interface DB {
      * @see Select
      */
     @Nonnull
-    <T extends Map.Entry<String, ?>> Select select(String query, T... namedParams);
+    default <T extends Map.Entry<String, ?>> Select select(String query, T... namedParams) {
+        return select(query, Arrays.asList(namedParams));
+    }
+
+    /**
+     * Executes one of DML statements: INSERT, UPDATE or DELETE.
+     *
+     * @param query  INSERT/UPDATE/DELETE query to execute.
+     * @param params query parameters on the declared order of '?'
+     * @return update query builder
+     */
+    Update update(String query, Object... params);
+
+    /**
+     * Executes one of DML statements: INSERT, UPDATE or DELETE.
+     *
+     * @param query       INSERT/UPDATE/DELETE query to execute.
+     * @param namedParams query named parameters. Parameter name in the form of :name
+     * @param <T>         type bounds
+     * @return update query builder
+     */
+    <T extends Map.Entry<String, ?>> Update update(String query, T... namedParams);
+
+    /**
+     * Executes one of DML statements: INSERT, UPDATE or DELETE.
+     *
+     * @param query INSERT/UPDATE/DELETE query to execute.
+     * @param batch an array of query named parameters. Parameter name in the form of :name
+     * @return update query builder
+     */
+    Update update(String query, Map<String, ?>... batch);
 
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
@@ -85,7 +121,9 @@ public interface DB {
      * @param params query parameters on the declared order of '?'
      * @return affected rows
      */
-    int update(String query, Object... params);
+    default int executeUpdate(String query, Object... params) {
+        return update(query, params).execute();
+    }
 
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
@@ -95,14 +133,8 @@ public interface DB {
      * @param <T>         type bounds
      * @return affected rows
      */
-    <T extends Map.Entry<String, ?>> int update(String query, T... namedParams);
+    default <T extends Map.Entry<String, ?>> int executeUpdate(String query, T... namedParams) {
+        return update(query, namedParams).execute();
+    }
 
-    /**
-     * Executes one of DML statements: INSERT, UPDATE or DELETE.
-     *
-     * @param query INSERT/UPDATE/DELETE query to execute.
-     * @param batch an array of query named parameters. Parameter name in the form of :name
-     * @return affected rows
-     */
-    int update(String query, Map<String, ?>... batch);
 }
