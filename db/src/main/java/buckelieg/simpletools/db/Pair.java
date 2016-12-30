@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @ParametersAreNonnullByDefault
-final class Pair<K, V> implements Map.Entry<K, V> {
+public final class Pair<K, V> implements Map.Entry<K, V> {
     private final K key;
     private final V val;
 

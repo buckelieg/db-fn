@@ -114,6 +114,9 @@ public interface Select extends Query<Iterable<ResultSet>> {
         try {
             return single(mapper);
         } catch (Exception e) {
+            if (DBUtils.LOG.isDebugEnabled()) {
+                DBUtils.LOG.debug(e);
+            }
             return defaultValue;
         }
     }

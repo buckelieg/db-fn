@@ -38,7 +38,7 @@ final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements
 
     @Nonnull
     @Override
-    public <T> Select withResultHandler(Try<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
+    public <T> Select setResultHandler(Try<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
         this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Mapper must be provided");
         this.callback = Objects.requireNonNull(consumer, "Callback must be provided");
         return this;

@@ -78,7 +78,7 @@ public class TestSuite {
 
     @Test
     public void testSelect() throws Exception {
-        Collection<?> results = Queries.select(db, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
+        Collection<?> results = DBUtils.select(db, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
                 .stream()
                 .parallel()
                 .collect(
@@ -101,7 +101,7 @@ public class TestSuite {
         params.put("id", new Object[]{1, 2});
 //        params.put("id", Arrays.asList(1, 2));
         params.put("NaME", "name_5");
-        Collection<Pair<Integer, String>> results = Queries.select(db, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", params)
+        Collection<Pair<Integer, String>> results = DBUtils.select(db, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", params)
                 .stream()
                 .parallel()
                 .collect(
@@ -120,34 +120,34 @@ public class TestSuite {
 
     @Test
     public void testInsert() throws Exception {
-        int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
+        int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
         assertTrue(res == 1);
     }
 
     @Test
     public void testInsertNamed() throws Exception {
-        int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(:name)", of("name", "New_Name"));
+        int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(:name)", of("name", "New_Name"));
         assertTrue(res == 1);
-        assertTrue(Long.valueOf(11L).equals(Queries.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(11L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testUpdate() throws Exception {
-        int res = Queries.update(db, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
+        int res = DBUtils.update(db, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
         assertTrue(res == 1);
-        assertTrue(Long.valueOf(1L).equals(Queries.<Long>select(db, "SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(1L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testUpdateNamed() throws Exception {
-        int res = Queries.update(db, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", of("name", "new_name_2"), of("new_name", "name_2"));
+        int res = DBUtils.update(db, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", of("name", "new_name_2"), of("new_name", "name_2"));
         assertTrue(res == 1);
-        assertTrue(Long.valueOf(1L).equals(Queries.<Long>select(db, "SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(1L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testUpdateBatch() throws Exception {
-        assertTrue(2 == Queries.update(db, "INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}));
+        assertTrue(2 == DBUtils.update(db, "INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}));
     }
 
     @Test
@@ -158,66 +158,66 @@ public class TestSuite {
         Map<String, String> params2 = new HashMap<String, String>() {{
             put("names", "name2");
         }};
-        int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(:names)", params1, params2);
+        int res = DBUtils.update(db, "INSERT INTO TEST(name) VALUES(:names)", params1, params2);
         assertTrue(2 == res);
     }
 
     @Test
     public void testDelete() throws Exception {
-        int res = Queries.update(db, "DELETE FROM TEST WHERE name=?", "name_2");
+        int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=?", "name_2");
         assertTrue(res == 1);
-        assertTrue(Long.valueOf(9L).equals(Queries.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(9L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testDeleteNamed() throws Exception {
-        int res = Queries.update(db, "DELETE FROM TEST WHERE name=:name", of("name", "name_2"));
+        int res = DBUtils.update(db, "DELETE FROM TEST WHERE name=:name", of("name", "name_2"));
         assertTrue(res == 1);
-        assertTrue(Long.valueOf(9L).equals(Queries.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(9L).equals(DBUtils.<Long>select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test(expected = IllegalStateException.class)
     public void testDuplicatedNamedParameters() throws Exception {
-        Queries.select(db, "SELECT * FROM TEST WHERE 1=1 AND (NAME IN (:names) OR NAME=:NAMES)", of("names", "name_1"), of("NAMES", "name_2"));
+        DBUtils.select(db, "SELECT * FROM TEST WHERE 1=1 AND (NAME IN (:names) OR NAME=:NAMES)", of("names", "name_1"), of("NAMES", "name_2"));
     }
 
     @Test
     public void testVoidStoredProcedure() throws Exception {
-        Iterable<ResultSet> result = Queries.call(db, "{call CREATETESTROW2(?)}", "new_name").execute();
+        Iterable<ResultSet> result = DBUtils.call(db, "{call CREATETESTROW2(?)}", "new_name").execute();
         assertTrue(!result.iterator().hasNext());
-        assertTrue(Long.valueOf(11L).equals(Queries.select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(11L).equals(DBUtils.select(db, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test
     public void testResultSetStoredProcedure() throws Exception {
-/*        Queries.call(db, "{call CREATETESTROW1(?)}", "new_name").stream().forEach((rs) -> {
+/*        DBUtils.call(db, "{call CREATETESTROW1(?)}", "new_name").stream().forEach((rs) -> {
             try {
                 System.out.println(String.format("ID='%s', NAME='%s'", rs.getInt(1), rs.getString(2)));
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         });*/
-        assertTrue(Queries.call(db, "{call CREATETESTROW1(?)}", "new_name").stream().count() == 13);
+        assertTrue(DBUtils.call(db, "{call CREATETESTROW1(?)}", "new_name").stream().count() == 13);
     }
 
     @Test
     public void testResultSetWithResultsStoredProcedure() throws Exception {
         List<String> name = new ArrayList<>(1);
-        long count = Queries.call(db, "call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
-                .withResultHandler((cs) -> cs.getString(2), name::add).stream().count();
+        long count = DBUtils.call(db, "call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
+                .setResultHandler((cs) -> cs.getString(2), name::add).stream().count();
         assertTrue(count == 0);
         assertTrue("name_1".equals(name.get(0)));
     }
 
     @Test
     public void testGetResult() throws Exception {
-        String name = Queries.call(db, "{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2));
+        String name = DBUtils.call(db, "{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2));
         assertTrue("name_1".equals(name));
     }
 
     @Test
     public void testImmutable() throws Exception {
-        Queries.select(db, "SELECT * FROM TEST WHERE 1=1 AND ID=?", 1)
+        DBUtils.select(db, "SELECT * FROM TEST WHERE 1=1 AND ID=?", 1)
                 .execute()
                 .forEach(rs -> {
                     testImmutableAction(rs, ResultSet::next);
@@ -249,7 +249,7 @@ public class TestSuite {
     }
 
     private void printDb() {
-        Queries.select(db, "SELECT * FROM TEST")
+        DBUtils.select(db, "SELECT * FROM TEST")
                 .execute()
                 .forEach(rs -> {
                     try {
@@ -262,7 +262,7 @@ public class TestSuite {
 
     @Test
     public void testStoredProcedureRegexp() throws Exception {
-        Field f = Queries.class.getDeclaredField("STORED_PROCEDURE");
+        Field f = DBUtils.class.getDeclaredField("STORED_PROCEDURE");
         f.setAccessible(true);
         Pattern STORED_PROCEDURE = (Pattern) f.get(null);
         Stream.of(

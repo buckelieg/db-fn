@@ -15,6 +15,8 @@
 */
 package buckelieg.simpletools.db;
 
+import org.apache.log4j.Logger;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -28,7 +30,9 @@ import java.util.stream.Collectors;
 import static java.util.stream.StreamSupport.stream;
 
 @ParametersAreNonnullByDefault
-public final class Queries {
+final class DBUtils {
+
+    static final Logger LOG = Logger.getLogger(DBUtils.class);
 
     private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
     // Java regexp does not support conditional regexps. We will enumerate all possible variants.
@@ -44,34 +48,16 @@ public final class Queries {
             )
     );
 
-    private Queries() {
+    private DBUtils() {
     }
 
-    /**
-     * Calls stored procedure. Supplied params are considered as IN parameters
-     *
-     * @param conn   The Connection to operate on
-     * @param query  procedure call string
-     * @param params procedure IN parameters
-     * @return procedure call builder
-     * @see ProcedureCall
-     */
     @Nonnull
-    public static ProcedureCall call(Connection conn, String query, Object... params) {
+    static ProcedureCall call(Connection conn, String query, Object... params) {
         return call(conn, query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P<?>[params.length]));
     }
 
-    /**
-     * Calls stored procedure.
-     *
-     * @param conn   The Connection to operate on
-     * @param query  procedure call string
-     * @param params procedure parameters as declared (IN/OUT/INOUT)
-     * @return procedure call builder
-     * @see ProcedureCall
-     */
     @Nonnull
-    public static ProcedureCall call(Connection conn, String query, P<?>... params) {
+    static ProcedureCall call(Connection conn, String query, P<?>... params) {
         try {
             String lowerQuery = validateQuery(query, null);
             P<?>[] preparedParams = params;
@@ -92,13 +78,13 @@ public final class Queries {
                 );
             }
             if (!STORED_PROCEDURE.matcher(lowerQuery).matches()) {
-                throw new IllegalArgumentException(String.format("Query '%s' is not a valid procedure call statement", query));
+                throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
             }
             CallableStatement cs = requireOpened(conn).prepareCall(lowerQuery);
             for (int i = 1; i <= preparedParams.length; i++) {
                 P<?> p = preparedParams[i - 1];
                 if (p.isOut() || p.isInOut()) {
-                    cs.registerOutParameter(i, Objects.requireNonNull(p.getType(), String.format("Parameter '%s' must have SQLType set.", p)));
+                    cs.registerOutParameter(i, Objects.requireNonNull(p.getType(), String.format("Parameter '%s' must have SQLType set", p)));
                 }
                 if (p.isIn() || p.isInOut()) {
                     cs.setObject(i, p.getValue());
@@ -110,21 +96,12 @@ public final class Queries {
         }
     }
 
-    /**
-     * Executes SELECT statement on provided Connection
-     *
-     * @param conn   The Connection to operate on.
-     * @param query  SELECT query to execute. Can be WITH query
-     * @param params query parameters on the declared order of '?'
-     * @return select query builder
-     * @see Select
-     */
     @Nonnull
-    public static Select select(Connection conn, String query, Object... params) {
+    static Select select(Connection conn, String query, Object... params) {
         try {
             PreparedStatement ps = requireOpened(conn).prepareStatement(validateQuery(query, (lowerQuery) -> {
                 if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
-                    throw new IllegalArgumentException(String.format("Query '%s' is not a select statement", query));
+                    throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
                 }
             }));
             return new SelectQuery<>(setParameters(ps, params));
@@ -133,15 +110,7 @@ public final class Queries {
         }
     }
 
-    /**
-     * Executes one of DML statements: INSERT, UPDATE or DELETE.
-     *
-     * @param conn  The Connection to operate on.
-     * @param query INSERT/UPDATE/DELETE query to execute.
-     * @param batch an array of query parameters on the declared order of '?'
-     * @return affected rows
-     */
-    public static int update(Connection conn, String query, Object[]... batch) {
+    static int update(Connection conn, String query, Object[]... batch) {
         int rowsAffected = 0;
         boolean autoCommit = true;
         Savepoint savepoint = null;
@@ -157,7 +126,7 @@ public final class Queries {
                 conn.setAutoCommit(false);
                 savepoint = conn.setSavepoint();
             }
-            for (Object[] params : Objects.requireNonNull(batch, "Batch must not be null")) {
+            for (Object[] params : Objects.requireNonNull(batch, "Batch must be provided")) {
                 rowsAffected += setParameters(ps, params).executeUpdate();
             }
             ps.close();
@@ -186,72 +155,28 @@ public final class Queries {
         return rowsAffected;
     }
 
-    /**
-     * Executes SELECT statement on provided Connection
-     *
-     * @param conn        The Connection to operate on.
-     * @param query       SELECT query to execute. Can be WITH query
-     * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return select query builder
-     * @see Select
-     */
     @Nonnull
-    public static Select select(Connection conn, String query, Map<String, ?> namedParams) {
+    static Select select(Connection conn, String query, Map<String, ?> namedParams) {
         return select(conn, query, namedParams.entrySet());
     }
 
-    /**
-     * Executes SELECT statement on provided Connection
-     *
-     * @param conn        The Connection to operate on.
-     * @param query       SELECT query to execute. Can be WITH query
-     * @param namedParams query named parameters. Parameter name in the form of :name
-     * @param <T>         type bounds
-     * @return select query builder
-     * @see Select
-     */
     @Nonnull
     @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> Select select(Connection conn, String query, T... namedParams) {
+    static <T extends Map.Entry<String, ?>> Select select(Connection conn, String query, T... namedParams) {
         return select(conn, query, Arrays.asList(namedParams));
     }
 
-    /**
-     * Executes one of DML statements: INSERT, UPDATE or DELETE.
-     *
-     * @param conn   The Connection to operate on.
-     * @param query  INSERT/UPDATE/DELETE query to execute.
-     * @param params query parameters on the declared order of '?'
-     * @return affected rows
-     */
-    public static int update(Connection conn, String query, Object... params) {
+    static int update(Connection conn, String query, Object... params) {
         return update(conn, query, new Object[][]{params});
     }
 
-    /**
-     * Executes one of DML statements: INSERT, UPDATE or DELETE.
-     *
-     * @param conn        The Connection to operate on.
-     * @param query       INSERT/UPDATE/DELETE query to execute.
-     * @param namedParams query named parameters. Parameter name in the form of :name
-     * @param <T>         type bounds
-     * @return affected rows
-     */
     @SafeVarargs
-    public static <T extends Map.Entry<String, ?>> int update(Connection conn, String query, T... namedParams) {
+    static <T extends Map.Entry<String, ?>> int update(Connection conn, String query, T... namedParams) {
         return update(conn, query, Arrays.asList(namedParams));
     }
 
-    /**
-     * Executes one of DML statements: INSERT, UPDATE or DELETE.
-     *
-     * @param conn  The Connection to operate on.
-     * @param query INSERT/UPDATE/DELETE query to execute.
-     * @param batch an array of query named parameters. Parameter name in the form of :name
-     * @return affected rows
-     */
     @SafeVarargs
-    public static int update(Connection conn, String query, Map<String, ?>... batch) {
+    static int update(Connection conn, String query, Map<String, ?>... batch) {
         List<Map.Entry<String, Object[]>> params = Arrays.stream(batch).map((np) -> prepareQuery(query, np.entrySet())).collect(Collectors.toList());
         return update(conn, params.get(0).getKey(), params.stream().map(Map.Entry::getValue).collect(Collectors.toList()).toArray(new Object[params.size()][]));
     }
@@ -305,14 +230,14 @@ public final class Queries {
     }
 
     private static Connection requireOpened(Connection conn) throws SQLException {
-        if (Objects.requireNonNull(conn, "Connection to Database has top be provided").isClosed()) {
+        if (Objects.requireNonNull(conn, "Connection to Database must be provided").isClosed()) {
             throw new SQLException(String.format("Connection '%s' is closed", conn));
         }
         return conn;
     }
 
     private static String validateQuery(String query, @Nullable Consumer<String> validator) {
-        String lowerQuery = Objects.requireNonNull(query, "SQL query has to be provided").trim().toLowerCase();
+        String lowerQuery = Objects.requireNonNull(query, "SQL query must be provided").trim().toLowerCase();
         if (validator != null) {
             validator.accept(lowerQuery);
         }
@@ -321,7 +246,7 @@ public final class Queries {
 
     private static PreparedStatement setParameters(PreparedStatement ps, Object... params) throws SQLException {
         int pNum = 0;
-        for (Object p : Objects.requireNonNull(params, "Parameters must not be null")) {
+        for (Object p : Objects.requireNonNull(params, "Parameters must be provided")) {
             ps.setObject(++pNum, p);
         }
         return ps;

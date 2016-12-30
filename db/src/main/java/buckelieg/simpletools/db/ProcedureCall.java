@@ -38,12 +38,12 @@ public interface ProcedureCall extends Select {
      * Statement and other resources will be closed automatically by JDBC driver.
      *
      * @param mapper   function for procedure call results processing
-     * @param consumer mapper result consumer
+     * @param consumer mapper result consumer - will be called after mapper is finished
      * @param <T>      type bounds
      * @return query builder
      */
     @Nonnull
-    <T> Select withResultHandler(Try<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
+    <T> Select setResultHandler(Try<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
 
     /**
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
@@ -56,7 +56,7 @@ public interface ProcedureCall extends Select {
     @Nullable
     default <T> T getResult(Try<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
-        if (withResultHandler(mapper, results::add).single((rs) -> rs, null) != null) {
+        if (setResultHandler(mapper, results::add).single((rs) -> rs, null) != null) {
             throw new SQLRuntimeException("Procedure has non empty result set!");
         }
         return results.get(0);
