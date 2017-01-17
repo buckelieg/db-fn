@@ -29,7 +29,7 @@ final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements
 
     private static final Logger LOG = Logger.getLogger(ProcedureCallQuery.class);
 
-    private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
+    private Try._1<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
     private Consumer callback;
 
     ProcedureCallQuery(CallableStatement statement) {
@@ -38,7 +38,7 @@ final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements
 
     @Nonnull
     @Override
-    public <T> Select setResultHandler(Try<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
+    public <T> Select setResultHandler(Try._1<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
         this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Mapper must be provided");
         this.callback = Objects.requireNonNull(consumer, "Callback must be provided");
         return this;
@@ -52,14 +52,14 @@ final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements
     }
 
     @SuppressWarnings("unchecked")
-    protected boolean doMove() throws SQLException {
-        boolean moved = super.doMove();
+    protected boolean doHasNext() throws SQLException {
+        boolean moved = super.doHasNext();
         if (!moved) {
             try {
                 if (statement.getMoreResults()) {
                     closeResultSet();
                     rs = statement.getResultSet();
-                    return super.doMove();
+                    return super.doHasNext();
                 }
             } catch (SQLException e) {
                 logSQLException("Could not move result set on", e);

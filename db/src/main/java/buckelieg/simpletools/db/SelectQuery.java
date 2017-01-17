@@ -61,7 +61,7 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
             if (hasMoved.get()) {
                 return hasNext.get();
             }
-            hasNext.set(doMove());
+            hasNext.set(doHasNext());
             hasMoved.set(true);
         } catch (SQLException e) {
             logSQLException("Could not move result set on", e);
@@ -73,7 +73,7 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
         return hasNext.get();
     }
 
-    protected boolean doMove() throws SQLException {
+    protected boolean doHasNext() throws SQLException {
         return rs != null && rs.next();
     }
 
@@ -88,7 +88,7 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
 
     @Nullable
     @Override
-    public final <T> T single(Try<ResultSet, T, SQLException> mapper) {
+    public final <T> T single(Try._1<ResultSet, T, SQLException> mapper) {
         try {
             return Objects.requireNonNull(mapper, "Mapper must be provided").doTry(execute().iterator().next());
         } catch (SQLException | NoSuchElementException e) {
@@ -162,9 +162,11 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
 
     @Override
     public void forEachRemaining(Consumer<? super ResultSet> action) {
-        Objects.requireNonNull(action);
+        /*Objects.requireNonNull(action);
         while (hasNext()) {
             action.accept(next());
+        }*/
+        while (tryAdvance(action)) {
         }
     }
 

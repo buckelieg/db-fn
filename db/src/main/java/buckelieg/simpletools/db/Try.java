@@ -16,14 +16,26 @@
 package buckelieg.simpletools.db;
 
 @FunctionalInterface
-public interface Try<I, O, E extends Exception> {
+public interface Try<O, E extends Exception> {
 
     /**
      * Represents some function which might throw an Exception
-     * @param input optional function input.
      * @return optional value
      * @throws E in case of something went wrong
      */
-    O doTry(I input) throws E;
+    O doTry() throws E;
 
+    @FunctionalInterface
+    interface _1<I, O, E extends Exception> {
+
+        /**
+         * Represents some function which might throw an Exception
+         *
+         * @param input optional function input.
+         * @return value
+         * @throws E in case of something went wrong
+         */
+        O doTry(I input) throws E;
+
+    }
 }
