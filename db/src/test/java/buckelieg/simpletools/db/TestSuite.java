@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static buckelieg.simpletools.db.Pair.of;
+import static java.util.AbstractMap.SimpleImmutableEntry;
 import static org.junit.Assert.assertTrue;
 
 
@@ -95,10 +95,10 @@ public class TestSuite {
                 .stream()
                 .parallel()
                 .collect(
-                        ArrayList<Pair<Integer, String>>::new,
+                        ArrayList<Map.Entry<Integer, String>>::new,
                         (pList, rs) -> {
                             try {
-                                pList.add(Pair.of(rs.getInt(1), rs.getString(2)));
+                                pList.add(new SimpleImmutableEntry<>(rs.getInt(1), rs.getString(2)));
                             } catch (SQLException e) {
                                 e.printStackTrace();
                             }
@@ -114,14 +114,14 @@ public class TestSuite {
         params.put("id", new Object[]{1, 2});
 //        params.put("id", Arrays.asList(1, 2));
         params.put("NaME", "name_5");
-        Collection<Pair<Integer, String>> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", params)
+        Collection<Map.Entry<Integer, String>> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", params)
                 .stream()
                 .parallel()
                 .collect(
-                        LinkedList<Pair<Integer, String>>::new,
+                        LinkedList<Map.Entry<Integer, String>>::new,
                         (pList, rs) -> {
                             try {
-                                pList.add(Pair.of(rs.getInt(1), rs.getString(2)));
+                                pList.add(new SimpleImmutableEntry<>(rs.getInt(1), rs.getString(2)));
                             } catch (SQLException e) {
                                 e.printStackTrace();
                             }
@@ -139,7 +139,7 @@ public class TestSuite {
 
     @Test
     public void testInsertNamed() throws Exception {
-        int res = db.update("INSERT INTO TEST(name) VALUES(:name)", of("name", "New_Name"));
+        int res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name"));
         assertTrue(res == 1);
         assertTrue(Long.valueOf(11L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
@@ -153,7 +153,7 @@ public class TestSuite {
 
     @Test
     public void testUpdateNamed() throws Exception {
-        int res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", of("name", "new_name_2"), of("new_name", "name_2"));
+        int res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2"));
         assertTrue(res == 1);
         assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
     }
@@ -184,14 +184,14 @@ public class TestSuite {
 
     @Test
     public void testDeleteNamed() throws Exception {
-        int res = db.update("DELETE FROM TEST WHERE name=:name", of("name", "name_2"));
+        int res = db.update("DELETE FROM TEST WHERE name=:name", new SimpleImmutableEntry<>("name", "name_2"));
         assertTrue(res == 1);
         assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
     }
 
     @Test(expected = IllegalStateException.class)
     public void testDuplicatedNamedParameters() throws Exception {
-        db.select("SELECT * FROM TEST WHERE 1=1 AND (NAME IN (:names) OR NAME=:NAMES)", of("names", "name_1"), of("NAMES", "name_2"));
+        db.select("SELECT * FROM TEST WHERE 1=1 AND (NAME IN (:names) OR NAME=:NAMES)", new SimpleImmutableEntry<>("names", "name_1"), new SimpleImmutableEntry<>("NAMES", "name_2"));
     }
 
     @Test
@@ -279,30 +279,30 @@ public class TestSuite {
         f.setAccessible(true);
         Pattern STORED_PROCEDURE = (Pattern) f.get(null);
         Stream.of(
-                of("{call myProc()}", true),
-                of("call myProc()", true),
-                of("{call myProc}", true),
-                of("call myProc", true),
-                of("{?=call MyProc()}", true),
-                of("?=call myProc()", true),
-                of("{?=call MyProc}", true),
-                of("?=call myProc", true),
-                of("{call myProc(?)}", true),
-                of("call myProc(?)", true),
-                of("{?=call myProc(?)}", true),
-                of("?=call myProc(?)", true),
-                of("{call myProc(?,?)}", true),
-                of("call myProc(?,?)", true),
-                of("{?=call myProc(?,?)}", true),
-                of("?=call myProc(?,?)", true),
-                of("{call myProc(?,?,?)}", true),
-                of("call myProc(?,?,?)", true),
-                of("{?=call myProc(?,?,?)}", true),
-                of("?=call myProc(?,?,?)", true),
-                of("{}", false),
-                of("call ", false),
-                of("{call}", false),
-                of("call myProc(?,?,?,?,?)", true)
+                new SimpleImmutableEntry<>("{call myProc()}", true),
+                new SimpleImmutableEntry<>("call myProc()", true),
+                new SimpleImmutableEntry<>("{call myProc}", true),
+                new SimpleImmutableEntry<>("call myProc", true),
+                new SimpleImmutableEntry<>("{?=call MyProc()}", true),
+                new SimpleImmutableEntry<>("?=call myProc()", true),
+                new SimpleImmutableEntry<>("{?=call MyProc}", true),
+                new SimpleImmutableEntry<>("?=call myProc", true),
+                new SimpleImmutableEntry<>("{call myProc(?)}", true),
+                new SimpleImmutableEntry<>("call myProc(?)", true),
+                new SimpleImmutableEntry<>("{?=call myProc(?)}", true),
+                new SimpleImmutableEntry<>("?=call myProc(?)", true),
+                new SimpleImmutableEntry<>("{call myProc(?,?)}", true),
+                new SimpleImmutableEntry<>("call myProc(?,?)", true),
+                new SimpleImmutableEntry<>("{?=call myProc(?,?)}", true),
+                new SimpleImmutableEntry<>("?=call myProc(?,?)", true),
+                new SimpleImmutableEntry<>("{call myProc(?,?,?)}", true),
+                new SimpleImmutableEntry<>("call myProc(?,?,?)", true),
+                new SimpleImmutableEntry<>("{?=call myProc(?,?,?)}", true),
+                new SimpleImmutableEntry<>("?=call myProc(?,?,?)", true),
+                new SimpleImmutableEntry<>("{}", false),
+                new SimpleImmutableEntry<>("call ", false),
+                new SimpleImmutableEntry<>("{call}", false),
+                new SimpleImmutableEntry<>("call myProc(?,?,?,?,?)", true)
                 // TODO more cases here
         ).forEach(testCase -> {
             assertTrue(

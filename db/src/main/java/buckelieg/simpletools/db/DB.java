@@ -25,7 +25,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.AbstractMap.SimpleImmutableEntry;
 import static java.util.stream.StreamSupport.stream;
+
 
 @ParametersAreNonnullByDefault
 public final class DB {
@@ -44,15 +46,18 @@ public final class DB {
             )
     );
 
-    private Try<Connection, SQLException> connectionSupplier;
-    private Connection connection;
+    private final Try<Connection, SQLException> connectionSupplier;
+    private final Connection connection;
+//    private Cac
 
     public DB(Try<Connection, SQLException> connectionSupplier) {
         this.connectionSupplier = Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
+        this.connection = null;
     }
 
     public DB(Connection connection) {
         this.connection = Objects.requireNonNull(connection, "Connection must be provided");
+        this.connectionSupplier = null;
     }
 
     /**
@@ -85,7 +90,9 @@ public final class DB {
             if (namedParams == params.length) {
                 Map.Entry<String, Object[]> preparedQuery = prepareQuery(
                         lowerQuery,
-                        Arrays.stream(params).map(p -> Pair.of(p.getName(), new P<?>[]{p})).collect(Collectors.toList())
+                        Arrays.stream(params)
+                                .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
+                                .collect(Collectors.toList())
                 );
                 lowerQuery = preparedQuery.getKey();
                 preparedParams = (P<?>[]) preparedQuery.getValue();
@@ -294,7 +301,7 @@ public final class DB {
                     stream(asIterable(e.getValue()).spliterator(), false).map(o -> "?").collect(Collectors.joining(", "))
             );
         }
-        return Pair.of(lowerQuery, indicesToValues.values().toArray(new Object[indicesToValues.size()]));
+        return new SimpleImmutableEntry<>(lowerQuery, indicesToValues.values().toArray(new Object[indicesToValues.size()]));
     }
 
     private Iterable<?> asIterable(Object o) {
