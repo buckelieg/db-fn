@@ -333,8 +333,9 @@ public final class DB {
     }
 
     private PreparedStatement setParameters(PreparedStatement ps, Object... params) throws SQLException {
+        Objects.requireNonNull(params, "Parameters must be provided");
         int pNum = 0;
-        for (Object p : Objects.requireNonNull(params, "Parameters must be provided")) {
+        for (Object p : params) {
             ps.setObject(++pNum, p);
         }
         return ps;
