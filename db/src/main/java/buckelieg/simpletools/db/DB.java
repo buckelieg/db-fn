@@ -48,13 +48,22 @@ public final class DB {
 
     private final Try<Connection, SQLException> connectionSupplier;
     private final Connection connection;
-//    private Cac
 
+    /**
+     * Creates DB with connection supplier.
+     *
+     * @param connectionSupplier the connection supplier.
+     */
     public DB(Try<Connection, SQLException> connectionSupplier) {
         this.connectionSupplier = Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
         this.connection = null;
     }
 
+    /**
+     * Creates DB with provided connection
+     *
+     * @param connection the connection to operate on
+     */
     public DB(Connection connection) {
         this.connection = Objects.requireNonNull(connection, "Connection must be provided");
         this.connectionSupplier = null;

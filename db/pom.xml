@@ -46,11 +46,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
             <version>10.12.1.1</version>
