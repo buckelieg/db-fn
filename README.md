@@ -14,14 +14,12 @@ Add maven dependency:
 ```
 Operate on result set in a functional way.
 #### Setup database
-Setup can be done in to ways:
-##### By providing connection itself:
+Setup can be done several ways:
 ```java
+// By providing connection itself
 DB db = new DB(DriverManager.getConnection("vendor-specific-string"));
 ...
-```
-##### By providing connection supplier:
-```java
+// By providing connection supplier
 DataSource ds = obtain ds (e.g. via JNDI or other way) 
 DB db = new DB(ds::getConnection);
 ...
