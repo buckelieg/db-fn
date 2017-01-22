@@ -36,7 +36,7 @@ Project intended to simplify the things for java developer. </p>
 <pre><code>&lt;dependency&gt;
   &lt;groupId&gt;com.github.buckelieg&lt;/groupId&gt;
   &lt;artifactId&gt;db-tools&lt;/artifactId&gt;
-  &lt;version&gt;0.5&lt;/version&gt;
+  &lt;version&gt;0.6&lt;/version&gt;
 &lt;/dependency&gt;
 </code></pre>
 
@@ -45,19 +45,13 @@ Project intended to simplify the things for java developer. </p>
 <h4>
 <a id="setup-database" class="anchor" href="#setup-database" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setup database</h4>
 
-<p>Setup can be done in to ways:</p>
+<p>Setup can be done several ways:</p>
 
-<h5>
-<a id="by-providing-connection-itself" class="anchor" href="#by-providing-connection-itself" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>By providing connection itself:</h5>
-
-<div class="highlight highlight-source-java"><pre><span class="pl-smi">Connection</span> conn <span class="pl-k">=</span> <span class="pl-smi">DriverManager</span><span class="pl-k">.</span>getConnection(<span class="pl-s"><span class="pl-pds">"</span>vendor-specific-string<span class="pl-pds">"</span></span>);
-<span class="pl-smi">DB</span> db <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">DB</span>(conn);
-<span class="pl-c1">...</span></pre></div>
-
-<h5>
-<a id="by-providing-connection-supplier" class="anchor" href="#by-providing-connection-supplier" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>By providing connection supplier:</h5>
-
-<div class="highlight highlight-source-java"><pre><span class="pl-smi">DataSource</span> ds <span class="pl-k">=</span> obtain ds (e<span class="pl-k">.</span>g. via <span class="pl-c1">JNDI</span> or other way) 
+<div class="highlight highlight-source-java"><pre><span class="pl-c"><span class="pl-c">//</span> By providing connection itself</span>
+<span class="pl-smi">DB</span> db <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">DB</span>(<span class="pl-smi">DriverManager</span><span class="pl-k">.</span>getConnection(<span class="pl-s"><span class="pl-pds">"</span>vendor-specific-string<span class="pl-pds">"</span></span>));
+<span class="pl-c1">...</span>
+<span class="pl-c"><span class="pl-c">//</span> By providing connection supplier</span>
+<span class="pl-smi">DataSource</span> ds <span class="pl-k">=</span> obtain ds (e<span class="pl-k">.</span>g. via <span class="pl-c1">JNDI</span> or other way) 
 <span class="pl-smi">DB</span> db <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">DB</span>(ds<span class="pl-k">::</span>getConnection);
 <span class="pl-c1">...</span>
 <span class="pl-c"><span class="pl-c">//</span> or</span>
