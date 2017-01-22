@@ -9,7 +9,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-tools</artifactId>
-  <version>0.5</version>
+  <version>0.6</version>
 </dependency>
 ```
 Operate on result set in a functional way.
