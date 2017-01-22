@@ -160,7 +160,6 @@ public final class DB {
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @param batch an array of query parameters on the declared order of '?'
      * @return update query builder
-     * @see Update
      */
     public int update(String query, Object[]... batch) {
         int rowsAffected = 0;
@@ -243,7 +242,6 @@ public final class DB {
      * @param query  INSERT/UPDATE/DELETE query to execute.
      * @param params query parameters on the declared order of '?'
      * @return update query builder
-     * @see Update
      */
     public int update(String query, Object... params) {
         return update(query, new Object[][]{params});
@@ -256,7 +254,6 @@ public final class DB {
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @param <T>         type bounds
      * @return update query builder
-     * @see Update
      */
     @SafeVarargs
     public final <T extends Map.Entry<String, ?>> int update(String query, T... namedParams) {
@@ -269,7 +266,6 @@ public final class DB {
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return update query builder
-     * @see Update
      */
     @SafeVarargs
     public final int update(String query, Map<String, ?>... batch) {
