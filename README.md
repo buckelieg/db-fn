@@ -9,14 +9,31 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-tools</artifactId>
-  <version>0.4</version>
+  <version>0.5</version>
 </dependency>
 ```
 Operate on result set in a functional way.
+#### Setup database
+Setup can be done in to ways:
+##### By providing connection itself:
+```java
+Connection conn = DriverManager.getConnection("vendor-specific-string");
+DB db = new DB(conn);
+...
+```
+##### By providing connection supplier:
+```java
+DataSource ds = obtain ds (e.g. via JNDI or other way) 
+DB db = new DB(ds::getConnection);
+...
+// or
+DB db = new DB(() -> {sophisticated connection supplier function});
+...
+```
 #### Select
 Use question marks:
 ```java
-Collection<T> results = Queries.select(conn, "SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
+Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
                 .stream().collect(
                         LinkedList<T>::new,
                         (pList, rs) -> {
@@ -31,7 +48,7 @@ Collection<T> results = Queries.select(conn, "SELECT * FROM TEST WHERE ID IN (?,
 ```
 or use named parameters:
 ```java
-Collection<T> results = Queries.select(conn, "SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
+Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
             put("id", new Object[]{1, 2});
             put("NaME", "name_5");
         }}).stream().collect(
@@ -54,36 +71,36 @@ These operations could be run in batch mode. Just supply an array of parameters 
 
 with question marks:
 ```java
-int res = Queries.update(conn, "INSERT INTO TEST(name) VALUES(?)", "New_Name");
+int res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name");
 ```
 Or with named parameters:
 ```java
-int res = Queries.update(conn, "INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
+int res = db.update("INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
 ```
 ##### Update
 ```java
-int res = Queries.update(conn, "UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
+int res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
 ```
 or
 ```java
-int res = Queries.update(conn, "UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
+int res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
 ```
 For batch operation use:
 ```java
-int res = Queries.update(db, "INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}});
+int res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}});
 ```  
 ##### Delete
 ```java
-int res = Queries.update(conn, "DELETE FROM TEST WHERE name=?", "name_2");
+int res = db.update("DELETE FROM TEST WHERE name=?", "name_2");
 ```
 and so on. Explore test suite for more examples.
 
 #### ETL
 implement simple ETL process:
 ```java
-long count = Queries.<Long>select(conn, "SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1));
+long count = db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1));
 // calculate partitions here and split work to threads if needed
-Executors.newCachedThreadPool().submit(() -> Queries.select(conn, " SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end)
+Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end)
 .stream(rs -> /*map result set here*/).forEach(obj -> {
             // do things here...
         }));
@@ -92,7 +109,7 @@ Executors.newCachedThreadPool().submit(() -> Queries.select(conn, " SELECT * FRO
 #### Stored Procedures
 Invoking stored procedures is also quite simple:
 ```java
-String name = Queries.call(conn, "{call GETNAMEBYID(?,?)}", P.in(12), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2));
+String name = db.call("{call GETNAMEBYID(?,?)}", P.in(12), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2));
 ```
 Note that in the latter case stored procedure must not return any result sets.
 If stored procedure is considered to return result sets it is handled similar to regular selects (see above).
