@@ -50,18 +50,18 @@ Project intended to simplify the things for java developer. </p>
 <h5>
 <a id="by-providing-connection-itself" class="anchor" href="#by-providing-connection-itself" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>By providing connection itself:</h5>
 
-<div class="highlight highlight-source-java"><pre><span class="pl-smi">Connection</span> conn <span class="pl-k">=</span> <span class="pl-smi">DriverManager</span><span class="pl-k">.</span>getConnection(<span class="pl-s"><span class="pl-pds">"</span>vendor-specific-string-here<span class="pl-pds">"</span></span>);
+<div class="highlight highlight-source-java"><pre><span class="pl-smi">Connection</span> conn <span class="pl-k">=</span> <span class="pl-smi">DriverManager</span><span class="pl-k">.</span>getConnection(<span class="pl-s"><span class="pl-pds">"</span>vendor-specific-string<span class="pl-pds">"</span></span>);
 <span class="pl-smi">DB</span> db <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">DB</span>(conn);
 <span class="pl-c1">...</span></pre></div>
 
 <h5>
 <a id="by-providing-connection-supplier" class="anchor" href="#by-providing-connection-supplier" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>By providing connection supplier:</h5>
 
-<div class="highlight highlight-source-java"><pre><span class="pl-smi">DataSource</span> ds <span class="pl-k">=</span> obtain ds here (e<span class="pl-k">.</span>g. via <span class="pl-c1">JNDI</span> or other way) 
+<div class="highlight highlight-source-java"><pre><span class="pl-smi">DataSource</span> ds <span class="pl-k">=</span> obtain ds (e<span class="pl-k">.</span>g. via <span class="pl-c1">JNDI</span> or other way) 
 <span class="pl-smi">DB</span> db <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">DB</span>(ds<span class="pl-k">::</span>getConnection);
 <span class="pl-c1">...</span>
 <span class="pl-c"><span class="pl-c">//</span> or</span>
-<span class="pl-smi">DB</span> db <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">DB</span>(() <span class="pl-k">-</span><span class="pl-k">&gt;</span> {sophisticated connection supplier function here});
+<span class="pl-smi">DB</span> db <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">DB</span>(() <span class="pl-k">-</span><span class="pl-k">&gt;</span> {sophisticated connection supplier function});
 <span class="pl-c1">...</span></pre></div>
 
 <h4>
