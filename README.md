@@ -17,17 +17,17 @@ Operate on result set in a functional way.
 Setup can be done in to ways:
 ##### By providing connection itself:
 ```java
-Connection conn = DriverManager.getConnection("vendor-specific-string-here");
+Connection conn = DriverManager.getConnection("vendor-specific-string");
 DB db = new DB(conn);
 ...
 ```
 ##### By providing connection supplier:
 ```java
-DataSource ds = obtain ds here (e.g. via JNDI or other way) 
+DataSource ds = obtain ds (e.g. via JNDI or other way) 
 DB db = new DB(ds::getConnection);
 ...
 // or
-DB db = new DB(() -> {sophisticated connection supplier function here});
+DB db = new DB(() -> {sophisticated connection supplier function});
 ...
 ```
 #### Select
