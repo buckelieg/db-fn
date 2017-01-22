@@ -17,8 +17,7 @@ Operate on result set in a functional way.
 Setup can be done in to ways:
 ##### By providing connection itself:
 ```java
-Connection conn = DriverManager.getConnection("vendor-specific-string");
-DB db = new DB(conn);
+DB db = new DB(DriverManager.getConnection("vendor-specific-string"));
 ...
 ```
 ##### By providing connection supplier:
