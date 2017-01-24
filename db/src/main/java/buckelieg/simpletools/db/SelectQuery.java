@@ -122,9 +122,9 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
     @Override
     public final Select batchSize(int size) {
         try {
-            batchSize = rs != null && rs.getFetchSize() >= size ? rs.getFetchSize() : size > 0 ? size : 0;
+            batchSize = rs != null && rs.getFetchSize() >= size ? rs.getFetchSize() : size > 0 ? size : 0; // 0 value is ignored by ResultSet.setFetchSize
         } catch (SQLException e) {
-            batchSize = size > 0 ? size : 0; // 0 value is ignored by ResultSet.setFetchSize
+            throw new SQLRuntimeException(e);
         }
         return this;
     }
