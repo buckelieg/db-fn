@@ -9,20 +9,17 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-tools</artifactId>
-  <version>0.5</version>
+  <version>0.6</version>
 </dependency>
 ```
 Operate on result set in a functional way.
 #### Setup database
-Setup can be done in to ways:
-##### By providing connection itself:
+Setup can be done several ways:
 ```java
-Connection conn = DriverManager.getConnection("vendor-specific-string");
-DB db = new DB(conn);
+// By providing connection itself
+DB db = new DB(DriverManager.getConnection("vendor-specific-string"));
 ...
-```
-##### By providing connection supplier:
-```java
+// By providing connection supplier
 DataSource ds = obtain ds (e.g. via JNDI or other way) 
 DB db = new DB(ds::getConnection);
 ...
