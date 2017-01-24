@@ -133,7 +133,18 @@ public final class DB {
     }
 
     /**
-     * Executes SELECT statement on provided Connection
+     * Executes SELECT statement
+     *
+     * @param query SELECT query to execute. Can be WITH query
+     * @return select query builder
+     * @see Select
+     */
+    public Select select(String query) {
+        return select(query, new Object[0]);
+    }
+
+    /**
+     * Executes SELECT statement
      *
      * @param query  SELECT query to execute. Can be WITH query
      * @param params query parameters on the declared order of '?'
@@ -209,7 +220,7 @@ public final class DB {
     }
 
     /**
-     * Executes SELECT statement on provided Connection
+     * Executes SELECT statement
      *
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
@@ -222,7 +233,7 @@ public final class DB {
     }
 
     /**
-     * Executes SELECT statement on provided Connection
+     * Executes SELECT statement
      *
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
@@ -234,6 +245,16 @@ public final class DB {
     @SafeVarargs
     public final <T extends Map.Entry<String, ?>> Select select(String query, T... namedParams) {
         return select(query, Arrays.asList(namedParams));
+    }
+
+    /**
+     * Executes one of DML statements: INSERT, UPDATE or DELETE.
+     *
+     * @param query INSERT/UPDATE/DELETE query to execute.
+     * @return update query builder
+     */
+    public int update(String query) {
+        return update(query, new Object[0]);
     }
 
     /**

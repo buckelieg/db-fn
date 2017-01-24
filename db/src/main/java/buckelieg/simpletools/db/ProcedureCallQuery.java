@@ -55,14 +55,12 @@ final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements
     protected boolean doHasNext() throws SQLException {
         boolean moved = super.doHasNext();
         if (!moved) {
-            try {
-                if (statement.getMoreResults()) {
-                    closeResultSet();
-                    rs = statement.getResultSet();
-                    return super.doHasNext();
+            if (statement.getMoreResults()) {
+                if (rs != null && !rs.isClosed()) {
+                    rs.close();
                 }
-            } catch (SQLException e) {
-                logSQLException("Could not move result set on", e);
+                rs = statement.getResultSet();
+                return super.doHasNext();
             }
             try {
                 if (storedProcedureResultsHandler != null && callback != null) {
@@ -73,19 +71,6 @@ final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements
             }
         }
         return moved;
-    }
-
-    private void closeResultSet() {
-        try {
-            if (rs != null && !rs.isClosed()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("Closing ResultSet '%s'", rs));
-                }
-                rs.close();
-            }
-        } catch (SQLException e) {
-            logSQLException("Could not close ResultSet", e);
-        }
     }
 
 }

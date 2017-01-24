@@ -132,6 +132,16 @@ public class TestSuite {
     }
 
     @Test
+    public void testSelectNoParams() throws Exception {
+        assertTrue(10 == db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)));
+    }
+
+    @Test
+    public void testUpdateNoParams() throws Exception {
+        assertTrue(10 == db.update("DELETE FROM TEST"));
+    }
+
+    @Test
     public void testInsert() throws Exception {
         int res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name");
         assertTrue(res == 1);

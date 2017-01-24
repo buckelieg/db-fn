@@ -64,7 +64,6 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
             hasNext.set(doHasNext());
             hasMoved.set(true);
         } catch (SQLException e) {
-            logSQLException("Could not move result set on", e);
             hasNext.set(false);
         }
         if (!hasNext.get()) {
@@ -110,7 +109,7 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
                 this.wrapper = new ImmutableResultSet(rs);
             }
         } catch (SQLException e) {
-            logSQLException(String.format("Could not execute statement '%s'", statement), e);
+            throw new SQLRuntimeException(e);
         }
         return this;
     }
@@ -173,21 +172,11 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
     final void close() {
         try {
             if (statement != null && !statement.isClosed()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("Closing statement '%s'", statement));
-                }
                 statement.close(); // by JDBC spec: subsequently closes all result sets opened by this statement
             }
         } catch (SQLException e) {
-            logSQLException(String.format("Could not close the statement '%s'", statement), e);
+            throw new SQLRuntimeException(e);
         }
 
-    }
-
-    final void logSQLException(String prepend, SQLException e) {
-        LOG.warn(String.format(prepend == null || prepend.isEmpty() ? "Caught '%s'" : prepend + " due to '%s'", e.getMessage()));
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(e);
-        }
     }
 }

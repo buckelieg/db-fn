@@ -15,9 +15,14 @@
 */
 package buckelieg.simpletools.db;
 
+import javax.annotation.Nonnull;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
  * Query abstraction. Can be considered as builder for queries
  * Gives a control to set up statements and do other tunings in the future.
+ *
  * @param <R> query execution results type
  */
 public interface Query<R> {
@@ -27,6 +32,7 @@ public interface Query<R> {
      *
      * @return query execution result
      */
-    R execute();
+    @Nonnull
+    Iterable<ResultSet> execute() throws SQLException;
 
 }

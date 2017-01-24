@@ -72,7 +72,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * calling some 'reduction' (terminal) operation we left resource freeing to JDBC
      *
      * @return a Stream over Iterable.
-     * @see #execute()
+     * @see Query#execute()
      */
     @Nonnull
     default Stream<ResultSet> stream() {
