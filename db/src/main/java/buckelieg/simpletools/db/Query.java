@@ -16,7 +16,6 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
-import java.sql.ResultSet;
 
 /**
  * Query abstraction. Can be considered as builder for queries
@@ -32,6 +31,6 @@ public interface Query<R> {
      * @return query execution result
      */
     @Nonnull
-    Iterable<ResultSet> execute();
+    Iterable<R> execute();
 
 }
