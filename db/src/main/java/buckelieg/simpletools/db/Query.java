@@ -31,6 +31,6 @@ public interface Query<R> {
      * @return query execution result
      */
     @Nonnull
-    Iterable<R> execute();
+    R execute();
 
 }
