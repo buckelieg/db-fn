@@ -46,7 +46,7 @@ Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
 or use named parameters:
 ```java
 Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", 
-  new HashMap<String, Object>() {{ put("id", new Object[]{1, 2}); put("NaME", "name_5");}}).stream().collect(
+  new HashMap<String, Object>(){ { put("id", new Object[]{1, 2}); put("NaME", "name_5");} }).stream().collect(
                 LinkedList<T>::new,
                 (pList, rs) -> {
                     try {
