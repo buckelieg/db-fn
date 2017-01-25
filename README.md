@@ -45,10 +45,8 @@ Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
 ```
 or use named parameters:
 ```java
-Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
-            put("id", new Object[]{1, 2});
-            put("NaME", "name_5");
-        }}).stream().collect(
+Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", 
+  new HashMap<String, Object>() {{ put("id", new Object[]{1, 2}); put("NaME", "name_5");}}).stream().collect(
                 LinkedList<T>::new,
                 (pList, rs) -> {
                     try {
@@ -84,7 +82,7 @@ int res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<
 ```
 For batch operation use:
 ```java
-int res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}});
+int res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{ {"name1"}, {"name2"} });
 ```  
 ##### Delete
 ```java
