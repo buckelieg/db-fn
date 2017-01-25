@@ -1,8 +1,0 @@
-title: Simple-tools
-description: Developer tools to simplify regular tasks
-google_analytics: 
-show_downloads: true
-theme: jekyll-theme-cayman
-
-gems:
-  - jekyll-mentions
