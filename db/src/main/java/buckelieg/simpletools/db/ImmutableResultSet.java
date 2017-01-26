@@ -173,8 +173,9 @@ final class ImmutableResultSet implements ResultSet {
     }
 
     @Override
+    @Deprecated
     public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
-        return delegate.getBigDecimal(columnLabel);
+        return delegate.getBigDecimal(columnLabel, scale);
     }
 
     @Override
