@@ -15,8 +15,6 @@
 */
 package buckelieg.simpletools.db;
 
-import org.apache.log4j.Logger;
-
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.CallableStatement;
@@ -26,8 +24,6 @@ import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 final class ProcedureCallQuery extends SelectQuery<CallableStatement> implements ProcedureCall {
-
-    private static final Logger LOG = Logger.getLogger(ProcedureCallQuery.class);
 
     private Try._1<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
     private Consumer callback;

@@ -15,8 +15,6 @@
 */
 package buckelieg.simpletools.db;
 
-import org.apache.log4j.Logger;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -34,8 +32,6 @@ import java.util.function.Consumer;
 @NotThreadSafe
 @ParametersAreNonnullByDefault
 class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
-
-    private static final Logger LOG = Logger.getLogger(SelectQuery.class);
 
     final S statement;
     private final AtomicBoolean hasNext;
