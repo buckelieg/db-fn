@@ -656,22 +656,22 @@ final class ImmutableResultSet implements ResultSet {
 
     @Override
     public Date getDate(int columnIndex, Calendar cal) throws SQLException {
-        return delegate.getDate(columnIndex);
+        return delegate.getDate(columnIndex, cal);
     }
 
     @Override
     public Date getDate(String columnLabel, Calendar cal) throws SQLException {
-        return delegate.getDate(columnLabel);
+        return delegate.getDate(columnLabel, cal);
     }
 
     @Override
     public Time getTime(int columnIndex, Calendar cal) throws SQLException {
-        return delegate.getTime(columnIndex);
+        return delegate.getTime(columnIndex, cal);
     }
 
     @Override
     public Time getTime(String columnLabel, Calendar cal) throws SQLException {
-        return delegate.getTime(columnLabel);
+        return delegate.getTime(columnLabel, cal);
     }
 
     @Override
