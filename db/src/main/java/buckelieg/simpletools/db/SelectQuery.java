@@ -157,10 +157,6 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
 
     @Override
     public void forEachRemaining(Consumer<? super ResultSet> action) {
-        /*Objects.requireNonNull(action);
-        while (hasNext()) {
-            action.accept(next());
-        }*/
         while (tryAdvance(action)) {
         }
     }

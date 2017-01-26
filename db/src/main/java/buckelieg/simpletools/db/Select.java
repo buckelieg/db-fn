@@ -114,7 +114,6 @@ public interface Select extends Query<Iterable<ResultSet>> {
         try {
             return single(mapper);
         } catch (Exception e) {
-            // TODO use try monad here?
             return defaultValue;
         }
     }
