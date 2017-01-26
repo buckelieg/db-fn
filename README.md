@@ -9,7 +9,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-tools</artifactId>
-  <version>0.8</version>
+  <version>0.9</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -45,8 +45,8 @@ Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
 ```
 or use named parameters:
 ```java
-Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>() {{
-            put("id", new Object[]{1, 2});
+Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>(){{
+            put("id", new Object[]{1, 2}); 
             put("NaME", "name_5");
         }}).stream().collect(
                 LinkedList<T>::new,
