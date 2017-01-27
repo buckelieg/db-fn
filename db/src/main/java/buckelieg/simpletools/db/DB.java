@@ -362,7 +362,7 @@ public final class DB {
         Objects.requireNonNull(params, "Parameters must be provided");
         int pNum = 0;
         for (Object p : params) {
-            ps.setObject(++pNum, p);
+            ps.setObject(++pNum, p); // TODO introduce type conversion here...
         }
         return ps;
     }
