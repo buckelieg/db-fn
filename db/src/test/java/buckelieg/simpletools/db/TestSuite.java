@@ -151,21 +151,21 @@ public class TestSuite {
     public void testInsertNamed() throws Exception {
         int res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name"));
         assertTrue(res == 1);
-        assertTrue(Long.valueOf(11L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(11L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
     public void testUpdate() throws Exception {
         int res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
         assertTrue(res == 1);
-        assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
     public void testUpdateNamed() throws Exception {
         int res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2"));
         assertTrue(res == 1);
-        assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
@@ -189,14 +189,14 @@ public class TestSuite {
     public void testDelete() throws Exception {
         int res = db.update("DELETE FROM TEST WHERE name=?", "name_2");
         assertTrue(res == 1);
-        assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
     public void testDeleteNamed() throws Exception {
         int res = db.update("DELETE FROM TEST WHERE name=:name", new SimpleImmutableEntry<>("name", "name_2"));
         assertTrue(res == 1);
-        assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -208,7 +208,7 @@ public class TestSuite {
     public void testVoidStoredProcedure() throws Exception {
         Iterable<ResultSet> result = db.call("{call CREATETESTROW2(?)}", "new_name").execute();
         assertTrue(!result.iterator().hasNext());
-        assertTrue(Long.valueOf(11L).equals(db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1))));
+        assertTrue(Long.valueOf(11L).equals(db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
