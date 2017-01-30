@@ -16,16 +16,12 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -81,16 +77,20 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
         return wrapper;
     }
 
-    @Nullable
+    @Nonnull
     @Override
-    public final <T> T single(Try._1<ResultSet, T, SQLException> mapper) {
+    public final <T> Optional<T> single(Try._1<ResultSet, T, SQLException> mapper) {
+        T value;
         try {
-            return Objects.requireNonNull(mapper, "Mapper must be provided").doTry(execute().iterator().next());
-        } catch (SQLException | NoSuchElementException e) {
+            value = Objects.requireNonNull(mapper, "Mapper must be provided").doTry(execute().iterator().next());
+        } catch (NoSuchElementException e) {
+            value = null;
+        } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         } finally {
             close();
         }
+        return Optional.ofNullable(value);
     }
 
     @Nonnull

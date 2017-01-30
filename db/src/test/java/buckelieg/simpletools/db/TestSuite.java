@@ -133,7 +133,7 @@ public class TestSuite {
 
     @Test
     public void testSelectNoParams() throws Exception {
-        assertTrue(10 == db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)));
+        assertTrue(10 == db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)).get());
     }
 
     @Test

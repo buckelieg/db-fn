@@ -16,11 +16,11 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -38,8 +38,8 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @param <T>    type bounds
      * @return mapped object
      */
-    @Nullable
-    <T> T single(Try._1<ResultSet, T, SQLException> mapper);
+    @Nonnull
+    <T> Optional<T> single(Try._1<ResultSet, T, SQLException> mapper);
 
     /**
      * Iterable abstraction over ResultSet.
@@ -97,25 +97,6 @@ public interface Select extends Query<Iterable<ResultSet>> {
                 throw new SQLRuntimeException(e);
             }
         });
-    }
-
-    /**
-     * Single that silently suppresses Exceptions.
-     *
-     * @param mapper       result set mapper
-     * @param defaultValue a value to return if an exception occurs
-     * @param <T>          type bounds
-     * @return mapped object or provided value in case of errors
-     * @see #single(Try._1)
-     */
-    @Nullable
-    default <T> T single(Try._1<ResultSet, T, SQLException> mapper, @Nullable T defaultValue) {
-        Objects.requireNonNull(mapper, "Mapper must be provided");
-        try {
-            return single(mapper);
-        } catch (Exception e) {
-            return defaultValue;
-        }
     }
 
 }
