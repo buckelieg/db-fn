@@ -88,9 +88,7 @@ implement simple ETL process:
 long count = db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1));
 // calculate partitions here and split work to threads if needed
 Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end)
-.stream(rs -> /*map result set here*/).forEach(obj -> {
-            // do things here...
-        }));
+.stream(rs -> /*map rs here*/).forEach(obj -> { /* do things here...*/}));
 ```
 
 #### Stored Procedures
