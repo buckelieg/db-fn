@@ -85,7 +85,7 @@ and so on. Explore test suite for more examples.
 #### ETL
 implement simple ETL process:
 ```java
-long count = db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1));
+long count = db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get();
 // calculate partitions here and split work to threads if needed
 Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end)
 .stream(rs -> /*map rs here*/).forEach(obj -> { /* do things here...*/}));
