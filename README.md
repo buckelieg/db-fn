@@ -20,11 +20,11 @@ Setup can be done several ways:
 DB db = new DB(DriverManager.getConnection("vendor-specific-string"));
 ...
 // By providing connection supplier
-DataSource ds = obtain ds (e.g. via JNDI or other way) 
+DataSource ds = // obtain ds (e.g. via JNDI or other way) 
 DB db = new DB(ds::getConnection);
 ...
 // or
-DB db = new DB(() -> {sophisticated connection supplier function});
+DB db = new DB(() -> {/*sophisticated connection supplier function*/});
 ...
 ```
 #### Select
@@ -88,7 +88,7 @@ implement simple ETL process:
 long count = db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get();
 // calculate partitions here and split work to threads if needed
 Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end)
-.stream(rs -> /*map rs here*/).forEach(obj -> { /* do things here...*/}));
+.stream(rs -> {/*map rs here*/}).forEach(obj -> {/* do things here...*/}));
 ```
 
 #### Stored Procedures
