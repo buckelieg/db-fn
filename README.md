@@ -31,7 +31,7 @@ DB db = new DB(() -> {/*sophisticated connection supplier function*/});
 Use question marks:
 ```java
 Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
-                .stream(rs -> /*map rs here*/).collect(Collectors.toList());
+                .stream(rs ->{/*map rs here*/}).collect(Collectors.toList());
 ```
 or use named parameters:
 ```java
