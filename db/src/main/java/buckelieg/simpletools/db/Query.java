@@ -18,8 +18,7 @@ package buckelieg.simpletools.db;
 import javax.annotation.Nonnull;
 
 /**
- * Query abstraction. Can be considered as builder for queries
- * Gives a control to set up statements and do other tunings in the future.
+ * Query abstraction.
  *
  * @param <R> query execution results type
  */
