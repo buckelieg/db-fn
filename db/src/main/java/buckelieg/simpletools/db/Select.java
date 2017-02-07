@@ -90,7 +90,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
     @Nonnull
     default <T> Stream<T> stream(Try._1<ResultSet, T, SQLException> mapper) {
         Objects.requireNonNull(mapper, "Mapper must be provided");
-        return stream().map((rs) -> {
+        return stream().map(rs -> {
             try {
                 return mapper.doTry(rs);
             } catch (SQLException e) {

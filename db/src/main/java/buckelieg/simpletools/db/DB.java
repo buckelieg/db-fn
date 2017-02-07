@@ -24,11 +24,12 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.AbstractMap.SimpleImmutableEntry;
 import static java.util.stream.StreamSupport.stream;
 
-
+@SuppressWarnings("varargs")
 @ParametersAreNonnullByDefault
 public final class DB {
 
@@ -99,7 +100,7 @@ public final class DB {
             if (namedParams == params.length) {
                 Map.Entry<String, Object[]> preparedQuery = prepareQuery(
                         lowerQuery,
-                        Arrays.stream(params)
+                        Stream.of(params)
                                 .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
                                 .collect(Collectors.toList())
                 );
@@ -154,7 +155,7 @@ public final class DB {
     @Nonnull
     public Select select(String query, Object... params) {
         try {
-            PreparedStatement ps = getConnection().prepareStatement(validateQuery(query, (lowerQuery) -> {
+            PreparedStatement ps = getConnection().prepareStatement(validateQuery(query, lowerQuery -> {
                 if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
                     throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
                 }
@@ -179,7 +180,7 @@ public final class DB {
         Connection conn = null;
         try {
             conn = getConnection();
-            PreparedStatement ps = conn.prepareStatement(validateQuery(query, (lowerQuery) -> {
+            PreparedStatement ps = conn.prepareStatement(validateQuery(query, lowerQuery -> {
                 if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
                     throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
                 }
@@ -242,8 +243,7 @@ public final class DB {
      * @see Select
      */
     @Nonnull
-    @SafeVarargs
-    public final <T extends Map.Entry<String, ?>> Select select(String query, T... namedParams) {
+    public <T extends Map.Entry<String, ?>> Select select(String query, T... namedParams) {
         return select(query, Arrays.asList(namedParams));
     }
 
@@ -276,8 +276,7 @@ public final class DB {
      * @param <T>         type bounds
      * @return update query builder
      */
-    @SafeVarargs
-    public final <T extends Map.Entry<String, ?>> int update(String query, T... namedParams) {
+    public <T extends Map.Entry<String, ?>> int update(String query, T... namedParams) {
         return update(query, Arrays.asList(namedParams));
     }
 
@@ -288,9 +287,8 @@ public final class DB {
      * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return update query builder
      */
-    @SafeVarargs
-    public final int update(String query, Map<String, ?>... batch) {
-        List<Map.Entry<String, Object[]>> params = Arrays.stream(batch).map((np) -> prepareQuery(query, np.entrySet())).collect(Collectors.toList());
+    public int update(String query, Map<String, ?>... batch) {
+        List<Map.Entry<String, Object[]>> params = Stream.of(batch).map(np -> prepareQuery(query, np.entrySet())).collect(Collectors.toList());
         return update(params.get(0).getKey(), params.stream().map(Map.Entry::getValue).collect(Collectors.toList()).toArray(new Object[params.size()][]));
     }
 
