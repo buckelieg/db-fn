@@ -9,7 +9,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-tools</artifactId>
-  <version>0.10</version>
+  <version>0.11</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -20,28 +20,18 @@ Setup can be done several ways:
 DB db = new DB(DriverManager.getConnection("vendor-specific-string"));
 ...
 // By providing connection supplier
-DataSource ds = obtain ds (e.g. via JNDI or other way) 
+DataSource ds = // obtain ds (e.g. via JNDI or other way) 
 DB db = new DB(ds::getConnection);
 ...
 // or
-DB db = new DB(() -> {sophisticated connection supplier function});
+DB db = new DB(() -> {/*sophisticated connection supplier function*/});
 ...
 ```
 #### Select
 Use question marks:
 ```java
 Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
-                .stream().collect(
-                        LinkedList<T>::new,
-                        (pList, rs) -> {
-                            try {
-                                pList.add(...);
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                            }
-                        },
-                        Collection::addAll
-                );
+                .stream(rs ->{/*map rs here*/}).collect(Collectors.toList());
 ```
 or use named parameters:
 ```java
@@ -95,12 +85,10 @@ and so on. Explore test suite for more examples.
 #### ETL
 implement simple ETL process:
 ```java
-long count = db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1));
+long count = db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get();
 // calculate partitions here and split work to threads if needed
 Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end)
-.stream(rs -> /*map result set here*/).forEach(obj -> {
-            // do things here...
-        }));
+.stream(rs -> {/*map rs here*/}).forEach(obj -> {/* do things here...*/}));
 ```
 
 #### Stored Procedures
