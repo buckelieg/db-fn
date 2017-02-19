@@ -31,7 +31,7 @@ import static java.util.stream.StreamSupport.stream;
 
 @SuppressWarnings("varargs")
 @ParametersAreNonnullByDefault
-public final class DB {
+public final class DB implements AutoCloseable {
 
     private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
     // Java regexp does not support conditional regexps. We will enumerate all possible variants.
@@ -68,6 +68,11 @@ public final class DB {
     public DB(Connection connection) {
         this.connection = Objects.requireNonNull(connection, "Connection must be provided");
         this.connectionSupplier = null;
+    }
+
+    @Override
+    public void close() throws Exception {
+        getConnection().close();
     }
 
     /**

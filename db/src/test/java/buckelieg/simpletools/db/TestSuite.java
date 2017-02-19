@@ -64,7 +64,7 @@ public class TestSuite {
         conn.createStatement().execute("DROP PROCEDURE CREATETESTROW1");
         conn.createStatement().execute("DROP PROCEDURE CREATETESTROW2");
         conn.createStatement().execute("DROP PROCEDURE GETNAMEBYID");
-        conn.close();
+        db.close();
     }
 
     @Before
