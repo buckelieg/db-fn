@@ -26,6 +26,15 @@ DB db = new DB(ds::getConnection);
 // or
 DB db = new DB(() -> {/*sophisticated connection supplier function*/});
 ...
+// do things...
+db.close();
+...
+// DB can be used with try-with-resources
+try (DB db = new DB(/*init*/)) {
+    ...
+} finally {
+    
+}
 ```
 #### Select
 Use question marks:
