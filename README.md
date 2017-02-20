@@ -94,7 +94,7 @@ and so on. Explore test suite for more examples.
 #### ETL
 implement simple ETL process:
 ```java
-long count = db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get();
+long count = db.<Long>select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getLong(1)).get();
 // calculate partitions here and split work to threads if needed
 Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end)
 .stream(rs -> {/*map rs here*/}).forEach(obj -> {/* do things here...*/}));
@@ -103,7 +103,7 @@ Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHER
 #### Stored Procedures
 Invoking stored procedures is also quite simple:
 ```java
-String name = db.call("{call GETNAMEBYID(?,?)}", P.in(12), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2));
+String name = db.call("{call GETNAMEBYID(?,?)}", P.in(12), P.out(JDBCType.VARCHAR)).getResult(cs -> cs.getString(2));
 ```
 Note that in the latter case stored procedure must not return any result sets.
 If stored procedure is considered to return result sets it is handled similar to regular selects (see above).
