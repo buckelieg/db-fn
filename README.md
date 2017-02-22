@@ -49,12 +49,13 @@ Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) 
             put("NaME", "name_5");
         }}).stream().collect(
                 LinkedList<T>::new,
-                (pList, rs) -> {
+                (list, rs) -> {
                     try {
-                        pList.add(...);
+                        list.add(...);
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
+                    return list;
                 },
                 Collection::addAll
         );
