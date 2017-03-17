@@ -21,7 +21,7 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
     @Nonnull
     @Override
     @SuppressWarnings("unchecked")
-    public <Q extends Query<R>> Q timeout(int timeout) {
+    public final <Q extends Query<R>> Q timeout(int timeout) {
         try {
             statement.setQueryTimeout(timeout >= 0 ? timeout : 0);
         } catch (SQLException e) {
