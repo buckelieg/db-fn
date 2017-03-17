@@ -61,15 +61,19 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
     }
 
     final void close() {
+        if (statement != null) {
+            doOnStatement(s -> statement.close()); // by JDBC spec: subsequently closes all result sets opened by this statement
+        }
+
+    }
+
+    final void doOnStatement(Try.Consume<S, SQLException> action) {
         try {
-            if (statement != null) {
-                statement.close(); // by JDBC spec: subsequently closes all result sets opened by this statement
-            }
+            action.doTry(statement);
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         } catch (AbstractMethodError ame) {
             // ignore this possible vendor-specific JDBC driver's error.
         }
-
     }
 }
