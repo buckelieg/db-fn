@@ -111,10 +111,11 @@ public class TestSuite {
     @Test
     public void testSelectNamed() throws Exception {
         Map<String, Object> params = new HashMap<>();
-        params.put("id", new Object[]{1, 2});
+        params.put("ID", new Object[]{1, 2});
 //        params.put("id", Arrays.asList(1, 2));
-        params.put("NaME", "name_5");
-        Collection<Map.Entry<Integer, String>> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", params)
+        params.put("name", "name_5");
+        params.put("NAME", "name_6");
+        Collection<Map.Entry<Integer, String>> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name OR NAME=:NAME", params)
                 .stream()
                 .parallel()
                 .collect(
@@ -128,7 +129,7 @@ public class TestSuite {
                         },
                         Collection::addAll
                 );
-        assertTrue(results.size() == 3);
+        assertTrue(results.size() == 4);
     }
 
     @Test
@@ -201,7 +202,7 @@ public class TestSuite {
 
     @Test(expected = IllegalStateException.class)
     public void testDuplicatedNamedParameters() throws Exception {
-        db.select("SELECT * FROM TEST WHERE 1=1 AND (NAME IN (:names) OR NAME=:NAMES)", new SimpleImmutableEntry<>("names", "name_1"), new SimpleImmutableEntry<>("NAMES", "name_2"));
+        db.select("SELECT * FROM TEST WHERE 1=1 AND (NAME IN (:names) OR NAME=:names)", new SimpleImmutableEntry<>("names", "name_1"), new SimpleImmutableEntry<>("names", "name_2"));
     }
 
     @Test

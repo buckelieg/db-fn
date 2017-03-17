@@ -79,7 +79,7 @@ public final class DB implements AutoCloseable {
      * Calls stored procedure. Supplied params are considered as IN parameters
      *
      * @param query  procedure call string
-     * @param params procedure IN parameters
+     * @param params procedure IN parameters' values
      * @return procedure call builder
      * @see ProcedureCall
      */
@@ -90,6 +90,8 @@ public final class DB implements AutoCloseable {
 
     /**
      * Calls stored procedure.
+     * Parameter names are CASE SENSITIVE!
+     * So that :NAME and :name are two different parameters.
      *
      * @param query  procedure call string
      * @param params procedure parameters as declared (IN/OUT/INOUT)
@@ -99,17 +101,17 @@ public final class DB implements AutoCloseable {
     @Nonnull
     public ProcedureCall call(String query, P<?>... params) {
         try {
-            String lowerQuery = validateQuery(query, null);
+            String validatedQuery = validateQuery(query, null);
             P<?>[] preparedParams = params;
             int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
             if (namedParams == params.length) {
                 Map.Entry<String, Object[]> preparedQuery = prepareQuery(
-                        lowerQuery,
+                        validatedQuery,
                         Stream.of(params)
                                 .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
                                 .collect(Collectors.toList())
                 );
-                lowerQuery = preparedQuery.getKey();
+                validatedQuery = preparedQuery.getKey();
                 preparedParams = (P<?>[]) preparedQuery.getValue();
             } else if (0 < namedParams && namedParams < params.length) {
                 throw new IllegalArgumentException(
@@ -119,10 +121,10 @@ public final class DB implements AutoCloseable {
                         )
                 );
             }
-            if (!STORED_PROCEDURE.matcher(lowerQuery).matches()) {
+            if (!STORED_PROCEDURE.matcher(validatedQuery).matches()) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
             }
-            CallableStatement cs = getConnection().prepareCall(lowerQuery);
+            CallableStatement cs = getConnection().prepareCall(validatedQuery);
             for (int i = 1; i <= preparedParams.length; i++) {
                 P<?> p = preparedParams[i - 1];
                 if (p.isOut() || p.isInOut()) {
@@ -227,6 +229,8 @@ public final class DB implements AutoCloseable {
 
     /**
      * Executes SELECT statement
+     * Parameter names are CASE SENSITIVE!
+     * So that :NAME and :name are two different parameters.
      *
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
@@ -239,7 +243,9 @@ public final class DB implements AutoCloseable {
     }
 
     /**
-     * Executes SELECT statement
+     * Executes SELECT statement with named parameters.
+     * Parameter names are CASE SENSITIVE!
+     * So that :NAME and :name are two different parameters.
      *
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
@@ -275,6 +281,8 @@ public final class DB implements AutoCloseable {
 
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
+     * Parameter names are CASE SENSITIVE!
+     * So that :NAME and :name are two different parameters.
      *
      * @param query       INSERT/UPDATE/DELETE query to execute.
      * @param namedParams query named parameters. Parameter name in the form of :name
@@ -287,6 +295,8 @@ public final class DB implements AutoCloseable {
 
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
+     * Parameter names are CASE SENSITIVE!
+     * So that :NAME and :name are two different parameters.
      *
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @param batch an array of query named parameters. Parameter name in the form of :name
@@ -308,13 +318,13 @@ public final class DB implements AutoCloseable {
     }
 
     private Map.Entry<String, Object[]> prepareQuery(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
-        String lowerQuery = validateQuery(query, null);
+        String validatedQuery = validateQuery(query, null);
         Map<Integer, Object> indicesToValues = new TreeMap<>();
         Map<String, ?> transformedParams = stream(namedParams.spliterator(), false).collect(Collectors.toMap(
-                k -> k.getKey().startsWith(":") ? k.getKey().toLowerCase() : String.format(":%s", k.getKey().toLowerCase()),
+                k -> k.getKey().startsWith(":") ? k.getKey() : String.format(":%s", k.getKey()),
                 Map.Entry::getValue
         ));
-        Matcher matcher = NAMED_PARAMETER.matcher(lowerQuery);
+        Matcher matcher = NAMED_PARAMETER.matcher(validatedQuery);
         int idx = 0;
         while (matcher.find()) {
             Object val = transformedParams.get(matcher.group());
@@ -325,12 +335,12 @@ public final class DB implements AutoCloseable {
             }
         }
         for (Map.Entry<String, ?> e : transformedParams.entrySet()) {
-            lowerQuery = lowerQuery.replaceAll(
+            validatedQuery = validatedQuery.replaceAll(
                     e.getKey(),
                     stream(asIterable(e.getValue()).spliterator(), false).map(o -> "?").collect(Collectors.joining(", "))
             );
         }
-        return new SimpleImmutableEntry<>(lowerQuery, indicesToValues.values().toArray(new Object[indicesToValues.size()]));
+        return new SimpleImmutableEntry<>(validatedQuery, indicesToValues.values().toArray(new Object[indicesToValues.size()]));
     }
 
     private Iterable<?> asIterable(Object o) {
@@ -358,7 +368,7 @@ public final class DB implements AutoCloseable {
         if (validator != null) {
             validator.accept(lowerQuery);
         }
-        return lowerQuery;
+        return query;
     }
 
     private PreparedStatement setParameters(PreparedStatement ps, Object... params) throws SQLException {

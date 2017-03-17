@@ -22,7 +22,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @NotThreadSafe
@@ -30,16 +29,16 @@ import java.util.function.Consumer;
 class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
     final S statement;
-    private final AtomicBoolean hasNext;
-    private final AtomicBoolean hasMoved;
     ResultSet rs;
+    private boolean hasNext;
+    private boolean hasMoved;
     private ImmutableResultSet wrapper;
     private int batchSize = -1;
 
     SelectQuery(S statement) {
         this.statement = Objects.requireNonNull(statement, "Statement must not be null");
-        this.hasMoved = new AtomicBoolean();
-        this.hasNext = new AtomicBoolean();
+//        this.hasMoved = new AtomicBoolean();
+//        this.hasNext = new AtomicBoolean();
     }
 
     @Override
@@ -50,18 +49,18 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
     @Override
     public final boolean hasNext() {
         try {
-            if (hasMoved.get()) {
-                return hasNext.get();
+            if (hasMoved) {
+                return hasNext;
             }
-            hasNext.set(doHasNext());
-            hasMoved.set(true);
+            hasNext = doHasNext();
+            hasMoved = true;
         } catch (SQLException e) {
-            hasNext.set(false);
+            hasNext = false;
         }
-        if (!hasNext.get()) {
+        if (!hasNext) {
             close();
         }
-        return hasNext.get();
+        return hasNext;
     }
 
     protected boolean doHasNext() throws SQLException {
@@ -73,7 +72,7 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        hasMoved.set(false);
+        hasMoved = false;
         return wrapper;
     }
 
@@ -163,11 +162,13 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
 
     final void close() {
         try {
-            if (statement != null && !statement.isClosed()) {
+            if (statement != null) {
                 statement.close(); // by JDBC spec: subsequently closes all result sets opened by this statement
             }
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
+        } catch (AbstractMethodError ame) {
+            // ignore this possible vendor-specific JDBC driver's error.
         }
 
     }
