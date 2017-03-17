@@ -95,6 +95,14 @@ public class TestSuite {
     }
 
     @Test
+    public void testMaxRows() throws Exception {
+        assertTrue(1 == db.select("select * from test").maxRows(1).stream().count());
+        assertTrue(1 == db.select("select * from test").maxRows(1L).stream().count());
+        assertTrue(2 == db.select("select * from test").maxRows(1).maxRows(2L).stream().count());
+        assertTrue(2 == db.select("select * from test").maxRows(1L).maxRows(2).stream().count());
+    }
+
+    @Test
     public void testSelect() throws Exception {
         Collection<?> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
                 .stream()

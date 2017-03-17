@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
+class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
     ResultSet rs;
     private boolean hasNext;
@@ -92,9 +92,16 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     @Override
     public final Iterable<ResultSet> execute() {
         try {
-            if (batchSize >= 0) {
+            if (batchSize > 0) {
                 statement.setFetchSize(batchSize);
             }
+            if (maxRows > 0) {
+                statement.setMaxRows(maxRows);
+            }
+            if (maxRowsLarge > 0) {
+                statement.setLargeMaxRows(maxRowsLarge);
+            }
+            statement.setPoolable(poolable);
             doExecute();
             if (rs != null) {
                 this.wrapper = new ImmutableResultSet(rs);
@@ -115,6 +122,27 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     @Override
     public final Select fetchSize(int size) {
         setFetchSize(size);
+        return this;
+    }
+
+    @Nonnull
+    @Override
+    public Select maxRows(int max) {
+        setMaxRows(max);
+        return this;
+    }
+
+    @Nonnull
+    @Override
+    public Select maxRows(long max) {
+        setMaxRows(max);
+        return this;
+    }
+
+    @Nonnull
+    @Override
+    public Select poolable() {
+        setPoolable();
         return this;
     }
 

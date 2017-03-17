@@ -48,7 +48,8 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * The code below does not iterate over all rows in the result set.
      * <code>execute().iterator().next().get(...)</code>
      * Thus there could be none or some rows more, but result set (and a statement) would not be closed forcibly.
-     * In such cases we rely on JDBC resources auto closing mechanism and it is strongly recommended to use <code>single</code> method.
+     * In such cases we rely on JDBC resources auto closing mechanism.
+     * And it is strongly recommended to use <code>single</code> method for the cases above.
      *
      * @return ResultSet as Iterable
      * @see #single(Try._1)
@@ -57,14 +58,44 @@ public interface Select extends Query<Iterable<ResultSet>> {
     Iterable<ResultSet> execute();
 
     /**
-     * Configures ResultSet fetch size parameter
+     * Configures Statement fetch size parameter
      *
      * @param size desired fetch size. Should be greater than 0.
      * @return query builder
+     * @see java.sql.Statement#setFetchSize(int)
      * @see ResultSet#setFetchSize(int)
      */
     @Nonnull
     Select fetchSize(int size);
+
+    /**
+     * Updates max rows obtained with this query.
+     *
+     * @param max rows number limit
+     * @return query builder
+     * @see java.sql.Statement#setMaxRows(int)
+     */
+    @Nonnull
+    Select maxRows(int max);
+
+    /**
+     * Updates max rows obtained with this query
+     *
+     * @param max rows number limit
+     * @return query builder
+     * @see java.sql.Statement#setLargeMaxRows(long)
+     */
+    @Nonnull
+    Select maxRows(long max);
+
+    /**
+     * Tells JDBC driver that this query can be pooled.
+     *
+     * @return query builder
+     * @see java.sql.Statement#setPoolable(boolean)
+     */
+    @Nonnull
+    Select poolable();
 
     /**
      * Shorthand for streams.

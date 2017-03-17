@@ -25,5 +25,5 @@ public interface Update extends Query<Long> {
      * @return an update statement abstraction
      * @see PreparedStatement#executeLargeUpdate
      */
-    Update setLarge();
+    Update large();
 }

@@ -32,4 +32,15 @@ public interface Query<R> {
     @Nonnull
     R execute();
 
+    /**
+     * Updates query execution timeout
+     *
+     * @param timeout query timeout in seconds gt 0 (0 means no timeout)
+     * @param <Q>     type bounds
+     * @return query builder
+     * @see java.sql.Statement#setQueryTimeout(int)
+     */
+    @Nonnull
+    <Q extends Query<R>> Q timeout(int timeout);
+
 }
