@@ -26,19 +26,15 @@ import java.util.function.Consumer;
 
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
+class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
-    final S statement;
     ResultSet rs;
     private boolean hasNext;
     private boolean hasMoved;
     private ImmutableResultSet wrapper;
-    private int batchSize = -1;
 
-    SelectQuery(S statement) {
-        this.statement = Objects.requireNonNull(statement, "Statement must not be null");
-//        this.hasMoved = new AtomicBoolean();
-//        this.hasNext = new AtomicBoolean();
+    SelectQuery(PreparedStatement statement) {
+        super(statement);
     }
 
     @Override
@@ -105,6 +101,8 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
             }
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
+        } catch (AbstractMethodError ame) {
+            // ignore this possible vendor-specific JDBC driver's error.
         }
         return this;
     }
@@ -115,12 +113,8 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
 
     @Nonnull
     @Override
-    public final Select batchSize(int size) {
-        try {
-            batchSize = rs != null && rs.getFetchSize() >= size ? rs.getFetchSize() : size > 0 ? size : 0; // 0 value is ignored by ResultSet.setFetchSize
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
-        }
+    public final Select fetchSize(int size) {
+        setFetchSize(size);
         return this;
     }
 
@@ -158,18 +152,5 @@ class SelectQuery<S extends PreparedStatement> implements Iterable<ResultSet>, I
     public void forEachRemaining(Consumer<? super ResultSet> action) {
         while (tryAdvance(action)) {
         }
-    }
-
-    final void close() {
-        try {
-            if (statement != null) {
-                statement.close(); // by JDBC spec: subsequently closes all result sets opened by this statement
-            }
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
-        } catch (AbstractMethodError ame) {
-            // ignore this possible vendor-specific JDBC driver's error.
-        }
-
     }
 }

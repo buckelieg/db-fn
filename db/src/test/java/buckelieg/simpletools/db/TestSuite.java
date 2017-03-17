@@ -90,6 +90,11 @@ public class TestSuite {
     }
 
     @Test
+    public void testFetchSize() throws Exception {
+        assertTrue(10 == db.select("SELECT * FROM TEST").fetchSize(1).stream().count());
+    }
+
+    @Test
     public void testSelect() throws Exception {
         Collection<?> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
                 .stream()

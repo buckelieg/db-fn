@@ -167,7 +167,7 @@ public final class DB implements AutoCloseable {
                     throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
                 }
             }));
-            return new SelectQuery<>(setParameters(ps, params));
+            return new SelectQuery(setParameters(ps, params));
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }

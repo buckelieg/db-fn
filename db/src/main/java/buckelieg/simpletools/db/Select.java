@@ -27,6 +27,7 @@ import java.util.stream.StreamSupport;
 /**
  * An abstraction for SELECT statement
  */
+// TODO add 1.8 version Statement methods set up (setPoolable, setLargeMaxRows etc.)
 @ParametersAreNonnullByDefault
 public interface Select extends Query<Iterable<ResultSet>> {
 
@@ -63,7 +64,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @see ResultSet#setFetchSize(int)
      */
     @Nonnull
-    Select batchSize(int size);
+    Select fetchSize(int size);
 
     /**
      * Shorthand for streams.
