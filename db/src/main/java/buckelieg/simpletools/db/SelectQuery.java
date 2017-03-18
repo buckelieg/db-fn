@@ -100,7 +100,7 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     }
 
     protected void doExecute() throws SQLException {
-        this.rs = statement.executeQuery();
+        withStatement(s -> this.rs = s.executeQuery());
     }
 
     @Nonnull

@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
 
-    final S statement;
+    private final S statement;
 
     AbstractQuery(S statement) {
         this.statement = Objects.requireNonNull(statement, "Statement must not be null");
@@ -26,22 +26,22 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
 
     @SuppressWarnings("unchecked")
     final <Q extends AbstractQuery<R, S>> Q withStatement(Try.Consume._1<S, SQLException> action) {
+        return withStatement0(s -> {
+            action.doTry(s);
+            return (Q) this;
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    final <T> T withStatement0(Try._1<S, T, SQLException> action) {
+        T result = null;
         try {
-            action.doTry(statement);
+            result = action.doTry(statement);
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         } catch (AbstractMethodError ame) {
             // ignore this possible vendor-specific JDBC driver's error.
         }
-        return (Q) this;
-    }
-
-    @SuppressWarnings("unchecked")
-    final R withStatetment(Try._1<S, R, SQLException> action) {
-        try {
-            return action.doTry(statement);
-        } catch (Exception e) {
-            throw new SQLRuntimeException(e);
-        }
+        return result;
     }
 }

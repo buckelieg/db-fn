@@ -36,6 +36,6 @@ public class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implemen
     @Nonnull
     @Override
     public Long execute() {
-        return withStatetment(s -> isLarge ? s.executeLargeUpdate() : s.executeUpdate());
+        return withStatement0(s -> isLarge ? s.executeLargeUpdate() : s.executeUpdate());
     }
 }
