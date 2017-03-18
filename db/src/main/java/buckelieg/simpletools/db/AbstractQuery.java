@@ -23,14 +23,6 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
         jdbcTry(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
     }
 
-    @SuppressWarnings("unchecked")
-    final <Q extends Query<R>> Q jdbcTry(Try.Consume<SQLException> action) {
-        return jdbcTry(() -> {
-            action.doTry();
-            return (Q) this;
-        });
-    }
-
     final <O> O jdbcTry(Try<O, SQLException> action) {
         O result = null;
         try {
@@ -41,5 +33,13 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
             // ignore this possible vendor-specific JDBC driver's error.
         }
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    final <Q extends Query<R>> Q jdbcTry(Try.Consume<SQLException> action) {
+        return jdbcTry(() -> {
+            action.doTry();
+            return (Q) this;
+        });
     }
 }
