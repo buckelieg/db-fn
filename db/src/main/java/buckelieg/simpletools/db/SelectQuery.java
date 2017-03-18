@@ -91,7 +91,7 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     @Nonnull
     @Override
     public final Iterable<ResultSet> execute() {
-        return withStatement(() -> {
+        return jdbcTry(() -> {
             doExecute();
             if (rs != null) {
                 this.wrapper = new ImmutableResultSet(rs);
@@ -100,31 +100,31 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     }
 
     protected void doExecute() throws SQLException {
-        withStatement(() -> this.rs = statement.executeQuery());
+        jdbcTry(() -> this.rs = statement.executeQuery());
     }
 
     @Nonnull
     @Override
     public final Select fetchSize(int size) {
-        return withStatement(() -> statement.setFetchSize(size)); // 0 value is ignored by ResultSet.setFetchSize;
+        return jdbcTry(() -> statement.setFetchSize(size)); // 0 value is ignored by ResultSet.setFetchSize;
     }
 
     @Nonnull
     @Override
     public Select maxRows(int max) {
-        return withStatement(() -> statement.setMaxRows(max));
+        return jdbcTry(() -> statement.setMaxRows(max));
     }
 
     @Nonnull
     @Override
     public Select maxRows(long max) {
-        return withStatement(() -> statement.setLargeMaxRows(max));
+        return jdbcTry(() -> statement.setLargeMaxRows(max));
     }
 
     @Nonnull
     @Override
     public Select poolable() {
-        return withStatement(() -> statement.setPoolable(true));
+        return jdbcTry(() -> statement.setPoolable(true));
     }
 
     @Override

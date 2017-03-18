@@ -15,24 +15,23 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
 
     @Nonnull
     @Override
-    @SuppressWarnings("unchecked")
     public final <Q extends Query<R>> Q timeout(int timeout) {
-        return (Q) withStatement(() -> statement.setQueryTimeout(timeout >= 0 ? timeout : 0));
+        return jdbcTry(() -> statement.setQueryTimeout(timeout >= 0 ? timeout : 0));
     }
 
     final void close() {
-        withStatement(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
+        jdbcTry(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
     }
 
     @SuppressWarnings("unchecked")
-    final <Q extends AbstractQuery<R, S>> Q withStatement(Try.Consume<SQLException> action) {
-        return doAction(() -> {
+    final <Q extends Query<R>> Q jdbcTry(Try.Consume<SQLException> action) {
+        return jdbcTry(() -> {
             action.doTry();
             return (Q) this;
         });
     }
 
-    final <O> O doAction(Try<O, SQLException> action) {
+    final <O> O jdbcTry(Try<O, SQLException> action) {
         O result = null;
         try {
             result = action.doTry();

@@ -36,6 +36,6 @@ public class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implemen
     @Nonnull
     @Override
     public Long execute() {
-        return doAction(() -> isLarge ? statement.executeLargeUpdate() : statement.executeUpdate());
+        return jdbcTry(() -> isLarge ? statement.executeLargeUpdate() : statement.executeUpdate());
     }
 }
