@@ -44,23 +44,19 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
 
     @Override
     public final boolean hasNext() {
-        try {
-            if (hasMoved) {
-                return hasNext;
-            }
-            hasNext = doHasNext();
-            hasMoved = true;
-        } catch (SQLException e) {
-            hasNext = false;
+        if (hasMoved) {
+            return hasNext;
         }
+        hasNext = doHasNext();
+        hasMoved = true;
         if (!hasNext) {
             close();
         }
         return hasNext;
     }
 
-    protected boolean doHasNext() throws SQLException {
-        return rs != null && rs.next();
+    protected boolean doHasNext() {
+        return jdbcTry(() -> rs != null && rs.next());
     }
 
     @Override
@@ -99,7 +95,7 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
         });
     }
 
-    protected void doExecute() throws SQLException {
+    protected void doExecute() {
         jdbcTry(() -> rs = statement.executeQuery());
     }
 

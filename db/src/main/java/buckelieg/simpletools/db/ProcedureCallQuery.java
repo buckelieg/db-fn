@@ -41,7 +41,7 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
     }
 
     @Override
-    protected void doExecute() throws SQLException {
+    protected void doExecute() {
         jdbcTry(() -> {
             if (statement.execute()) {
                 rs = statement.getResultSet();
@@ -50,7 +50,7 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
     }
 
     @SuppressWarnings("unchecked")
-    protected boolean doHasNext() throws SQLException {
+    protected boolean doHasNext() {
         return jdbcTry(() -> {
             boolean moved = super.doHasNext();
             if (!moved) {
