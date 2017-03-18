@@ -89,7 +89,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
     Select maxRows(long max);
 
     /**
-     * Tells JDBC driver that this query can be pooled.
+     * Tells JDBC driver that this query is poolable.
      *
      * @return query builder
      * @see java.sql.Statement#setPoolable(boolean)

@@ -91,27 +91,12 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     @Nonnull
     @Override
     public final Iterable<ResultSet> execute() {
-        try {
-            if (batchSize > 0) {
-                statement.setFetchSize(batchSize);
-            }
-            if (maxRows > 0) {
-                statement.setMaxRows(maxRows);
-            }
-            if (maxRowsLarge > 0) {
-                statement.setLargeMaxRows(maxRowsLarge);
-            }
-            statement.setPoolable(poolable);
+        return withStatement(s -> {
             doExecute();
             if (rs != null) {
                 this.wrapper = new ImmutableResultSet(rs);
             }
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
-        } catch (AbstractMethodError ame) {
-            // ignore this possible vendor-specific JDBC driver's error.
-        }
-        return this;
+        });
     }
 
     protected void doExecute() throws SQLException {
@@ -121,29 +106,25 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     @Nonnull
     @Override
     public final Select fetchSize(int size) {
-        setFetchSize(size);
-        return this;
+        return withStatement(s -> batchSize = s.getFetchSize() >= size ? s.getFetchSize() : size > 0 ? size : 0); // 0 value is ignored by ResultSet.setFetchSize;
     }
 
     @Nonnull
     @Override
     public Select maxRows(int max) {
-        setMaxRows(max);
-        return this;
+        return withStatement(s -> s.setMaxRows(max));
     }
 
     @Nonnull
     @Override
     public Select maxRows(long max) {
-        setMaxRows(max);
-        return this;
+        return withStatement(s -> s.setLargeMaxRows(max));
     }
 
     @Nonnull
     @Override
     public Select poolable() {
-        setPoolable();
-        return this;
+        return withStatement(s -> s.setPoolable(true));
     }
 
     @Override

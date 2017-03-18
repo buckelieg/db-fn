@@ -9,10 +9,6 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
 
     final S statement;
     int batchSize;
-    boolean large;
-    boolean poolable;
-    int maxRows;
-    long maxRowsLarge;
 
     AbstractQuery(S statement) {
         this.statement = Objects.requireNonNull(statement, "Statement must not be null");
@@ -22,8 +18,17 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
     @Override
     @SuppressWarnings("unchecked")
     public final <Q extends Query<R>> Q timeout(int timeout) {
+        return (Q) withStatement(s -> s.setQueryTimeout(timeout >= 0 ? timeout : 0));
+    }
+
+    final void close() {
+        withStatement(s -> statement.close()); // by JDBC spec: subsequently closes all result sets opened by this statement
+    }
+
+    @SuppressWarnings("unchecked")
+    final <Q extends AbstractQuery<R, S>> Q withStatement(Try.Consume._1<S, SQLException> action) {
         try {
-            statement.setQueryTimeout(timeout >= 0 ? timeout : 0);
+            action.doTry(statement);
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         } catch (AbstractMethodError ame) {
@@ -32,48 +37,13 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
         return (Q) this;
     }
 
-    final void setFetchSize(int size) {
+
+    @SuppressWarnings("unchecked")
+    final R withStatetment(Try._1<S, R, SQLException> action) {
         try {
-            batchSize = statement.getFetchSize() >= size ? statement.getFetchSize() : size > 0 ? size : 0; // 0 value is ignored by ResultSet.setFetchSize
-        } catch (SQLException e) {
+            return action.doTry(statement);
+        } catch (Exception e) {
             throw new SQLRuntimeException(e);
-        } catch (AbstractMethodError ame) {
-            // ignore this possible vendor-specific JDBC driver's error.
-        }
-    }
-
-    final void setLargeUpdate() {
-        large = true;
-    }
-
-    final void setPoolable() {
-        poolable = true;
-    }
-
-    final void setMaxRows(int max) {
-        maxRows = max > 0 ? max : maxRows;
-        maxRowsLarge = 0L;
-    }
-
-    final void setMaxRows(long max) {
-        maxRowsLarge = max > 0L ? max : maxRowsLarge;
-        maxRows = 0;
-    }
-
-    final void close() {
-        if (statement != null) {
-            doOnStatement(s -> statement.close()); // by JDBC spec: subsequently closes all result sets opened by this statement
-        }
-
-    }
-
-    final void doOnStatement(Try.Consume<S, SQLException> action) {
-        try {
-            action.doTry(statement);
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
-        } catch (AbstractMethodError ame) {
-            // ignore this possible vendor-specific JDBC driver's error.
         }
     }
 }

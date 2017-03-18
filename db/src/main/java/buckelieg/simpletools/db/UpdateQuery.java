@@ -17,10 +17,11 @@ package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 // TODO implement batch here
 public class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
+
+    private boolean isLarge;
 
     public UpdateQuery(PreparedStatement statement) {
         super(statement);
@@ -28,20 +29,13 @@ public class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implemen
 
     @Override
     public Update large() {
-        setLargeUpdate();
+        isLarge = true;
         return this;
     }
 
     @Nonnull
     @Override
     public Long execute() {
-        try {
-            return large ? statement.executeLargeUpdate() : statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
-        } catch (AbstractMethodError ame) {
-            // ignore this possible vendor-specific JDBC driver's error.
-        }
-        return -1L;
+        return withStatetment(s -> isLarge ? s.executeLargeUpdate() : s.executeUpdate());
     }
 }

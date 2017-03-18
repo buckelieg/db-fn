@@ -20,6 +20,7 @@ public interface Try<O, E extends Exception> {
 
     /**
      * Represents some function which might throw an Exception
+     *
      * @return optional value
      * @throws E in case of something went wrong
      */
@@ -27,7 +28,24 @@ public interface Try<O, E extends Exception> {
 
     @FunctionalInterface
     interface Consume<I, E extends Exception> {
-        void doTry(I input) throws E;
+
+        /**
+         * Represents some function which might throw an Exception without a return value
+         *
+         * @throws E an exception
+         */
+        void doTry() throws E;
+
+        interface _1<I, E extends Exception> {
+            /**
+             * Represents some function which might throw an Exception without a return value
+             *
+             * @param input to process
+             * @throws E an exception
+             */
+            void doTry(I input) throws E;
+        }
+
     }
 
     @FunctionalInterface
