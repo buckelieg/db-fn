@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Objects;
 
-public abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
+abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
 
     final S statement;
 
