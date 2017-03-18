@@ -27,7 +27,7 @@ public interface Try<O, E extends Exception> {
     O doTry() throws E;
 
     @FunctionalInterface
-    interface Consume<I, E extends Exception> {
+    interface Consume<E extends Exception> {
 
         /**
          * Represents some function which might throw an Exception without a return value

@@ -42,28 +42,28 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     @Override
     protected void doExecute() throws SQLException {
-        withStatement(s -> {
-            if (s.execute()) {
-                this.rs = s.getResultSet();
+        withStatement(() -> {
+            if (statement.execute()) {
+                this.rs = statement.getResultSet();
             }
         });
     }
 
     @SuppressWarnings("unchecked")
     protected boolean doHasNext() throws SQLException {
-        return withStatement0(s -> {
+        return doAction(() -> {
             boolean moved = super.doHasNext();
             if (!moved) {
-                if (s.getMoreResults()) {
+                if (statement.getMoreResults()) {
                     if (rs != null && !rs.isClosed()) {
                         rs.close();
                     }
-                    rs = s.getResultSet();
+                    rs = statement.getResultSet();
                     return super.doHasNext();
                 }
                 try {
                     if (storedProcedureResultsHandler != null && callback != null) {
-                        callback.accept(storedProcedureResultsHandler.doTry((CallableStatement) s));
+                        callback.accept(storedProcedureResultsHandler.doTry((CallableStatement) statement));
                     }
                 } finally {
                     close();

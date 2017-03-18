@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
 
-    private final S statement;
+    final S statement;
 
     AbstractQuery(S statement) {
         this.statement = Objects.requireNonNull(statement, "Statement must not be null");
@@ -17,26 +17,25 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
     @Override
     @SuppressWarnings("unchecked")
     public final <Q extends Query<R>> Q timeout(int timeout) {
-        return (Q) withStatement(s -> s.setQueryTimeout(timeout >= 0 ? timeout : 0));
+        return (Q) withStatement(() -> statement.setQueryTimeout(timeout >= 0 ? timeout : 0));
     }
 
     final void close() {
-        withStatement(s -> statement.close()); // by JDBC spec: subsequently closes all result sets opened by this statement
+        withStatement(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
     }
 
     @SuppressWarnings("unchecked")
-    final <Q extends AbstractQuery<R, S>> Q withStatement(Try.Consume._1<S, SQLException> action) {
-        return withStatement0(s -> {
-            action.doTry(s);
+    final <Q extends AbstractQuery<R, S>> Q withStatement(Try.Consume<SQLException> action) {
+        return doAction(() -> {
+            action.doTry();
             return (Q) this;
         });
     }
 
-    @SuppressWarnings("unchecked")
-    final <T> T withStatement0(Try._1<S, T, SQLException> action) {
-        T result = null;
+    final <O> O doAction(Try<O, SQLException> action) {
+        O result = null;
         try {
-            result = action.doTry(statement);
+            result = action.doTry();
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         } catch (AbstractMethodError ame) {
