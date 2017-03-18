@@ -94,13 +94,13 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
         return jdbcTry(() -> {
             doExecute();
             if (rs != null) {
-                this.wrapper = new ImmutableResultSet(rs);
+                wrapper = new ImmutableResultSet(rs);
             }
         });
     }
 
     protected void doExecute() throws SQLException {
-        jdbcTry(() -> this.rs = statement.executeQuery());
+        jdbcTry(() -> rs = statement.executeQuery());
     }
 
     @Nonnull

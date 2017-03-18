@@ -44,7 +44,7 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
     protected void doExecute() throws SQLException {
         jdbcTry(() -> {
             if (statement.execute()) {
-                this.rs = statement.getResultSet();
+                rs = statement.getResultSet();
             }
         });
     }
