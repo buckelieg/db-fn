@@ -106,7 +106,7 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     @Nonnull
     @Override
     public final Select fetchSize(int size) {
-        return withStatement(s -> batchSize = s.getFetchSize() >= size ? s.getFetchSize() : size > 0 ? size : 0); // 0 value is ignored by ResultSet.setFetchSize;
+        return withStatement(s -> s.setFetchSize(size)); // 0 value is ignored by ResultSet.setFetchSize;
     }
 
     @Nonnull

@@ -8,7 +8,6 @@ import java.util.Objects;
 public abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
 
     final S statement;
-    int batchSize;
 
     AbstractQuery(S statement) {
         this.statement = Objects.requireNonNull(statement, "Statement must not be null");
@@ -36,7 +35,6 @@ public abstract class AbstractQuery<R, S extends Statement> implements Query<R> 
         }
         return (Q) this;
     }
-
 
     @SuppressWarnings("unchecked")
     final R withStatetment(Try._1<S, R, SQLException> action) {
