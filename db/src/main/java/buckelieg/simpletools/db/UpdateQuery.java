@@ -19,7 +19,7 @@ import javax.annotation.Nonnull;
 import java.sql.PreparedStatement;
 
 // TODO implement batch here
-public class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
+final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
 
     private boolean isLarge;
 

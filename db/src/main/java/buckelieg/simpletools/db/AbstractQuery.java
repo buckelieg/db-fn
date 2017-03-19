@@ -16,7 +16,7 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
     @Nonnull
     @Override
     public final <Q extends Query<R>> Q timeout(int timeout) {
-        return jdbcTry(() -> statement.setQueryTimeout(timeout >= 0 ? timeout : 0));
+        return jdbcTry(() -> statement.setQueryTimeout(timeout > 0 ? timeout : 0));
     }
 
     final void close() {
