@@ -119,7 +119,7 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
 
     @Nonnull
     @Override
-    public Select poolable() {
+    public Select pooled() {
         return jdbcTry(() -> statement.setPoolable(true));
     }
 

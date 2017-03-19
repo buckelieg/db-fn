@@ -95,7 +95,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @see java.sql.Statement#setPoolable(boolean)
      */
     @Nonnull
-    Select poolable();
+    Select pooled();
 
     /**
      * Shorthand for streams.
