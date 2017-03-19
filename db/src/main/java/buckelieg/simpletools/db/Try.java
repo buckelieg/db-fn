@@ -40,7 +40,7 @@ public interface Try<O, E extends Exception> {
         }
 
     }
-    
+
     /**
      * Represents some function which might throw an Exception
      *
