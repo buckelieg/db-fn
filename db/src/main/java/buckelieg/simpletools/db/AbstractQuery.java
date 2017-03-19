@@ -1,6 +1,7 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Objects;
@@ -41,5 +42,14 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
             action.doTry();
             return (Q) this;
         });
+    }
+
+    final PreparedStatement setParameters(PreparedStatement ps, Object... params) throws SQLException {
+        Objects.requireNonNull(params, "Parameters must be provided");
+        int pNum = 0;
+        for (Object p : params) {
+            ps.setObject(++pNum, p); // TODO introduce type conversion here...
+        }
+        return ps;
     }
 }

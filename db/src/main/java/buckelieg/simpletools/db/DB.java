@@ -180,51 +180,13 @@ public final class DB implements AutoCloseable {
      * @param batch an array of query parameters on the declared order of '?'
      * @return update query builder
      */
-    public int update(String query, Object[]... batch) {
-        int rowsAffected = 0;
-        boolean autoCommit = true;
-        Savepoint savepoint = null;
-        Connection conn = null;
-        try {
-            conn = getConnection();
-            PreparedStatement ps = conn.prepareStatement(validateQuery(query, lowerQuery -> {
-                if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
-                    throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
-                }
-            }));
-            boolean transacted = batch.length > 1;
-            if (transacted) {
-                autoCommit = conn.getAutoCommit();
-                conn.setAutoCommit(false);
-                savepoint = conn.setSavepoint();
+    public Update update(String query, Object[]... batch) {
+        PreparedStatement ps = getConnection().prepareStatement(validateQuery(query, lowerQuery -> {
+            if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
+                throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
             }
-            for (Object[] params : Objects.requireNonNull(batch, "Batch must be provided")) {
-                rowsAffected += setParameters(ps, params).executeUpdate();
-            }
-            ps.close();
-            if (transacted) {
-                conn.commit();
-            }
-        } catch (SQLException e) {
-            try {
-                if (conn != null && savepoint != null) {
-                    conn.rollback(savepoint);
-                }
-            } catch (SQLException ex) {
-                // ignore
-            }
-            throw new SQLRuntimeException(e);
-        } finally {
-            try {
-                if (conn != null && savepoint != null) {
-                    conn.setAutoCommit(autoCommit);
-                    conn.releaseSavepoint(savepoint);
-                }
-            } catch (SQLException e) {
-                // ignore
-            }
-        }
-        return rowsAffected;
+        }));
+        return new UpdateQuery(getConnection(), ps, batch);
     }
 
     /**

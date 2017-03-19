@@ -16,15 +16,25 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Savepoint;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 // TODO implement batch here
 final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
 
+    private Connection connection;
     private boolean isLarge;
+    private final Object[][] batch;
 
-    public UpdateQuery(PreparedStatement statement) {
+    public UpdateQuery(Connection connection, PreparedStatement statement, Object[]... batch) {
         super(statement);
+        this.batch = Objects.requireNonNull(batch, "Batch must be provided");
+        this.connection = connection;
     }
 
     @Override
@@ -36,6 +46,67 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     @Nonnull
     @Override
     public Long execute() {
-        return jdbcTry(() -> isLarge ? statement.executeLargeUpdate() : statement.executeUpdate());
+        return jdbcTry(() -> {
+            boolean autoCommit = true;
+            Savepoint savepoint = null;
+            long rowsAffected;
+            try {
+                boolean transacted = batch.length > 1;
+                if (transacted) {
+                    autoCommit = connection.getAutoCommit();
+                    connection.setAutoCommit(false);
+                    savepoint = connection.setSavepoint();
+                }
+                rowsAffected = connection.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
+                statement.close();
+                if (transacted) {
+                    connection.commit();
+                }
+                return rowsAffected;
+            } catch (SQLException e) {
+                try {
+                    if (connection != null && savepoint != null) {
+                        connection.rollback(savepoint);
+                    }
+                } catch (SQLException ex) {
+                    // ignore
+                }
+                throw new SQLRuntimeException(e);
+            } finally {
+                try {
+                    if (connection != null && savepoint != null) {
+                        connection.setAutoCommit(autoCommit);
+                        connection.releaseSavepoint(savepoint);
+                    }
+                } catch (SQLException e) {
+                    // ignore
+                }
+            }
+        });
+    }
+
+    private long executeSimple() {
+        return Stream.of(batch).reduce(
+                0L,
+                (rowsAffected, params) -> rowsAffected += jdbcTry(() -> isLarge ? setParameters(statement, params).executeLargeUpdate() : (long) setParameters(statement, params).executeUpdate()),
+                (j, k) -> j + k
+        );
+    }
+
+    private long executeBatch() {
+        return Stream.of(batch).map(params ->
+                jdbcTry(() -> {
+                    setParameters(statement, params).addBatch();
+                    return statement;
+                })
+        ).reduce(
+                0L,
+                (rowsAffected, stmt) ->
+                        rowsAffected += Arrays.stream(
+                                jdbcTry(() -> isLarge ? stmt.executeLargeBatch() : Arrays.stream(stmt.executeBatch()).asLongStream().toArray())
+                        ).sum(),
+                (j, k) -> j + k
+
+        );
     }
 }
