@@ -184,7 +184,7 @@ public class TestSuite {
 
     @Test
     public void testUpdateBatch() throws Exception {
-        assertTrue(2 == db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute());
+        assertTrue(2L == db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute());
     }
 
     @Test
@@ -197,6 +197,11 @@ public class TestSuite {
         }};
         long res = db.update("INSERT INTO TEST(name) VALUES(:names)", params1, params2).execute();
         assertTrue(2L == res);
+    }
+
+    @Test
+    public void testUpdateBatchBatch() throws Exception {
+        assertTrue(2L == db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).batched().execute());
     }
 
     @Test

@@ -113,7 +113,6 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
                                 jdbcTry(() -> isLarge ? stmt.executeLargeBatch() : Arrays.stream(stmt.executeBatch()).asLongStream().toArray())
                         ).sum(),
                 (j, k) -> j + k
-
         );
     }
 }
