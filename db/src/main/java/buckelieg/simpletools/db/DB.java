@@ -18,7 +18,10 @@ package buckelieg.simpletools.db;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -167,11 +170,12 @@ public final class DB implements AutoCloseable {
                     throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
                 }
             }));
-            return new SelectQuery(setParameters(ps, params));
+            return new SelectQuery(ps, params);
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
     }
+
 
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
@@ -181,12 +185,17 @@ public final class DB implements AutoCloseable {
      * @return update query builder
      */
     public Update update(String query, Object[]... batch) {
-        PreparedStatement ps = getConnection().prepareStatement(validateQuery(query, lowerQuery -> {
-            if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
-                throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
-            }
-        }));
-        return new UpdateQuery(getConnection(), ps, batch);
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement(validateQuery(query, lowerQuery -> {
+                if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
+                    throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
+                }
+            }));
+            return new UpdateQuery(conn, ps, batch);
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
     }
 
     /**
@@ -226,7 +235,7 @@ public final class DB implements AutoCloseable {
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @return update query builder
      */
-    public int update(String query) {
+    public Update update(String query) {
         return update(query, new Object[0]);
     }
 
@@ -237,7 +246,7 @@ public final class DB implements AutoCloseable {
      * @param params query parameters on the declared order of '?'
      * @return update query builder
      */
-    public int update(String query, Object... params) {
+    public Update update(String query, Object... params) {
         return update(query, new Object[][]{params});
     }
 
@@ -251,7 +260,7 @@ public final class DB implements AutoCloseable {
      * @param <T>         type bounds
      * @return update query builder
      */
-    public <T extends Map.Entry<String, ?>> int update(String query, T... namedParams) {
+    public <T extends Map.Entry<String, ?>> Update update(String query, T... namedParams) {
         return update(query, Arrays.asList(namedParams));
     }
 
@@ -264,7 +273,7 @@ public final class DB implements AutoCloseable {
      * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return update query builder
      */
-    public int update(String query, Map<String, ?>... batch) {
+    public Update update(String query, Map<String, ?>... batch) {
         List<Map.Entry<String, Object[]>> params = Stream.of(batch).map(np -> prepareQuery(query, np.entrySet())).collect(Collectors.toList());
         return update(params.get(0).getKey(), params.stream().map(Map.Entry::getValue).collect(Collectors.toList()).toArray(new Object[params.size()][]));
     }
@@ -274,7 +283,7 @@ public final class DB implements AutoCloseable {
         return select(preparedQuery.getKey(), preparedQuery.getValue());
     }
 
-    private int update(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
+    private Update update(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return update(preparedQuery.getKey(), preparedQuery.getValue());
     }
@@ -331,15 +340,6 @@ public final class DB implements AutoCloseable {
             validator.accept(lowerQuery);
         }
         return query;
-    }
-
-    private PreparedStatement setParameters(PreparedStatement ps, Object... params) throws SQLException {
-        Objects.requireNonNull(params, "Parameters must be provided");
-        int pNum = 0;
-        for (Object p : params) {
-            ps.setObject(++pNum, p); // TODO introduce type conversion here...
-        }
-        return ps;
     }
 
 }

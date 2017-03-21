@@ -24,11 +24,11 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-// TODO implement batch here
 final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
 
     private Connection connection;
     private boolean isLarge;
+    private boolean batchMode;
     private final Object[][] batch;
 
     public UpdateQuery(Connection connection, PreparedStatement statement, Object[]... batch) {
@@ -40,6 +40,12 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     @Override
     public Update large() {
         isLarge = true;
+        return this;
+    }
+
+    @Override
+    public Update useBatch() {
+        batchMode = true;
         return this;
     }
 
@@ -57,7 +63,7 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
                     connection.setAutoCommit(false);
                     savepoint = connection.setSavepoint();
                 }
-                rowsAffected = connection.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
+                rowsAffected = batchMode && connection.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
                 statement.close();
                 if (transacted) {
                     connection.commit();

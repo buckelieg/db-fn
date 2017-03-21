@@ -152,39 +152,39 @@ public class TestSuite {
 
     @Test
     public void testUpdateNoParams() throws Exception {
-        assertTrue(10 == db.update("DELETE FROM TEST"));
+        assertTrue(10L == db.update("DELETE FROM TEST").execute());
     }
 
     @Test
     public void testInsert() throws Exception {
-        int res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name");
-        assertTrue(res == 1);
+        long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute();
+        assertTrue(1L == res);
     }
 
     @Test
     public void testInsertNamed() throws Exception {
-        int res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name"));
-        assertTrue(res == 1);
+        long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute();
+        assertTrue(1L == res);
         assertTrue(Long.valueOf(11L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
     public void testUpdate() throws Exception {
-        int res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
-        assertTrue(res == 1);
+        long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute();
+        assertTrue(1L ==res);
         assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
     public void testUpdateNamed() throws Exception {
-        int res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2"));
-        assertTrue(res == 1);
+        long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute();
+        assertTrue(1L ==res);
         assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
     public void testUpdateBatch() throws Exception {
-        assertTrue(2 == db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}));
+        assertTrue(2 == db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute());
     }
 
     @Test
@@ -195,21 +195,27 @@ public class TestSuite {
         Map<String, String> params2 = new HashMap<String, String>() {{
             put("names", "name2");
         }};
-        int res = db.update("INSERT INTO TEST(name) VALUES(:names)", params1, params2);
-        assertTrue(2 == res);
+        long res = db.update("INSERT INTO TEST(name) VALUES(:names)", params1, params2).execute();
+        assertTrue(2L == res);
+    }
+
+    @Test
+    public void testLargeUpdate() throws Exception {
+        long res = db.update("INSERT INTO TEST(name) VALUES(?)", "largeupdatenametest").execute();
+        assertTrue(1L == res);
     }
 
     @Test
     public void testDelete() throws Exception {
-        int res = db.update("DELETE FROM TEST WHERE name=?", "name_2");
-        assertTrue(res == 1);
+        long res = db.update("DELETE FROM TEST WHERE name=?", "name_2").execute();
+        assertTrue(1L == res);
         assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
     public void testDeleteNamed() throws Exception {
-        int res = db.update("DELETE FROM TEST WHERE name=:name", new SimpleImmutableEntry<>("name", "name_2"));
-        assertTrue(res == 1);
+        long res = db.update("DELETE FROM TEST WHERE name=:name", new SimpleImmutableEntry<>("name", "name_2")).execute();
+        assertTrue(1L == res);
         assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 

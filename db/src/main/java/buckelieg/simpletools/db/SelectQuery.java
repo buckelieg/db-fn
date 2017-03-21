@@ -32,9 +32,11 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     private boolean hasNext;
     private boolean hasMoved;
     private ImmutableResultSet wrapper;
+    private Object[] params;
 
-    SelectQuery(PreparedStatement statement) {
+    SelectQuery(PreparedStatement statement, Object... params) {
         super(statement);
+        this.params = params;
     }
 
     @Override
@@ -96,7 +98,7 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     }
 
     protected void doExecute() {
-        jdbcTry(() -> rs = statement.executeQuery());
+        jdbcTry(() -> rs = setParameters(statement, params).executeQuery());
     }
 
     @Nonnull

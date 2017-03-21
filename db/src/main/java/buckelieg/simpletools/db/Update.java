@@ -15,6 +15,7 @@
 */
 package buckelieg.simpletools.db;
 
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 
 // TODO introduce batching for update operations
@@ -27,4 +28,11 @@ public interface Update extends Query<Long> {
      * @see PreparedStatement#executeLargeUpdate
      */
     Update large();
+
+    /**
+     * Tells DB to use batch (if possible)
+     * @return an update statement abstraction
+     * @see DatabaseMetaData#supportsBatchUpdates()
+     */
+    Update useBatch();
 }
