@@ -19,6 +19,18 @@ package buckelieg.simpletools.db;
 public interface Try<O, E extends Exception> {
 
     @FunctionalInterface
+    interface Produce<O, E extends Exception> {
+
+        /**
+         * Value supplier
+         *
+         * @return the value of type O
+         * @throws E an exception
+         */
+        O doTry() throws E;
+    }
+
+    @FunctionalInterface
     interface Consume<E extends Exception> {
 
         /**

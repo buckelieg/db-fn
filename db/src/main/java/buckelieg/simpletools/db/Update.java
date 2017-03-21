@@ -33,5 +33,5 @@ public interface Update extends Query<Long> {
      * @return an update statement abstraction
      * @see DatabaseMetaData#supportsBatchUpdates()
      */
-    Update useBatch();
+    Update batched();
 }

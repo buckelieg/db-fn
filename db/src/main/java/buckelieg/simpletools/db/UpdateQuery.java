@@ -26,15 +26,15 @@ import java.util.stream.Stream;
 
 final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
 
-    private Connection connection;
+    private Try.Produce<Connection, SQLException> connectionSupplier;
     private boolean isLarge;
     private boolean batchMode;
     private final Object[][] batch;
 
-    public UpdateQuery(Connection connection, PreparedStatement statement, Object[]... batch) {
+    public UpdateQuery(Try.Produce<Connection, SQLException> connectionSupplier, PreparedStatement statement, Object[]... batch) {
         super(statement);
         this.batch = Objects.requireNonNull(batch, "Batch must be provided");
-        this.connection = connection;
+        this.connectionSupplier = Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
     }
 
     @Override
@@ -44,7 +44,7 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     }
 
     @Override
-    public Update useBatch() {
+    public Update batched() {
         batchMode = true;
         return this;
     }
@@ -53,26 +53,27 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     @Override
     public Long execute() {
         return jdbcTry(() -> {
+            Connection conn = connectionSupplier.doTry();
             boolean autoCommit = true;
             Savepoint savepoint = null;
             long rowsAffected;
             try {
                 boolean transacted = batch.length > 1;
                 if (transacted) {
-                    autoCommit = connection.getAutoCommit();
-                    connection.setAutoCommit(false);
-                    savepoint = connection.setSavepoint();
+                    autoCommit = conn.getAutoCommit();
+                    conn.setAutoCommit(false);
+                    savepoint = conn.setSavepoint();
                 }
-                rowsAffected = batchMode && connection.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
+                rowsAffected = batchMode && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
                 statement.close();
                 if (transacted) {
-                    connection.commit();
+                    conn.commit();
                 }
                 return rowsAffected;
             } catch (SQLException e) {
                 try {
-                    if (connection != null && savepoint != null) {
-                        connection.rollback(savepoint);
+                    if (conn != null && savepoint != null) {
+                        conn.rollback(savepoint);
                     }
                 } catch (SQLException ex) {
                     // ignore
@@ -80,9 +81,9 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
                 throw new SQLRuntimeException(e);
             } finally {
                 try {
-                    if (connection != null && savepoint != null) {
-                        connection.setAutoCommit(autoCommit);
-                        connection.releaseSavepoint(savepoint);
+                    if (conn != null && savepoint != null) {
+                        conn.setAutoCommit(autoCommit);
+                        conn.releaseSavepoint(savepoint);
                     }
                 } catch (SQLException e) {
                     // ignore

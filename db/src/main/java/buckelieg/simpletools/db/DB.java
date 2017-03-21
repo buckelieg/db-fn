@@ -192,7 +192,7 @@ public final class DB implements AutoCloseable {
                     throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
                 }
             }));
-            return new UpdateQuery(conn, ps, batch);
+            return new UpdateQuery(this::getConnection, ps, batch);
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
