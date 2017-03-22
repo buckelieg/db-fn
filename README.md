@@ -9,7 +9,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-tools</artifactId>
-  <version>0.12</version>
+  <version>0.13</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -45,8 +45,8 @@ Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
 or use named parameters:
 ```java
 Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>(){{
-            put("id", new Object[]{1, 2}); 
-            put("NaME", "name_5");
+            put("ID", new Object[]{1, 2}); 
+            put("name", "name_5");
         }}).stream().collect(
                 LinkedList<T>::new,
                 (list, rs) -> {
@@ -68,27 +68,27 @@ These operations could be run in batch mode. Just supply an array of parameters 
 
 with question marks:
 ```java
-int res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name");
+long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute();
 ```
 Or with named parameters:
 ```java
-int res = db.update("INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name"));
+long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name")).execute();
 ```
 ##### Update
 ```java
-int res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2");
+long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute();
 ```
 or
 ```java
-int res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2"));
+long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2")).execute();
 ```
 For batch operation use:
 ```java
-int res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}});
+long res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute();
 ```  
 ##### Delete
 ```java
-int res = db.update("DELETE FROM TEST WHERE name=?", "name_2");
+long res = db.update("DELETE FROM TEST WHERE name=?", "name_2").execute();
 ```
 and so on. Explore test suite for more examples.
 
