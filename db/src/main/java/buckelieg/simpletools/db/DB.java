@@ -83,7 +83,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query  procedure call string
      * @param params procedure IN parameters' values
-     * @return procedure call builder
+     * @return procedure call
      * @see ProcedureCall
      */
     @Nonnull
@@ -98,7 +98,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query  procedure call string
      * @param params procedure parameters as declared (IN/OUT/INOUT)
-     * @return procedure call builder
+     * @return procedure call
      * @see ProcedureCall
      */
     @Nonnull
@@ -147,7 +147,7 @@ public final class DB implements AutoCloseable {
      * Executes SELECT statement
      *
      * @param query SELECT query to execute. Can be WITH query
-     * @return select query builder
+     * @return select query
      * @see Select
      */
     public Select select(String query) {
@@ -159,7 +159,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query  SELECT query to execute. Can be WITH query
      * @param params query parameters on the declared order of '?'
-     * @return select query builder
+     * @return select query
      * @see Select
      */
     @Nonnull
@@ -182,7 +182,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @param batch an array of query parameters on the declared order of '?'
-     * @return update query builder
+     * @return update query
      */
     public Update update(String query, Object[]... batch) {
         try {
@@ -205,7 +205,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @return select query builder
+     * @return select query
      * @see Select
      */
     @Nonnull
@@ -221,7 +221,7 @@ public final class DB implements AutoCloseable {
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @param <T>         type bounds
-     * @return select query builder
+     * @return select query
      * @see Select
      */
     @Nonnull
@@ -233,7 +233,7 @@ public final class DB implements AutoCloseable {
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
      * @param query INSERT/UPDATE/DELETE query to execute.
-     * @return update query builder
+     * @return update query
      */
     public Update update(String query) {
         return update(query, new Object[0]);
@@ -244,7 +244,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query  INSERT/UPDATE/DELETE query to execute.
      * @param params query parameters on the declared order of '?'
-     * @return update query builder
+     * @return update query
      */
     public Update update(String query, Object... params) {
         return update(query, new Object[][]{params});
@@ -258,7 +258,7 @@ public final class DB implements AutoCloseable {
      * @param query       INSERT/UPDATE/DELETE query to execute.
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @param <T>         type bounds
-     * @return update query builder
+     * @return update query
      */
     public <T extends Map.Entry<String, ?>> Update update(String query, T... namedParams) {
         return update(query, Arrays.asList(namedParams));
@@ -271,7 +271,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @param batch an array of query named parameters. Parameter name in the form of :name
-     * @return update query builder
+     * @return update query
      */
     public Update update(String query, Map<String, ?>... batch) {
         List<Map.Entry<String, Object[]>> params = Stream.of(batch).map(np -> prepareQuery(query, np.entrySet())).collect(Collectors.toList());

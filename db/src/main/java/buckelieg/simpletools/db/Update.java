@@ -23,14 +23,14 @@ public interface Update extends Query<Long> {
     /**
      * Tells this update will be a large update
      *
-     * @return an update statement abstraction
+     * @return an update abstraction
      * @see PreparedStatement#executeLargeUpdate
      */
     Update large();
 
     /**
      * Tells DB to use batch (if possible)
-     * @return an update statement abstraction
+     * @return an update abstraction
      * @see DatabaseMetaData#supportsBatchUpdates()
      */
     Update batched();

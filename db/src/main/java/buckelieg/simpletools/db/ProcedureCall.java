@@ -39,7 +39,7 @@ public interface ProcedureCall extends Select {
      * @param mapper   function for procedure call results processing
      * @param consumer mapper result consumer - will be called after mapper is finished
      * @param <T>      type bounds
-     * @return query builder
+     * @return select abstraction
      */
     @Nonnull
     <T> Select setResultHandler(Try._1<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);

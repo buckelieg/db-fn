@@ -37,7 +37,8 @@ public interface Select extends Query<Iterable<ResultSet>> {
      *
      * @param mapper ResultSet mapper function
      * @param <T>    type bounds
-     * @return mapped object
+     * @return mapped object as Optional
+     * @see Optional
      */
     @Nonnull
     <T> Optional<T> single(Try._1<ResultSet, T, SQLException> mapper);
@@ -61,7 +62,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * Configures Statement fetch size parameter
      *
      * @param size desired fetch size. Should be greater than 0.
-     * @return query builder
+     * @return select abstraction
      * @see java.sql.Statement#setFetchSize(int)
      * @see ResultSet#setFetchSize(int)
      */
@@ -72,7 +73,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * Updates max rows obtained with this query.
      *
      * @param max rows number limit
-     * @return query builder
+     * @return select abstraction
      * @see java.sql.Statement#setMaxRows(int)
      */
     @Nonnull
@@ -82,7 +83,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * Updates max rows obtained with this query
      *
      * @param max rows number limit
-     * @return query builder
+     * @return select abstraction
      * @see java.sql.Statement#setLargeMaxRows(long)
      */
     @Nonnull
@@ -91,7 +92,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
     /**
      * Tells JDBC driver that this query is poolable.
      *
-     * @return query builder
+     * @return select abstraction
      * @see java.sql.Statement#setPoolable(boolean)
      */
     @Nonnull
@@ -103,8 +104,9 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * The same principle is applied to streams - whenever we left stream without
      * calling some 'reduction' (terminal) operation we left resource freeing to JDBC
      *
-     * @return a Stream over Iterable.
+     * @return a stream over Iterable.
      * @see Query#execute()
+     * @see Stream
      */
     @Nonnull
     default Stream<ResultSet> stream() {
@@ -116,7 +118,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      *
      * @param mapper result set mapper which is not required to handle {@link SQLException}
      * @param <T>    type of the mapped object
-     * @return mapped object
+     * @return a stream over mapped objects
      * @see #stream()
      */
     @Nonnull
