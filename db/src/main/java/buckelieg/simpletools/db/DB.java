@@ -32,7 +32,6 @@ import java.util.stream.Stream;
 import static java.util.AbstractMap.SimpleImmutableEntry;
 import static java.util.stream.StreamSupport.stream;
 
-@SuppressWarnings("varargs")
 @ParametersAreNonnullByDefault
 public final class DB implements AutoCloseable {
 
@@ -150,6 +149,7 @@ public final class DB implements AutoCloseable {
      * @return select query
      * @see Select
      */
+    @Nonnull
     public Select select(String query) {
         return select(query, new Object[0]);
     }
@@ -184,6 +184,7 @@ public final class DB implements AutoCloseable {
      * @param batch an array of query parameters on the declared order of '?'
      * @return update query
      */
+    @Nonnull
     public Update update(String query, Object[]... batch) {
         try {
             Connection conn = getConnection();
@@ -224,8 +225,9 @@ public final class DB implements AutoCloseable {
      * @return select query
      * @see Select
      */
+    @SafeVarargs
     @Nonnull
-    public <T extends Map.Entry<String, ?>> Select select(String query, T... namedParams) {
+    public final <T extends Map.Entry<String, ?>> Select select(String query, T... namedParams) {
         return select(query, Arrays.asList(namedParams));
     }
 
@@ -235,6 +237,7 @@ public final class DB implements AutoCloseable {
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @return update query
      */
+    @Nonnull
     public Update update(String query) {
         return update(query, new Object[0]);
     }
@@ -246,6 +249,7 @@ public final class DB implements AutoCloseable {
      * @param params query parameters on the declared order of '?'
      * @return update query
      */
+    @Nonnull
     public Update update(String query, Object... params) {
         return update(query, new Object[][]{params});
     }
@@ -260,7 +264,9 @@ public final class DB implements AutoCloseable {
      * @param <T>         type bounds
      * @return update query
      */
-    public <T extends Map.Entry<String, ?>> Update update(String query, T... namedParams) {
+    @SafeVarargs
+    @Nonnull
+    public final <T extends Map.Entry<String, ?>> Update update(String query, T... namedParams) {
         return update(query, Arrays.asList(namedParams));
     }
 
@@ -273,7 +279,9 @@ public final class DB implements AutoCloseable {
      * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return update query
      */
-    public Update update(String query, Map<String, ?>... batch) {
+    @SafeVarargs
+    @Nonnull
+    public final Update update(String query, Map<String, ?>... batch) {
         List<Map.Entry<String, Object[]>> params = Stream.of(batch).map(np -> prepareQuery(query, np.entrySet())).collect(Collectors.toList());
         return update(params.get(0).getKey(), params.stream().map(Map.Entry::getValue).collect(Collectors.toList()).toArray(new Object[params.size()][]));
     }
