@@ -18,6 +18,9 @@ package buckelieg.simpletools.db;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 
+/**
+ * An abstraction for INSERT/UPDATE/DELETE statements
+ */
 public interface Update extends Query<Long> {
 
     /**
