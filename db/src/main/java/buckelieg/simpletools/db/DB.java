@@ -18,6 +18,7 @@ package buckelieg.simpletools.db;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.concurrent.ThreadSafe;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,6 +34,7 @@ import java.util.stream.Stream;
 import static java.util.AbstractMap.SimpleImmutableEntry;
 import static java.util.stream.StreamSupport.stream;
 
+@ThreadSafe
 @ParametersAreNonnullByDefault
 public final class DB implements AutoCloseable {
 

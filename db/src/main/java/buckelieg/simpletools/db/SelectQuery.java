@@ -141,7 +141,7 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     }
 
     @Override
-    public final Spliterator<ResultSet> trySplit() {
+    public final Spliterator<ResultSet> trySplit() { // TODO use CachedRowSet?
         return null; // not splittable. Parallel streams would not gain any performance benefits yet. May be implemented in future
     }
 
