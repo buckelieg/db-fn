@@ -72,7 +72,7 @@ long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute();
 ```
 Or with named parameters:
 ```java
-long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new Pair<>("name", "New_Name")).execute();
+long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute();
 ```
 ##### Update
 ```java
@@ -80,7 +80,7 @@ long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_
 ```
 or
 ```java
-long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Pair<>("name", "new_name_2"), new Pair<>("new_name", "name_2")).execute();
+long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute();
 ```
 For batch operation use:
 ```java
