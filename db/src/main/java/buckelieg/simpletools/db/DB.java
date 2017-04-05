@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +51,7 @@ public final class DB implements AutoCloseable {
     );
 
     private final Try<Connection, SQLException> connectionSupplier;
-    private final Connection connection;
+    private final AtomicReference<Connection> pool = new AtomicReference<>();
 
     /**
      * Creates DB with connection supplier.
@@ -59,7 +60,6 @@ public final class DB implements AutoCloseable {
      */
     public DB(Try<Connection, SQLException> connectionSupplier) {
         this.connectionSupplier = Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
-        this.connection = null;
     }
 
     /**
@@ -68,7 +68,7 @@ public final class DB implements AutoCloseable {
      * @param connection the connection to operate on
      */
     public DB(Connection connection) {
-        this.connection = Objects.requireNonNull(connection, "Connection must be provided");
+        this.pool.set(Objects.requireNonNull(connection, "Connection must be provided"));
         this.connectionSupplier = null;
     }
 
@@ -334,12 +334,20 @@ public final class DB implements AutoCloseable {
         return iterable;
     }
 
-    private Connection getConnection() throws SQLException {
-        Connection conn = connectionSupplier != null ? connectionSupplier.doTry() : connection;
-        if (Objects.requireNonNull(conn, "Connection to Database must be provided").isClosed()) {
-            throw new SQLException(String.format("Connection '%s' is closed", conn));
-        }
-        return conn;
+    private Connection getConnection() {
+        return pool.updateAndGet(c -> {
+            try {
+                if (c == null || (c.isClosed() && connectionSupplier != null)) {
+                    c = connectionSupplier.doTry();
+                }
+                if (Objects.requireNonNull(c, "Connection must be provided").isClosed()) {
+                    throw new SQLRuntimeException(String.format("Connection '%s' is closed", c));
+                }
+            } catch (SQLException e) {
+                throw new SQLRuntimeException(e);
+            }
+            return c;
+        });
     }
 
     private String validateQuery(String query, @Nullable Consumer<String> validator) {
