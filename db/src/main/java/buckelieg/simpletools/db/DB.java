@@ -337,7 +337,7 @@ public final class DB implements AutoCloseable {
     private Connection getConnection() {
         return pool.updateAndGet(c -> {
             try {
-                if (c == null || (c.isClosed() && connectionSupplier != null)) {
+                if ((c == null || c.isClosed()) && connectionSupplier != null) {
                     c = connectionSupplier.doTry();
                 }
                 if (Objects.requireNonNull(c, "Connection must be provided").isClosed()) {
