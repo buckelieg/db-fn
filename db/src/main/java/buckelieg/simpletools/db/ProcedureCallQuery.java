@@ -17,11 +17,13 @@ package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+@NotThreadSafe
 @ParametersAreNonnullByDefault
 final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 

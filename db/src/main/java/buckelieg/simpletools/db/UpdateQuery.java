@@ -16,6 +16,7 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+@NotThreadSafe
 final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
 
     private final Object[][] batch;
