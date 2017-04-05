@@ -40,6 +40,7 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     }
 
     @Override
+    @Nonnull
     public final Iterator<ResultSet> iterator() {
         return this;
     }
