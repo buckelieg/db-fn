@@ -37,7 +37,7 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
     }
 
     @SuppressWarnings("unchecked")
-    final <Q extends Query<R>> Q jdbcTry(TryDo action) {
+    final <Q extends Query<R>> Q jdbcTry(Try action) {
         return jdbcTry(() -> {
             action.doTry();
             return (Q) this;
@@ -53,7 +53,7 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
         return ps;
     }
 
-    interface TryDo {
+    interface Try {
         void doTry() throws SQLException;
     }
 
