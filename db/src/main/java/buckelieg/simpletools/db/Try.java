@@ -18,8 +18,16 @@ package buckelieg.simpletools.db;
 @FunctionalInterface
 public interface Try<O, E extends Exception> {
 
+    /**
+     * Represents some function which might throw an Exception
+     *
+     * @return optional value
+     * @throws E in case of something went wrong
+     */
+    O doTry() throws E;
+
     @FunctionalInterface
-    interface Produce<O, E extends Exception> {
+    interface Supply<O, E extends Exception> {
 
         /**
          * Value supplier
@@ -39,27 +47,7 @@ public interface Try<O, E extends Exception> {
          * @throws E an exception
          */
         void doTry() throws E;
-
-        @FunctionalInterface
-        interface _1<I, E extends Exception> {
-            /**
-             * Represents some function which might throw an Exception without a return value
-             *
-             * @param input to process
-             * @throws E an exception
-             */
-            void doTry(I input) throws E;
-        }
-
     }
-
-    /**
-     * Represents some function which might throw an Exception
-     *
-     * @return optional value
-     * @throws E in case of something went wrong
-     */
-    O doTry() throws E;
 
     @FunctionalInterface
     interface _1<I, O, E extends Exception> {
@@ -72,6 +60,5 @@ public interface Try<O, E extends Exception> {
          * @throws E in case of something went wrong
          */
         O doTry(I input) throws E;
-
     }
 }
