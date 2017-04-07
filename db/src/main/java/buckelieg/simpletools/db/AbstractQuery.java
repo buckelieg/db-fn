@@ -16,12 +16,19 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
 
     @Nonnull
     @Override
+    @SuppressWarnings("unchecked")
     public final <Q extends Query<R>> Q timeout(int timeout) {
-        return jdbcTry(() -> statement.setQueryTimeout(timeout > 0 ? timeout : 0));
+        return jdbcTry(() -> {
+            statement.setQueryTimeout(timeout > 0 ? timeout : 0);
+            return (Q) this;
+        });
     }
 
     final void close() {
-        jdbcTry(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
+        jdbcTry(() -> {
+            statement.close();
+            return null;
+        }); // by JDBC spec: subsequently closes all result sets opened by this statement
     }
 
     final <O> O jdbcTry(Try<O, SQLException> action) {
@@ -34,14 +41,6 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
             // ignore this possible vendor-specific JDBC driver's error.
         }
         return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    final <Q extends Query<R>> Q jdbcTry(Try.Consume<SQLException> action) {
-        return jdbcTry(() -> {
-            action.doTry();
-            return (Q) this;
-        });
     }
 
     final PreparedStatement setParameters(PreparedStatement ps, Object... params) throws SQLException {
