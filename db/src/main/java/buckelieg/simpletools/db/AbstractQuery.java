@@ -16,31 +16,32 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
 
     @Nonnull
     @Override
-    @SuppressWarnings("unchecked")
     public final <Q extends Query<R>> Q timeout(int timeout) {
-        return jdbcTry(() -> {
-            statement.setQueryTimeout(timeout > 0 ? timeout : 0);
-            return (Q) this;
-        });
+        return jdbcTry(() -> statement.setQueryTimeout(timeout > 0 ? timeout : 0));
     }
 
     final void close() {
-        jdbcTry(() -> {
-            statement.close();
-            return null;
-        }); // by JDBC spec: subsequently closes all result sets opened by this statement
+        jdbcTry(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
     }
 
-    final <O> O jdbcTry(Try<O, SQLException> action) {
+    final <O> O jdbcTry(TrySupply<O> supplier) {
         O result = null;
         try {
-            result = action.doTry();
+            result = supplier.doTry();
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         } catch (AbstractMethodError ame) {
             // ignore this possible vendor-specific JDBC driver's error.
         }
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    final <Q extends Query<R>> Q jdbcTry(TryDo action) {
+        return jdbcTry(() -> {
+            action.doTry();
+            return (Q) this;
+        });
     }
 
     final PreparedStatement setParameters(PreparedStatement ps, Object... params) throws SQLException {
@@ -50,5 +51,13 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
             ps.setObject(++pNum, p); // TODO introduce type conversion here...
         }
         return ps;
+    }
+
+    interface TryDo {
+        void doTry() throws SQLException;
+    }
+
+    interface TrySupply<O> {
+        O doTry() throws SQLException;
     }
 }

@@ -40,7 +40,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @see Optional
      */
     @Nonnull
-    <T> Optional<T> single(Try._1<ResultSet, T, SQLException> mapper);
+    <T> Optional<T> single(Try<ResultSet, T, SQLException> mapper);
 
     /**
      * Iterable abstraction over ResultSet.
@@ -52,7 +52,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * And it is strongly recommended to use <code>single</code> method for the cases above.
      *
      * @return ResultSet as Iterable
-     * @see #single(Try._1)
+     * @see #single(Try)
      */
     @Nonnull
     Iterable<ResultSet> execute();
@@ -121,7 +121,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @see #stream()
      */
     @Nonnull
-    default <T> Stream<T> stream(Try._1<ResultSet, T, SQLException> mapper) {
+    default <T> Stream<T> stream(Try<ResultSet, T, SQLException> mapper) {
         Objects.requireNonNull(mapper, "Mapper must be provided");
         return stream().map(rs -> {
             try {

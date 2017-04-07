@@ -288,7 +288,7 @@ public class TestSuite {
                 });
     }
 
-    private void testImmutableAction(ResultSet rs, Try._1<ResultSet, ?, SQLException> action) {
+    private void testImmutableAction(ResultSet rs, Try<ResultSet, ?, SQLException> action) {
         try {
             action.doTry(rs);
         } catch (SQLException e) {

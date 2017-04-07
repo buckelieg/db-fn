@@ -42,7 +42,7 @@ public interface ProcedureCall extends Select {
      * @return select abstraction
      */
     @Nonnull
-    <T> Select setResultHandler(Try._1<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
+    <T> Select setResultHandler(Try<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
 
     /**
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
@@ -51,10 +51,10 @@ public interface ProcedureCall extends Select {
      * @param mapper function that constructs from {@link CallableStatement}
      * @param <T>    type of the result object
      * @return mapped result
-     * @see #setResultHandler(Try._1, Consumer)
+     * @see #setResultHandler(Try, Consumer)
      */
     @Nullable
-    default <T> T getResult(Try._1<CallableStatement, T, SQLException> mapper) {
+    default <T> T getResult(Try<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
         setResultHandler(mapper, results::add).single(rs -> rs).ifPresent(rs -> {
             throw new SQLRuntimeException("Procedure has non empty result set!");

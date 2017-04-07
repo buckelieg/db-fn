@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
-    private Try._1<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
+    private Try<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
     private Consumer callback;
 
     ProcedureCallQuery(CallableStatement statement) {
@@ -36,7 +36,7 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     @Nonnull
     @Override
-    public <T> Select setResultHandler(Try._1<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
+    public <T> Select setResultHandler(Try<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
         this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "Mapper must be provided");
         this.callback = Objects.requireNonNull(consumer, "Callback must be provided");
         return this;

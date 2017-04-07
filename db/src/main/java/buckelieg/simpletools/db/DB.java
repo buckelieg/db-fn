@@ -52,7 +52,7 @@ public final class DB implements AutoCloseable {
             )
     );
 
-    private final Try<Connection, SQLException> connectionSupplier;
+    private final ConnectionSupplier connectionSupplier;
     private final AtomicReference<Connection> pool = new AtomicReference<>();
 
     /**
@@ -60,7 +60,7 @@ public final class DB implements AutoCloseable {
      *
      * @param connectionSupplier the connection supplier.
      */
-    public DB(Try<Connection, SQLException> connectionSupplier) {
+    public DB(ConnectionSupplier connectionSupplier) {
         this.connectionSupplier = Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
     }
 
@@ -336,11 +336,12 @@ public final class DB implements AutoCloseable {
         return iterable;
     }
 
+    @Nonnull
     private Connection getConnection() {
         return pool.updateAndGet(c -> {
             try {
                 if ((c == null || c.isClosed()) && connectionSupplier != null) {
-                    c = connectionSupplier.doTry();
+                    c = connectionSupplier.get();
                 }
                 if (Objects.requireNonNull(c, "Connection must be provided").isClosed()) {
                     throw new SQLRuntimeException(String.format("Connection '%s' is closed", c));
