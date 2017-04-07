@@ -16,7 +16,9 @@
 package buckelieg.simpletools.db;
 
 
-public interface Try<I, O, E extends Exception> {
+import javax.annotation.Nonnull;
+
+public interface Mapper<I, O, E extends Exception> {
 
     /**
      * Represents some function which might throw an Exception
@@ -25,6 +27,7 @@ public interface Try<I, O, E extends Exception> {
      * @return value
      * @throws E in case of something went wrong
      */
-    O doTry(I input) throws E;
+    @Nonnull
+    O map(I input) throws E;
 
 }
