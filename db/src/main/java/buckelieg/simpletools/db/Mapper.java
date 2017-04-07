@@ -16,15 +16,18 @@
 package buckelieg.simpletools.db;
 
 
+import javax.annotation.Nullable;
+
 public interface Mapper<I, O, E extends Exception> {
 
     /**
      * Represents some function which might throw an Exception
      *
      * @param input optional function input.
-     * @return value
+     * @return an optional value
      * @throws E in case of something went wrong
      */
-    O map(I input) throws E;
+    @Nullable
+    O map(@Nullable I input) throws E;
 
 }
