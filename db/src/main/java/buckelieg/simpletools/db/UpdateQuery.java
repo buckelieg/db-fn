@@ -29,11 +29,11 @@ import java.util.stream.Stream;
 final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
 
     private final Object[][] batch;
-    private ConnectionSupplier connectionSupplier;
+    private ValueSupplier<Connection, SQLException> connectionSupplier;
     private boolean isLarge;
     private boolean batchMode;
 
-    UpdateQuery(ConnectionSupplier connectionSupplier, PreparedStatement statement, Object[]... batch) {
+    UpdateQuery(ValueSupplier<Connection, SQLException> connectionSupplier, PreparedStatement statement, Object[]... batch) {
         super(statement);
         this.batch = Objects.requireNonNull(batch, "Batch must be provided");
         this.connectionSupplier = Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");

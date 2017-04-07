@@ -52,7 +52,7 @@ public final class DB implements AutoCloseable {
             )
     );
 
-    private final ConnectionSupplier connectionSupplier;
+    private final ValueSupplier<Connection, SQLException> connectionSupplier;
     private final AtomicReference<Connection> pool = new AtomicReference<>();
 
     /**
@@ -60,7 +60,7 @@ public final class DB implements AutoCloseable {
      *
      * @param connectionSupplier the connection supplier.
      */
-    public DB(ConnectionSupplier connectionSupplier) {
+    public DB(ValueSupplier<Connection, SQLException> connectionSupplier) {
         this.connectionSupplier = Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
     }
 
