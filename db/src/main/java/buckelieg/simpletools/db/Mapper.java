@@ -16,8 +16,6 @@
 package buckelieg.simpletools.db;
 
 
-import javax.annotation.Nonnull;
-
 public interface Mapper<I, O, E extends Exception> {
 
     /**
@@ -27,7 +25,6 @@ public interface Mapper<I, O, E extends Exception> {
      * @return value
      * @throws E in case of something went wrong
      */
-    @Nonnull
     O map(I input) throws E;
 
 }
