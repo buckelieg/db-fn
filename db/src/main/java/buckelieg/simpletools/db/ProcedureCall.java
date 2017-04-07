@@ -16,13 +16,13 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -50,15 +50,16 @@ public interface ProcedureCall extends Select {
      *
      * @param mapper function that constructs from {@link CallableStatement}
      * @param <T>    type of the result object
-     * @return mapped result
+     * @return mapped result as {@link Optional}
      * @see #setResultHandler(Mapper, Consumer)
+     * @see Optional
      */
-    @Nullable
-    default <T> T getResult(Mapper<CallableStatement, T, SQLException> mapper) {
+    @Nonnull
+    default <T> Optional<T> getResult(Mapper<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
         setResultHandler(mapper, results::add).single(rs -> rs).ifPresent(rs -> {
             throw new SQLRuntimeException("Procedure has non empty result set!");
         });
-        return results.get(0);
+        return results.isEmpty() ? Optional.empty() : Optional.ofNullable(results.get(0));
     }
 }

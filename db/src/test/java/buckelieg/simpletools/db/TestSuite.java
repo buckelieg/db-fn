@@ -259,7 +259,7 @@ public class TestSuite {
 
     @Test
     public void testGetResult() throws Exception {
-        String name = db.call("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2));
+        String name = db.call("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).getResult((cs) -> cs.getString(2)).get();
         assertTrue("name_1".equals(name));
     }
 
