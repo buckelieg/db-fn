@@ -15,7 +15,7 @@
 */
 package buckelieg.simpletools.db;
 
-
+@FunctionalInterface
 public interface Mapper<I, O, E extends Exception> {
 
     /**

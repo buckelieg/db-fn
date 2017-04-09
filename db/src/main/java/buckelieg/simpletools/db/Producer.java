@@ -1,7 +1,7 @@
 package buckelieg.simpletools.db;
 
 @FunctionalInterface
-public interface ValueSupplier<O, E extends Exception> {
+public interface Producer<O, E extends Exception> {
 
     /**
      * Value supplier function which might throw an Exception
