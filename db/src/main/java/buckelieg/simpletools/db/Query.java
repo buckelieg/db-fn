@@ -22,7 +22,7 @@ import javax.annotation.Nonnull;
  *
  * @param <R> query execution results type
  */
-public interface Query<R> {
+public interface Query<R> extends AutoCloseable {
 
     /**
      * Executes this query with expected results of certain type.

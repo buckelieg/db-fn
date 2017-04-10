@@ -109,7 +109,14 @@ public interface Select extends Query<Iterable<ResultSet>> {
      */
     @Nonnull
     default Stream<ResultSet> stream() {
-        return StreamSupport.stream(execute().spliterator(), false);
+        return StreamSupport.stream(execute().spliterator(), false)
+                .onClose(() -> {
+                    try {
+                        close();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     /**
