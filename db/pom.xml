@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>db-tools</artifactId>
-    <version>0.16</version>
+    <version>0.17-SNAPSHOT</version>
 
     <packaging>jar</packaging>
 
@@ -28,7 +28,7 @@
         <url>http://buckelieg.github.io/simple-tools/</url>
         <connection>scm:git:git@github.com:buckelieg/simple-tools.git</connection>
         <developerConnection>scm:git:git@github.com:buckelieg/simple-tools.git</developerConnection>
-        <tag>db-tools-0.16</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
