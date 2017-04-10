@@ -65,7 +65,7 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
                 }
                 try {
                     if (storedProcedureResultsHandler != null && callback != null) {
-                        callback.accept(storedProcedureResultsHandler.map((CallableStatement) statement));
+                        callback.accept(storedProcedureResultsHandler.apply((CallableStatement) statement));
                     }
                 } finally {
                     close();

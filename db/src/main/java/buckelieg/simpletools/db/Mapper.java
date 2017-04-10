@@ -25,6 +25,6 @@ public interface Mapper<I, O, E extends Exception> {
      * @return mapped value
      * @throws E in case of something went wrong
      */
-    O map(I input) throws E;
+    O apply(I input) throws E;
 
 }

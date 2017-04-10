@@ -290,7 +290,7 @@ public class TestSuite {
 
     private void testImmutableAction(ResultSet rs, Mapper<ResultSet, ?, SQLException> action) {
         try {
-            action.map(rs);
+            action.apply(rs);
         } catch (SQLException e) {
             assertTrue("Unsupported operation".equals(e.getMessage()));
         }

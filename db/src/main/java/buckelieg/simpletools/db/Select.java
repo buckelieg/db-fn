@@ -125,7 +125,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
         Objects.requireNonNull(mapper, "Mapper must be provided");
         return stream().map(rs -> {
             try {
-                return mapper.map(rs);
+                return mapper.apply(rs);
             } catch (SQLException e) {
                 throw new SQLRuntimeException(e);
             }
