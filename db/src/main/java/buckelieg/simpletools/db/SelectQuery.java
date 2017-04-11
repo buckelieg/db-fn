@@ -73,10 +73,10 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
 
     @Nonnull
     @Override
-    public final <T> Optional<T> single(Mapper<ResultSet, T, SQLException> mapper) {
+    public final <T> Optional<T> single(TryFunction<ResultSet, T, SQLException> mapper) {
         T value;
         try {
-            value = Objects.requireNonNull(mapper, "Mapper must be provided").apply(execute().iterator().next());
+            value = Objects.requireNonNull(mapper, "TryFunction must be provided").tryApply(execute().iterator().next());
         } catch (NoSuchElementException e) {
             value = null;
         } catch (SQLException e) {

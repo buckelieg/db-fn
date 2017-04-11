@@ -43,4 +43,9 @@ public interface Query<R> extends AutoCloseable {
     @Nonnull
     <Q extends Query<R>> Q timeout(int timeout);
 
+    @Override
+    default void close() {
+
+    }
+
 }

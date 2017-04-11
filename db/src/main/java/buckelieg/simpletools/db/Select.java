@@ -40,7 +40,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @see Optional
      */
     @Nonnull
-    <T> Optional<T> single(Mapper<ResultSet, T, SQLException> mapper);
+    <T> Optional<T> single(TryFunction<ResultSet, T, SQLException> mapper);
 
     /**
      * Iterable abstraction over ResultSet.
@@ -52,7 +52,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * And it is strongly recommended to use <code>single</code> method for the cases above.
      *
      * @return ResultSet as Iterable
-     * @see #single(Mapper)
+     * @see #single(TryFunction)
      */
     @Nonnull
     Iterable<ResultSet> execute();
@@ -109,14 +109,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      */
     @Nonnull
     default Stream<ResultSet> stream() {
-        return StreamSupport.stream(execute().spliterator(), false)
-                .onClose(() -> {
-                    try {
-                        close();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+        return StreamSupport.stream(execute().spliterator(), false).onClose(this::close);
     }
 
     /**
@@ -128,11 +121,11 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @see #stream()
      */
     @Nonnull
-    default <T> Stream<T> stream(Mapper<ResultSet, T, SQLException> mapper) {
-        Objects.requireNonNull(mapper, "Mapper must be provided");
+    default <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper) {
+        Objects.requireNonNull(mapper, "TryFunction must be provided");
         return stream().map(rs -> {
             try {
-                return mapper.apply(rs);
+                return mapper.tryApply(rs);
             } catch (SQLException e) {
                 throw new SQLRuntimeException(e);
             }

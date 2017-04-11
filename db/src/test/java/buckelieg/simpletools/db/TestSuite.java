@@ -288,9 +288,9 @@ public class TestSuite {
                 });
     }
 
-    private void testImmutableAction(ResultSet rs, Mapper<ResultSet, ?, SQLException> action) {
+    private void testImmutableAction(ResultSet rs, TryFunction<ResultSet, ?, SQLException> action) {
         try {
-            action.apply(rs);
+            action.tryApply(rs);
         } catch (SQLException e) {
             assertTrue("Unsupported operation".equals(e.getMessage()));
         }

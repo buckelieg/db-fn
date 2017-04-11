@@ -16,7 +16,7 @@
 package buckelieg.simpletools.db;
 
 @FunctionalInterface
-public interface Mapper<I, O, E extends Exception> {
+public interface TryFunction<I, O, E extends Exception> {
 
     /**
      * Represents some function which might throw an Exception
@@ -25,6 +25,6 @@ public interface Mapper<I, O, E extends Exception> {
      * @return mapped value
      * @throws E in case of something went wrong
      */
-    O apply(I input) throws E;
+    O tryApply(I input) throws E;
 
 }
