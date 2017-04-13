@@ -189,13 +189,16 @@ public final class DB implements AutoCloseable {
     @Nonnull
     public Update update(String query, Object[]... batch) {
         try {
-            Connection conn = getConnection();
-            PreparedStatement ps = conn.prepareStatement(validateQuery(query, lowerQuery -> {
-                if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
-                    throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
-                }
-            }));
-            return new UpdateQuery(this::getConnection, ps, batch);
+            return new UpdateQuery(
+                    this::getConnection,
+                    getConnection().prepareStatement(validateQuery(query, lowerQuery -> {
+                                if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
+                                    throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
+                                }
+                            })
+                    ),
+                    batch
+            );
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
