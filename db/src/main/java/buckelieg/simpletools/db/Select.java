@@ -125,7 +125,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
         Objects.requireNonNull(mapper, "TryFunction must be provided");
         return stream().map(rs -> {
             try {
-                return mapper.tryApply(rs);
+                return mapper.apply(rs);
             } catch (SQLException e) {
                 throw new SQLRuntimeException(e);
             }
