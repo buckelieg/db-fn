@@ -32,12 +32,12 @@ import java.util.function.Consumer;
 public interface ProcedureCall extends Select {
 
     /**
-     * Registers a callableMapper for procedure results processing which is expected in the OUT/INOUT parameters.
+     * Registers mapper for procedure results processing which are expected in the OUT/INOUT parameters.
      * If registered - it will be invoked AFTER result set is iterated over.
-     * If the result set is not iterated exhaustively - callableMapper will NOT be invoked.
+     * If the result set is not iterated exhaustively - mapper will NOT be invoked.
      *
      * @param mapper   function for procedure call results processing
-     * @param consumer callableMapper result consumer - will be called after callableMapper is finished
+     * @param consumer mapper result consumer - will be called after mapper is finished
      * @param <T>      type bounds
      * @return select abstraction
      */
@@ -49,7 +49,7 @@ public interface ProcedureCall extends Select {
      * Throws {@link SQLRuntimeException} in case of non empty results which could be obtained through {@link ResultSet} object.
      *
      * @param mapper function that constructs from {@link CallableStatement}
-     * @param <T>    type of the result object
+     * @param <T>    type bounds
      * @return mapped result as {@link Optional}
      * @see #callableMapper(TryFunction, Consumer)
      * @see Optional

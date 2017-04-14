@@ -116,7 +116,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * Shorthand for stream mapping.
      *
      * @param mapper result set mapper which is not required to handle {@link SQLException}
-     * @param <T>    type of the mapped object
+     * @param <T>    type bounds
      * @return a stream over mapped objects
      * @see #stream()
      */
