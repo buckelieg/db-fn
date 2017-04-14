@@ -32,17 +32,17 @@ import java.util.function.Consumer;
 public interface ProcedureCall extends Select {
 
     /**
-     * Registers a mapper for procedure results processing which is expected in the OUT/INOUT parameters.
+     * Registers a callableMapper for procedure results processing which is expected in the OUT/INOUT parameters.
      * If registered - it will be invoked AFTER result set is iterated over.
-     * If the result set is not iterated exhaustively - mapper will NOT be invoked.
+     * If the result set is not iterated exhaustively - callableMapper will NOT be invoked.
      *
      * @param mapper   function for procedure call results processing
-     * @param consumer mapper result consumer - will be called after mapper is finished
+     * @param consumer callableMapper result consumer - will be called after callableMapper is finished
      * @param <T>      type bounds
      * @return select abstraction
      */
     @Nonnull
-    <T> Select setResultHandler(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
+    <T> Select callableMapper(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
 
     /**
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
@@ -51,13 +51,13 @@ public interface ProcedureCall extends Select {
      * @param mapper function that constructs from {@link CallableStatement}
      * @param <T>    type of the result object
      * @return mapped result as {@link Optional}
-     * @see #setResultHandler(TryFunction, Consumer)
+     * @see #callableMapper(TryFunction, Consumer)
      * @see Optional
      */
     @Nonnull
     default <T> Optional<T> invoke(TryFunction<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
-        setResultHandler(mapper, results::add).single(rs -> rs).ifPresent(rs -> {
+        callableMapper(mapper, results::add).single(rs -> rs).ifPresent(rs -> {
             throw new SQLRuntimeException("Procedure has non-empty result set!");
         });
         return results.isEmpty() ? Optional.empty() : Optional.ofNullable(results.get(0));
@@ -69,7 +69,7 @@ public interface ProcedureCall extends Select {
      * @see #invoke(TryFunction)
      */
     default void invoke() {
-        invoke(cs -> null).ifPresent(rs -> {
+        invoke(cs -> null).ifPresent(cs -> {
             throw new SQLRuntimeException("Procedure has non-empty result set!");
         });
     }

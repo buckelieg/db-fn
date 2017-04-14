@@ -27,8 +27,8 @@ import java.util.function.Consumer;
 @ParametersAreNonnullByDefault
 final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
-    private TryFunction<CallableStatement, ?, SQLException> storedProcedureResultsHandler;
-    private Consumer callback;
+    private TryFunction<CallableStatement, ?, SQLException> mapper;
+    private Consumer consumer;
 
     ProcedureCallQuery(CallableStatement statement) {
         super(statement);
@@ -36,9 +36,9 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     @Nonnull
     @Override
-    public <T> Select setResultHandler(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
-        this.storedProcedureResultsHandler = Objects.requireNonNull(mapper, "TryFunction must be provided");
-        this.callback = Objects.requireNonNull(consumer, "Callback must be provided");
+    public <T> Select callableMapper(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
+        this.mapper = Objects.requireNonNull(mapper, "Mapper must be provided");
+        this.consumer = Objects.requireNonNull(consumer, "Consumer must be provided");
         return this;
     }
 
@@ -64,8 +64,8 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
                     return super.doHasNext();
                 }
                 try {
-                    if (storedProcedureResultsHandler != null && callback != null) {
-                        callback.accept(storedProcedureResultsHandler.apply((CallableStatement) statement));
+                    if (mapper != null && consumer != null) {
+                        consumer.accept(mapper.apply((CallableStatement) statement));
                     }
                 } finally {
                     close();
