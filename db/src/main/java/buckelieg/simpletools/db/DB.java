@@ -21,7 +21,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.ThreadSafe;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -167,12 +166,16 @@ public final class DB implements AutoCloseable {
     @Nonnull
     public Select select(String query, Object... params) {
         try {
-            PreparedStatement ps = getConnection().prepareStatement(validateQuery(query, lowerQuery -> {
-                if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
-                    throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
-                }
-            }));
-            return new SelectQuery(ps, params);
+            return new SelectQuery(
+                    getConnection().prepareStatement(
+                            validateQuery(query, lowerQuery -> {
+                                if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
+                                    throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
+                                }
+                            })
+                    ),
+                    params
+            );
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
