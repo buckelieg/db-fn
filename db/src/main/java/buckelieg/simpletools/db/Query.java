@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
  * Query abstraction.
  *
  * @param <R> query execution results type
+ * @see AutoCloseable
  */
 public interface Query<R> extends AutoCloseable {
 
