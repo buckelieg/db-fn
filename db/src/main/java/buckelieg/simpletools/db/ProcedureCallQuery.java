@@ -36,7 +36,7 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     @Nonnull
     @Override
-    public <T> Select callableMapper(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
+    public <T> Select invoke(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
         this.mapper = Objects.requireNonNull(mapper, "Mapper must be provided");
         this.consumer = Objects.requireNonNull(consumer, "Consumer must be provided");
         return this;

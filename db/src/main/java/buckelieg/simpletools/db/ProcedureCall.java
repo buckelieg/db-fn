@@ -32,17 +32,19 @@ import java.util.function.Consumer;
 public interface ProcedureCall extends Select {
 
     /**
-     * Registers mapper for procedure results processing which are expected in the OUT/INOUT parameters.
-     * If registered - it will be invoked AFTER result set is iterated over.
-     * If the result set is not iterated exhaustively - mapper will NOT be invoked.
+     * Calls procedure for results processing which are expected in the OUT/INOUT parameters.
+     * If registered - these will be invoked AFTER result set is iterated over.
+     * If the result set is not iterated exhaustively - mapper & consumer will NOT be invoked.
+     *
+     * The logic of this is to call mapper for creating result and the call consumer to process it.
      *
      * @param mapper   function for procedure call results processing
      * @param consumer mapper result consumer - will be called after mapper is finished
      * @param <T>      type bounds
-     * @return select abstraction
+     * @return an abstraction for select statement
      */
     @Nonnull
-    <T> Select callableMapper(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
+    <T> Select invoke(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
 
     /**
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
@@ -51,20 +53,20 @@ public interface ProcedureCall extends Select {
      * @param mapper function that constructs from {@link CallableStatement}
      * @param <T>    type bounds
      * @return mapped result as {@link Optional}
-     * @see #callableMapper(TryFunction, Consumer)
+     * @see #invoke(TryFunction, Consumer)
      * @see Optional
      */
     @Nonnull
     default <T> Optional<T> invoke(TryFunction<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
-        callableMapper(mapper, results::add).single(rs -> rs).ifPresent(rs -> {
+        invoke(mapper, results::add).single(rs -> rs).ifPresent(rs -> {
             throw new SQLRuntimeException("Procedure has non-empty result set!");
         });
         return results.isEmpty() ? Optional.empty() : Optional.ofNullable(results.get(0));
     }
 
     /**
-     * Calls this procedure without any results.
+     * Calls this procedure that is without any results expected
      *
      * @see #invoke(TryFunction)
      */

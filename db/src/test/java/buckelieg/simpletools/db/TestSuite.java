@@ -251,7 +251,7 @@ public class TestSuite {
     public void testResultSetWithResultsStoredProcedure() throws Exception {
         List<String> name = new ArrayList<>(1);
         long count = db.call("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
-                .callableMapper((cs) -> cs.getString(2), name::add).stream().count();
+                .invoke((cs) -> cs.getString(2), name::add).stream().count();
         assertTrue(count == 0);
         assertTrue("name_1".equals(name.get(0)));
     }
