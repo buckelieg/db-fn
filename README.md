@@ -9,7 +9,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-tools</artifactId>
-  <version>0.18</version>
+  <version>0.19</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -60,6 +60,8 @@ Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) 
                 Collection::addAll
         );
 ```
+Parameter names are CASE SENSITIVE! 'Name' and 'name' are considered different parameter names.
+
 #### Update/Insert/Delete
 
 These operations could be run in batch mode. Just supply an array of parameters and it will be processed in a single transaction.
@@ -104,7 +106,7 @@ Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHER
 #### Stored Procedures
 Invoking stored procedures is also quite simple:
 ```java
-String name = db.call("{call GETNAMEBYID(?,?)}", P.in(12), P.out(JDBCType.VARCHAR)).getResult(cs -> cs.getString(2)).get();
+String name = db.call("{call GETNAMEBYID(?,?)}", P.in(12), P.out(JDBCType.VARCHAR)).invoke(cs -> cs.getString(2)).get();
 ```
 Note that in the latter case stored procedure must not return any result sets.
 If stored procedure is considered to return result sets it is handled similar to regular selects (see above).
