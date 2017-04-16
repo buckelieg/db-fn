@@ -235,6 +235,11 @@ public class TestSuite {
         assertTrue(Long.valueOf(11L).equals(db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
+    @Test(expected = SQLRuntimeException.class)
+    public void testStoredProcedureNonEmptyResult() throws Exception {
+        db.call("{call CREATETESTROW1(?)}", "new_name").invoke();
+    }
+
     @Test
     public void testResultSetStoredProcedure() throws Exception {
 /*        DB.call(conn, "{call CREATETESTROW1(?)}", "new_name").stream().forEach((rs) -> {
