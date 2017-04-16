@@ -34,7 +34,7 @@ public interface ProcedureCall extends Select {
     /**
      * Calls procedure for results processing which are expected in the OUT/INOUT parameters.
      * If registered - these will be invoked AFTER result set is iterated over.
-     * If the result set is not iterated exhaustively - mapper & consumer will NOT be invoked.
+     * If the result set is not iterated exhaustively - mapper and (then) consumer will NOT be invoked.
      *
      * The logic of this is to call mapper for creating result and the call consumer to process it.
      *
