@@ -25,10 +25,10 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
         jdbcTry(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
     }
 
-    final <O> O jdbcTry(TrySupply<O> supplier) {
+    final <O> O jdbcTry(TrySupplier<O, SQLException> supplier) {
         O result = null;
         try {
-            result = supplier.doTry();
+            result = supplier.get();
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         } catch (AbstractMethodError ame) {
@@ -56,9 +56,5 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
 
     interface Try {
         void doTry() throws SQLException;
-    }
-
-    interface TrySupply<O> {
-        O doTry() throws SQLException;
     }
 }
