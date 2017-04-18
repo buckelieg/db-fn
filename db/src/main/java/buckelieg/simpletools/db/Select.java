@@ -122,7 +122,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      */
     @Nonnull
     default <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper) {
-        Objects.requireNonNull(mapper, "TryFunction must be provided");
+        Objects.requireNonNull(mapper, "Mapper must be provided");
         return stream().map(rs -> {
             try {
                 return mapper.apply(rs);
