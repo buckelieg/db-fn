@@ -91,21 +91,21 @@ public class TestSuite {
 
     @Test
     public void testFetchSize() throws Exception {
-        assertTrue(10 == db.select("SELECT * FROM TEST").fetchSize(1).stream().count());
+        assertTrue(10 == db.select("SELECT * FROM TEST").fetchSize(1).execute().count());
     }
 
     @Test
     public void testMaxRows() throws Exception {
-        assertTrue(1 == db.select("select * from test").maxRows(1).stream().count());
-        assertTrue(1 == db.select("select * from test").maxRows(1L).stream().count());
-        assertTrue(2 == db.select("select * from test").maxRows(1).maxRows(2L).stream().count());
-        assertTrue(2 == db.select("select * from test").maxRows(1L).maxRows(2).stream().count());
+        assertTrue(1 == db.select("select * from test").maxRows(1).execute().count());
+        assertTrue(1 == db.select("select * from test").maxRows(1L).execute().count());
+        assertTrue(2 == db.select("select * from test").maxRows(1).maxRows(2L).execute().count());
+        assertTrue(2 == db.select("select * from test").maxRows(1L).maxRows(2).execute().count());
     }
 
     @Test
     public void testSelect() throws Exception {
         Collection<?> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
-                .stream()
+                .execute()
                 .parallel()
                 .collect(
                         ArrayList<Map.Entry<Integer, String>>::new,
@@ -129,7 +129,7 @@ public class TestSuite {
         params.put("name", "name_5");
         params.put("NAME", "name_6");
         Collection<Map.Entry<Integer, String>> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name OR NAME=:NAME", params)
-                .stream()
+                .execute()
                 .parallel()
                 .collect(
                         LinkedList<Map.Entry<Integer, String>>::new,
@@ -249,14 +249,14 @@ public class TestSuite {
                 e.printStackTrace();
             }
         });*/
-        assertTrue(db.call("{call CREATETESTROW1(?)}", "new_name").stream().count() == 13);
+        assertTrue(db.call("{call CREATETESTROW1(?)}", "new_name").execute().count() == 13);
     }
 
     @Test
     public void testResultSetWithResultsStoredProcedure() throws Exception {
         List<String> name = new ArrayList<>(1);
         long count = db.call("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
-                .invoke((cs) -> cs.getString(2), name::add).stream().count();
+                .invoke((cs) -> cs.getString(2), name::add).execute().count();
         assertTrue(count == 0);
         assertTrue("name_1".equals(name.get(0)));
     }

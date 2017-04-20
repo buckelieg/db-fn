@@ -20,6 +20,12 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
         return jdbcTry(() -> statement.setQueryTimeout(timeout > 0 ? timeout : 0));
     }
 
+    @Nonnull
+    @Override
+    public final <Q extends Query<R>> Q poolable(boolean poolable) {
+        return jdbcTry(() -> statement.setPoolable(poolable));
+    }
+
     @Override
     public final void close() {
         jdbcTry(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement

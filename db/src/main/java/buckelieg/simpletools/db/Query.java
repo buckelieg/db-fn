@@ -34,7 +34,7 @@ public interface Query<R> extends AutoCloseable {
     R execute();
 
     /**
-     * Updates query execution timeout
+     * Sets query execution timeout
      *
      * @param timeout query timeout in seconds gt 0 (0 means no timeout)
      * @param <Q>     type bounds
@@ -45,11 +45,21 @@ public interface Query<R> extends AutoCloseable {
     <Q extends Query<R>> Q timeout(int timeout);
 
     /**
+     * Tells JDBC driver that this query is poolable.
+     *
+     * @param poolable true if this query is poolable, false otherwise
+     * @return query abstraction
+     * @see java.sql.Statement#setPoolable(boolean)
+     */
+    @Nonnull
+    <Q extends Query<R>> Q poolable(boolean poolable);
+
+    /**
+     * Closes this query
+     *
      * @see AutoCloseable#close()
      */
     @Override
     default void close() {
-
     }
-
 }

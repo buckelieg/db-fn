@@ -16,7 +16,7 @@
 package buckelieg.simpletools.db;
 
 @FunctionalInterface
-public interface TryFunction<I, O, E extends Exception> {
+public interface TryFunction<I, O, E extends Throwable> {
 
     /**
      * Represents some function which might throw an Exception

@@ -90,6 +90,7 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
                 } catch (SQLException e) {
                     // ignore
                 }
+                close();
             }
         });
     }

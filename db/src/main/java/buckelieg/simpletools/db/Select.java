@@ -22,13 +22,12 @@ import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * An abstraction for SELECT statement
  */
 @ParametersAreNonnullByDefault
-public interface Select extends Query<Iterable<ResultSet>> {
+public interface Select extends Query<Stream<ResultSet>> {
 
     /**
      * In cases when single result of SELECT statement is expected.
@@ -43,9 +42,9 @@ public interface Select extends Query<Iterable<ResultSet>> {
     <T> Optional<T> single(TryFunction<ResultSet, T, SQLException> mapper);
 
     /**
-     * Iterable abstraction over ResultSet.
+     * Stream abstraction over ResultSet.
      * Note:
-     * The code below does not iterate over all rows in the result set.
+     * Whenever we left stream without calling some 'reduction' (terminal) operation we left resource freeing to JDBC
      * <code>execute().iterator().next().get(...)</code>
      * Thus there could be none or some rows more, but result set (and a statement) would not be closed forcibly.
      * In such cases we rely on JDBC resources auto closing mechanism.
@@ -55,7 +54,7 @@ public interface Select extends Query<Iterable<ResultSet>> {
      * @see #single(TryFunction)
      */
     @Nonnull
-    Iterable<ResultSet> execute();
+    Stream<ResultSet> execute();
 
     /**
      * Configures Statement fetch size parameter
@@ -89,41 +88,17 @@ public interface Select extends Query<Iterable<ResultSet>> {
     Select maxRows(long max);
 
     /**
-     * Tells JDBC driver that this query is poolable.
-     *
-     * @return select abstraction
-     * @see java.sql.Statement#setPoolable(boolean)
-     */
-    @Nonnull
-    Select pooled();
-
-    /**
-     * Shorthand for streams.
-     * Note:
-     * The same principle is applied to streams - whenever we left stream without
-     * calling some 'reduction' (terminal) operation we left resource freeing to JDBC
-     *
-     * @return a stream over Iterable.
-     * @see Query#execute()
-     * @see Stream
-     */
-    @Nonnull
-    default Stream<ResultSet> stream() {
-        return StreamSupport.stream(execute().spliterator(), false).onClose(this::close);
-    }
-
-    /**
      * Shorthand for stream mapping.
      *
      * @param mapper result set mapper which is not required to handle {@link SQLException}
      * @param <T>    type bounds
      * @return a stream over mapped objects
-     * @see #stream()
+     * @see #execute()
      */
     @Nonnull
     default <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper) {
         Objects.requireNonNull(mapper, "Mapper must be provided");
-        return stream().map(rs -> {
+        return execute().map(rs -> {
             try {
                 return mapper.apply(rs);
             } catch (SQLException e) {

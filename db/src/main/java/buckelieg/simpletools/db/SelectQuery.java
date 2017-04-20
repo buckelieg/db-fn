@@ -23,10 +23,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
+class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
     ResultSet rs;
     private boolean hasNext;
@@ -89,13 +91,14 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
 
     @Nonnull
     @Override
-    public final Iterable<ResultSet> execute() {
-        return jdbcTry(() -> {
+    public final Stream<ResultSet> execute() {
+        return StreamSupport.stream(jdbcTry(() -> {
             doExecute();
             if (rs != null) {
                 wrapper = new ImmutableResultSet(rs);
             }
-        });
+            return spliterator();
+        }), false).onClose(this::close);
     }
 
     protected void doExecute() {
@@ -120,12 +123,6 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
         return jdbcTry(() -> statement.setLargeMaxRows(max));
     }
 
-    @Nonnull
-    @Override
-    public Select pooled() {
-        return jdbcTry(() -> statement.setPoolable(true));
-    }
-
     @Override
     public final Spliterator<ResultSet> spliterator() {
         return this;
@@ -142,7 +139,7 @@ class SelectQuery extends AbstractQuery<Iterable<ResultSet>, PreparedStatement> 
     }
 
     @Override
-    public final Spliterator<ResultSet> trySplit() { // TODO use CachedRowSet?
+    public final Spliterator<ResultSet> trySplit() {
         return null; // not splittable. Parallel streams would not gain any performance benefits yet. May be implemented in future
     }
 

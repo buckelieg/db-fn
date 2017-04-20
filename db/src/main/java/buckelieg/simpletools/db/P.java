@@ -100,18 +100,20 @@ public final class P<T> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         P<?> p = (P<?>) o;
-        return mode == p.mode &&
-                Objects.equals(name, p.name) &&
-                Objects.equals(value, p.value);
+        return mode == p.mode && name.equals(p.name) && value.equals(p.value) && type.equals(p.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mode, name, value);
+        int result = mode;
+        result = 31 * result + name.hashCode();
+        result = 31 * result + value.hashCode();
+        result = 31 * result + type.hashCode();
+        return result;
     }
 
     @Override
     public String toString() {
-        return String.format("%s:%s=%s", isInOut() ? "INOUT" : isOut() ? "OUT" : "IN", name, value);
+        return String.format("%s:%s=%s(%s)", isInOut() ? "INOUT" : isOut() ? "OUT" : "IN", name, value, type.getName());
     }
 }

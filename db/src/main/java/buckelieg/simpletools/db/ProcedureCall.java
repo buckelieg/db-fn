@@ -60,7 +60,7 @@ public interface ProcedureCall extends Select {
     default <T> Optional<T> invoke(TryFunction<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
         invoke(mapper, results::add).single(rs -> rs).ifPresent(rs -> {
-            throw new SQLRuntimeException("Procedure has non-empty result set!");
+            throw new SQLRuntimeException("Procedure has non-empty result set");
         });
         return results.isEmpty() ? Optional.empty() : Optional.ofNullable(results.get(0));
     }
@@ -72,7 +72,7 @@ public interface ProcedureCall extends Select {
      */
     default void invoke() {
         invoke(cs -> null).ifPresent(rs -> {
-            throw new SQLRuntimeException("Procedure has non-empty result set!");
+            throw new SQLRuntimeException("Procedure has non-empty result set");
         });
     }
 }
