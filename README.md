@@ -9,7 +9,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-tools</artifactId>
-  <version>0.19</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -47,7 +47,7 @@ or use named parameters:
 Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>(){{
             put("ID", new Object[]{1, 2}); 
             put("name", "name_5");
-        }}).stream().collect(
+        }}).execute().collect(
                 LinkedList<T>::new,
                 (list, rs) -> {
                     try {
