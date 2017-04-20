@@ -97,7 +97,7 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
             if (rs != null) {
                 wrapper = new ImmutableResultSet(rs);
             }
-            return spliterator();
+            return this;
         }), false).onClose(this::close);
     }
 
