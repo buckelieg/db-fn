@@ -11,7 +11,7 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
     final S statement;
 
     AbstractQuery(S statement) {
-        this.statement = Objects.requireNonNull(statement, "Statement must not be null");
+        this.statement = Objects.requireNonNull(statement, "Statement must be provided");
     }
 
     @Nonnull
