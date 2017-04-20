@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
 
     private final Object[][] batch;
-    private TrySupplier<Connection, SQLException> connectionSupplier;
+    private final TrySupplier<Connection, SQLException> connectionSupplier;
     private boolean isLarge;
     private boolean batchMode;
 
