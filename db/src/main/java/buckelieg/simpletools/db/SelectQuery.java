@@ -108,19 +108,19 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
     @Nonnull
     @Override
     public final Select fetchSize(int size) {
-        return jdbcTry(() -> statement.setFetchSize(size)); // 0 value is ignored by ResultSet.setFetchSize;
+        return jdbcTry(() -> statement.setFetchSize(size > 0 ? size : 0)); // 0 value is ignored by ResultSet.setFetchSize;
     }
 
     @Nonnull
     @Override
     public Select maxRows(int max) {
-        return jdbcTry(() -> statement.setMaxRows(max));
+        return jdbcTry(() -> statement.setMaxRows(max > 0 ? max : 0));
     }
 
     @Nonnull
     @Override
     public Select maxRows(long max) {
-        return jdbcTry(() -> statement.setLargeMaxRows(max));
+        return jdbcTry(() -> statement.setLargeMaxRows(max > 0 ? max : 0));
     }
 
     @Override
@@ -130,9 +130,8 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
 
     @Override
     public final boolean tryAdvance(Consumer<? super ResultSet> action) {
-        Objects.requireNonNull(action);
         if (hasNext()) {
-            action.accept(next());
+            Objects.requireNonNull(action).accept(next());
             return true;
         }
         return false;
