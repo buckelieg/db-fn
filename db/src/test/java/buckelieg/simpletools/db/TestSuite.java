@@ -343,12 +343,10 @@ public class TestSuite {
                 new SimpleImmutableEntry<>("{call}", false),
                 new SimpleImmutableEntry<>("call myProc(?,?,?,?,?)", true)
                 // TODO more cases here
-        ).forEach(testCase -> {
-            assertTrue(
-                    String.format("Test case '%s' failed", testCase.getKey()),
-                    testCase.getValue() == STORED_PROCEDURE.matcher(testCase.getKey()).matches()
-            );
-        });
+        ).forEach(testCase -> assertTrue(
+                String.format("Test case '%s' failed", testCase.getKey()),
+                testCase.getValue() == STORED_PROCEDURE.matcher(testCase.getKey()).matches()
+        ));
     }
 
 }
