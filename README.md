@@ -46,9 +46,9 @@ or use named parameters:
 ```java
 Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>(){{
             put("ID", new Object[]{1, 2}); 
-            put("name", "name_5");
-        }}).execute().collect(
-                LinkedList<T>::new,
+            put("name", "name_5"); // for example only: do not use this IRL
+        }}).execute().reduce(
+                new LinkedList<T>(),
                 (list, rs) -> {
                     try {
                         list.add(...);
@@ -57,7 +57,10 @@ Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) 
                     }
                     return list;
                 },
-                Collection::addAll
+                (l1, l2) -> {
+                  l1.addAll(l2);
+                  return l1;
+                }
         );
 ```
 Parameter names are CASE SENSITIVE! 'Name' and 'name' are considered different parameter names.
