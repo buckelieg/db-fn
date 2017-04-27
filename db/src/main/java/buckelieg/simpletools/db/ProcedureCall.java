@@ -71,8 +71,6 @@ public interface ProcedureCall extends Select {
      * @see #invoke(TryFunction)
      */
     default void invoke() {
-        invoke(cs -> null).ifPresent(rs -> {
-            throw new SQLRuntimeException("Procedure has non-empty result set");
-        });
+        invoke(cs -> null);
     }
 }
