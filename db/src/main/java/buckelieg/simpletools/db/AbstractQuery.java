@@ -55,7 +55,7 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
         Objects.requireNonNull(params, "Parameters must be provided");
         int pNum = 0;
         for (Object p : params) {
-            ps.setObject(++pNum, p); // TODO introduce type conversion here...
+            ps.setObject(++pNum, p); // introduce type conversion here?
         }
         return ps;
     }

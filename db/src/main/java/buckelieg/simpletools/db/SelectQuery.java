@@ -139,7 +139,7 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
 
     @Override
     public final Spliterator<ResultSet> trySplit() {
-        return null; // not splittable. Parallel streams would not gain any performance benefits yet. May be implemented in future
+        return null; // not splittable. Parallel streams would not gain any performance benefits yet. May be implemented in future?
     }
 
     @Override

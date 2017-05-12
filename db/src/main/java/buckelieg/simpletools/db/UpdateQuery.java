@@ -67,7 +67,6 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
                     savepoint = conn.setSavepoint();
                 }
                 rowsAffected = batchMode && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
-                statement.close();
                 if (transacted) {
                     conn.commit();
                 }
