@@ -69,8 +69,7 @@ public final class DB implements AutoCloseable {
      * @param connection the connection to operate on
      */
     public DB(Connection connection) {
-        this.pool.set(Objects.requireNonNull(connection, "Connection must be provided"));
-        this.connectionSupplier = null;
+        this.connectionSupplier = () -> Objects.requireNonNull(connection, "Connection must be provided");
     }
 
     @Override
@@ -346,16 +345,10 @@ public final class DB implements AutoCloseable {
     private Connection getConnection() {
         return pool.updateAndGet(c -> {
             try {
-                if ((c == null || c.isClosed()) && connectionSupplier != null) {
-                    c = connectionSupplier.get();
-                }
-                if (Objects.requireNonNull(c, "Connection must be provided").isClosed()) {
-                    throw new SQLRuntimeException(String.format("Connection '%s' is closed", c));
-                }
+                return c == null ? connectionSupplier.get() : c;
             } catch (SQLException e) {
                 throw new SQLRuntimeException(e);
             }
-            return c;
         });
     }
 
