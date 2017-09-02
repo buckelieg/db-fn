@@ -23,7 +23,6 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,7 +51,6 @@ public final class DB implements AutoCloseable {
     );
 
     private final TrySupplier<Connection, SQLException> connectionSupplier;
-    private final AtomicReference<Connection> pool = new AtomicReference<>();
 
     /**
      * Creates DB with connection supplier.
@@ -74,7 +72,7 @@ public final class DB implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        getConnection().close();
+        connectionSupplier.get().close();
     }
 
     /**
@@ -126,7 +124,7 @@ public final class DB implements AutoCloseable {
             if (!STORED_PROCEDURE.matcher(validatedQuery).matches()) {
                 throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
             }
-            CallableStatement cs = getConnection().prepareCall(validatedQuery);
+            CallableStatement cs = connectionSupplier.get().prepareCall(validatedQuery);
             for (int i = 1; i <= preparedParams.length; i++) {
                 P<?> p = preparedParams[i - 1];
                 if (p.isOut() || p.isInOut()) {
@@ -166,7 +164,7 @@ public final class DB implements AutoCloseable {
     public Select select(String query, Object... params) {
         try {
             return new SelectQuery(
-                    getConnection().prepareStatement(
+                    connectionSupplier.get().prepareStatement(
                             validateQuery(query, lowerQuery -> {
                                 if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
                                     throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
@@ -192,8 +190,8 @@ public final class DB implements AutoCloseable {
     public Update update(String query, Object[]... batch) {
         try {
             return new UpdateQuery(
-                    this::getConnection,
-                    getConnection().prepareStatement(validateQuery(query, lowerQuery -> {
+                    connectionSupplier,
+                    connectionSupplier.get().prepareStatement(validateQuery(query, lowerQuery -> {
                                 if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
                                     throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
                                 }
@@ -339,17 +337,6 @@ public final class DB implements AutoCloseable {
             iterable = Collections.singletonList(o);
         }
         return iterable;
-    }
-
-    @Nonnull
-    private Connection getConnection() {
-        return pool.updateAndGet(c -> {
-            try {
-                return c == null ? connectionSupplier.get() : c;
-            } catch (SQLException e) {
-                throw new SQLRuntimeException(e);
-            }
-        });
     }
 
     private String validateQuery(String query, @Nullable Consumer<String> validator) {

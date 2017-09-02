@@ -35,7 +35,7 @@ public interface ProcedureCall extends Select {
      * Calls procedure for results processing which are expected in the OUT/INOUT parameters.
      * If registered - these will be invoked AFTER result set is iterated over.
      * If the result set is not iterated exhaustively - mapper and (then) consumer will NOT be invoked.
-     *
+     * <p>
      * The logic of this is to call mapper for creating result and the call consumer to process it.
      *
      * @param mapper   function for procedure call results processing
@@ -62,7 +62,7 @@ public interface ProcedureCall extends Select {
         invoke(mapper, results::add).single(rs -> rs).ifPresent(rs -> {
             throw new SQLRuntimeException("Procedure has non-empty result set");
         });
-        return results.isEmpty() ? Optional.empty() : Optional.ofNullable(results.get(0));
+        return Optional.ofNullable(results.isEmpty() ? null : results.get(0));
     }
 
     /**

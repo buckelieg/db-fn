@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 /**
  * An abstraction for SELECT statement
  */
+@SuppressWarnings("unchecked")
 @ParametersAreNonnullByDefault
 public interface Select extends Query<Stream<ResultSet>> {
 
@@ -86,6 +87,20 @@ public interface Select extends Query<Stream<ResultSet>> {
      */
     @Nonnull
     Select maxRows(long max);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    Select timeout(int timeout);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    Select poolable(boolean poolable);
 
     /**
      * Shorthand for stream mapping.

@@ -15,12 +15,14 @@
 */
 package buckelieg.simpletools.db;
 
+import javax.annotation.Nonnull;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 
 /**
  * An abstraction for INSERT/UPDATE/DELETE statements
  */
+@SuppressWarnings("unchecked")
 public interface Update extends Query<Long> {
 
     /**
@@ -33,8 +35,23 @@ public interface Update extends Query<Long> {
 
     /**
      * Tells DB to use batch (if possible)
+     *
      * @return an update abstraction
      * @see DatabaseMetaData#supportsBatchUpdates()
      */
     Update batched();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    Update timeout(int timeout);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    Update poolable(boolean poolable);
 }

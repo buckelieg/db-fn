@@ -26,6 +26,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+@SuppressWarnings("unchecked")
 @NotThreadSafe
 @ParametersAreNonnullByDefault
 class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
@@ -121,6 +122,18 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
     @Override
     public Select maxRows(long max) {
         return jdbcTry(() -> statement.setLargeMaxRows(max > 0 ? max : 0));
+    }
+
+    @Nonnull
+    @Override
+    public final Select poolable(boolean poolable) {
+        return setPoolable(poolable);
+    }
+
+    @Nonnull
+    @Override
+    public final Select timeout(int timeout) {
+        return setTimeout(timeout);
     }
 
     @Override

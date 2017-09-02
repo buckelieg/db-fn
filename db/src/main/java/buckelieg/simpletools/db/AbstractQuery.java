@@ -1,12 +1,10 @@
 package buckelieg.simpletools.db;
 
-import javax.annotation.Nonnull;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Objects;
 
-abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
+abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R> {
 
     final S statement;
 
@@ -14,21 +12,17 @@ abstract class AbstractQuery<R, S extends Statement> implements Query<R> {
         this.statement = Objects.requireNonNull(statement, "Statement must be provided");
     }
 
-    @Nonnull
-    @Override
-    public final <Q extends Query<R>> Q timeout(int timeout) {
-        return jdbcTry(() -> statement.setQueryTimeout(timeout > 0 ? timeout : 0));
-    }
-
-    @Nonnull
-    @Override
-    public final <Q extends Query<R>> Q poolable(boolean poolable) {
-        return jdbcTry(() -> statement.setPoolable(poolable));
-    }
-
     @Override
     public final void close() {
         jdbcTry(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
+    }
+
+    final <Q extends Query<R>> Q setTimeout(int timeout) {
+        return jdbcTry(() -> statement.setQueryTimeout(timeout > 0 ? timeout : 0));
+    }
+
+    final <Q extends Query<R>> Q setPoolable(boolean poolable) {
+        return jdbcTry(() -> statement.setPoolable(poolable));
     }
 
     final <O> O jdbcTry(TrySupplier<O, SQLException> supplier) {

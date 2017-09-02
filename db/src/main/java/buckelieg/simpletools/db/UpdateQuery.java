@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+@SuppressWarnings("unchecked")
 @NotThreadSafe
 final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
 
@@ -49,6 +50,18 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     public Update batched() {
         batchMode = true;
         return this;
+    }
+
+    @Nonnull
+    @Override
+    public final Update poolable(boolean poolable) {
+        return setPoolable(poolable);
+    }
+
+    @Nonnull
+    @Override
+    public final Update timeout(int timeout) {
+        return setTimeout(timeout);
     }
 
     @Nonnull
