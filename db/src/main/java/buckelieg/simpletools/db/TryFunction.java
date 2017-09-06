@@ -15,6 +15,8 @@
 */
 package buckelieg.simpletools.db;
 
+import java.util.Objects;
+
 @FunctionalInterface
 public interface TryFunction<I, O, E extends Throwable> {
 
@@ -27,4 +29,15 @@ public interface TryFunction<I, O, E extends Throwable> {
      */
     O apply(I input) throws E;
 
+    static <T> TryFunction<T, T, ?> identity() {
+        return t -> t;
+    }
+
+    default <V> TryFunction<V, O, E> compose(TryFunction<? super V, ? extends I, ? extends E> before) throws E {
+        return (V v) -> apply(Objects.requireNonNull(before).apply(v));
+    }
+
+    default <V> TryFunction<I, V, E> andThen(TryFunction<? super O, ? extends V, ? extends E> after) throws E {
+        return (I t) -> Objects.requireNonNull(after).apply(apply(t));
+    }
 }
