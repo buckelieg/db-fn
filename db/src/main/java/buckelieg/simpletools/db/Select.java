@@ -20,7 +20,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -35,12 +34,11 @@ public interface Select extends Query<Stream<ResultSet>> {
      * Like SELECT COUNT(*) FROM TABLE_NAME etc...
      *
      * @param mapper ResultSet mapper function
-     * @param <T>    type bounds
      * @return mapped object as Optional
-     * @see Optional
+     * @see TryOptional
      */
     @Nonnull
-    <T> Optional<T> single(TryFunction<ResultSet, T, SQLException> mapper);
+    <T, E extends SQLException> TryOptional<T, E> single(TryFunction<ResultSet, T, E> mapper);
 
     /**
      * Stream abstraction over ResultSet.
@@ -103,10 +101,19 @@ public interface Select extends Query<Stream<ResultSet>> {
     Select poolable(boolean poolable);
 
     /**
+     * Sets {@link ResultSet} mutable.
+     * By default returned {@link ResultSet} is immutable.
+     * This means that "mutation" methods (like next, setXXX, last etc.) would result in {@link SQLException}
+     *
+     * @return select abstraction
+     */
+    @Nonnull
+    Select mutable();
+
+    /**
      * Shorthand for stream mapping.
      *
      * @param mapper result set mapper which is not required to handle {@link SQLException}
-     * @param <T>    type bounds
      * @return a stream over mapped objects
      * @see #execute()
      */

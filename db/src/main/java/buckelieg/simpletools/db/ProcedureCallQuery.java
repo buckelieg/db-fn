@@ -19,6 +19,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -30,8 +31,8 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
     private TryFunction<CallableStatement, ?, SQLException> mapper;
     private Consumer consumer;
 
-    ProcedureCallQuery(CallableStatement statement) {
-        super(statement);
+    ProcedureCallQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, P<?>... params) {
+        super(connectionSupplier, query, (Object[]) params);
     }
 
     @Nonnull
@@ -44,16 +45,12 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
 
     @Override
     protected void doExecute() {
-        jdbcTry(() -> {
-            if (statement.execute()) {
-                rs = statement.getResultSet();
-            }
-        });
+        withStatement(s -> s.execute() ? rs = s.getResultSet() : null);
     }
 
     @SuppressWarnings("unchecked")
     protected boolean doHasNext() {
-        return jdbcTry(() -> {
+        return withStatement(statement -> {
             boolean moved = super.doHasNext();
             if (!moved) {
                 if (statement.getMoreResults()) {
@@ -75,4 +72,20 @@ final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
         });
     }
 
+    @Override
+    CallableStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
+        return jdbcTry(() -> {
+            CallableStatement cs = connectionSupplier.get().prepareCall(query);
+            for (int i = 1; i <= params.length; i++) {
+                P<?> p = (P<?>) params[i - 1];
+                if (p.isOut() || p.isInOut()) {
+                    cs.registerOutParameter(i, Objects.requireNonNull(p.getType(), String.format("Parameter '%s' must have SQLType set", p)));
+                }
+                if (p.isIn() || p.isInOut()) {
+                    cs.setObject(i, p.getValue());
+                }
+            }
+            return cs;
+        });
+    }
 }

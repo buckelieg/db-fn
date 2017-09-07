@@ -57,20 +57,25 @@ public interface ProcedureCall extends Select {
      * @see Optional
      */
     @Nonnull
-    default <T> Optional<T> invoke(TryFunction<CallableStatement, T, SQLException> mapper) {
+    default <T> TryOptional<T, SQLException> invoke(TryFunction<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
-        invoke(mapper, results::add).single(rs -> rs).ifPresent(rs -> {
-            throw new SQLRuntimeException("Procedure has non-empty result set");
+        return TryOptional.of(() -> {
+            if (invoke(mapper, results::add).single(rs -> rs).toOptional().isPresent()) {
+                throw new SQLException("Procedure has non-empty result set");
+            }
+            return results.get(0);
         });
-        return Optional.ofNullable(results.isEmpty() ? null : results.get(0));
     }
 
     /**
      * Calls this procedure that is without any results expected
      *
+     * @throws SQLRuntimeException if provided {@link ResultSet} is not empty.
      * @see #invoke(TryFunction)
      */
     default void invoke() {
-        invoke(cs -> null);
+        invoke(cs -> null).onException(e -> {
+            throw new SQLRuntimeException(e);
+        });
     }
 }

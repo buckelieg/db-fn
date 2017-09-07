@@ -18,12 +18,13 @@ package buckelieg.simpletools.db;
 import javax.annotation.Nonnull;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * An abstraction for INSERT/UPDATE/DELETE statements
  */
 @SuppressWarnings("unchecked")
-public interface Update extends Query<Long> {
+public interface Update extends Query<TryOptional<Long, SQLException>> {
 
     /**
      * Tells this update will be a large update
@@ -54,4 +55,5 @@ public interface Update extends Query<Long> {
     @Nonnull
     @Override
     Update poolable(boolean poolable);
+
 }

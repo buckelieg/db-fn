@@ -37,7 +37,6 @@ public interface Query<R> extends AutoCloseable {
      * Sets query execution timeout
      *
      * @param timeout query timeout in seconds gt 0 (0 means no timeout)
-     * @param <Q>     type bounds
      * @return query abstraction
      * @see java.sql.Statement#setQueryTimeout(int)
      */

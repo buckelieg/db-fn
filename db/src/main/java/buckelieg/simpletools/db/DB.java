@@ -19,7 +19,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.ThreadSafe;
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -100,44 +99,30 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public ProcedureCall call(String query, P<?>... params) {
-        try {
-            String validatedQuery = validateQuery(query, null);
-            P<?>[] preparedParams = params;
-            int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
-            if (namedParams == params.length) {
-                Map.Entry<String, Object[]> preparedQuery = prepareQuery(
-                        validatedQuery,
-                        Stream.of(params)
-                                .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
-                                .collect(Collectors.toList())
-                );
-                validatedQuery = preparedQuery.getKey();
-                preparedParams = (P<?>[]) preparedQuery.getValue();
-            } else if (0 < namedParams && namedParams < params.length) {
-                throw new IllegalArgumentException(
-                        String.format(
-                                "Cannot combine named parameters(count=%s) with unnamed ones(count=%s).",
-                                namedParams, params.length - namedParams
-                        )
-                );
-            }
-            if (!STORED_PROCEDURE.matcher(validatedQuery).matches()) {
-                throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
-            }
-            CallableStatement cs = connectionSupplier.get().prepareCall(validatedQuery);
-            for (int i = 1; i <= preparedParams.length; i++) {
-                P<?> p = preparedParams[i - 1];
-                if (p.isOut() || p.isInOut()) {
-                    cs.registerOutParameter(i, Objects.requireNonNull(p.getType(), String.format("Parameter '%s' must have SQLType set", p)));
-                }
-                if (p.isIn() || p.isInOut()) {
-                    cs.setObject(i, p.getValue());
-                }
-            }
-            return new ProcedureCallQuery(cs);
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
+        String validatedQuery = validateQuery(query, null);
+        P<?>[] preparedParams = params;
+        int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
+        if (namedParams == params.length) {
+            Map.Entry<String, Object[]> preparedQuery = prepareQuery(
+                    validatedQuery,
+                    Stream.of(params)
+                            .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
+                            .collect(Collectors.toList())
+            );
+            validatedQuery = preparedQuery.getKey();
+            preparedParams = (P<?>[]) preparedQuery.getValue();
+        } else if (0 < namedParams && namedParams < params.length) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Cannot combine named parameters(count=%s) with unnamed ones(count=%s).",
+                            namedParams, params.length - namedParams
+                    )
+            );
         }
+        if (!STORED_PROCEDURE.matcher(validatedQuery).matches()) {
+            throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
+        }
+        return new ProcedureCallQuery(connectionSupplier, validatedQuery, preparedParams);
     }
 
     /**
@@ -162,20 +147,15 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public Select select(String query, Object... params) {
-        try {
-            return new SelectQuery(
-                    connectionSupplier.get().prepareStatement(
-                            validateQuery(query, lowerQuery -> {
-                                if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
-                                    throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
-                                }
-                            })
-                    ),
-                    params
-            );
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
-        }
+        return new SelectQuery(
+                connectionSupplier,
+                validateQuery(query, lowerQuery -> {
+                    if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
+                        throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
+                    }
+                }),
+                params
+        );
     }
 
 
@@ -188,20 +168,15 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public Update update(String query, Object[]... batch) {
-        try {
-            return new UpdateQuery(
-                    connectionSupplier,
-                    connectionSupplier.get().prepareStatement(validateQuery(query, lowerQuery -> {
-                                if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
-                                    throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
-                                }
-                            })
-                    ),
-                    batch
-            );
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
-        }
+        return new UpdateQuery(
+                connectionSupplier,
+                validateQuery(query, lowerQuery -> {
+                    if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
+                        throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
+                    }
+                }),
+                batch
+        );
     }
 
     /**
@@ -226,7 +201,6 @@ public final class DB implements AutoCloseable {
      *
      * @param query       SELECT query to execute. Can be WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @param <T>         type bounds
      * @return select query
      * @see Select
      */
@@ -266,7 +240,6 @@ public final class DB implements AutoCloseable {
      *
      * @param query       INSERT/UPDATE/DELETE query to execute.
      * @param namedParams query named parameters. Parameter name in the form of :name
-     * @param <T>         type bounds
      * @return update query
      */
     @SafeVarargs

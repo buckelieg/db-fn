@@ -18,10 +18,14 @@ package buckelieg.simpletools.db;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -32,14 +36,13 @@ import java.util.stream.StreamSupport;
 class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
     ResultSet rs;
+    private boolean isMutable;
     private boolean hasNext;
     private boolean hasMoved;
-    private ImmutableResultSet wrapper;
-    private Object[] params;
+    private ResultSet wrapper;
 
-    SelectQuery(PreparedStatement statement, Object... params) {
-        super(statement);
-        this.params = params;
+    SelectQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
+        super(connectionSupplier, query, params);
     }
 
     @Override
@@ -76,18 +79,14 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
 
     @Nonnull
     @Override
-    public final <T> Optional<T> single(TryFunction<ResultSet, T, SQLException> mapper) {
-        T value;
-        try {
-            value = Objects.requireNonNull(mapper, "Mapper must be provided").apply(execute().iterator().next());
-        } catch (NoSuchElementException e) {
-            value = null;
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
-        } finally {
-            close();
-        }
-        return Optional.ofNullable(value);
+    public final <T, E extends SQLException> TryOptional<T, E> single(TryFunction<ResultSet, T, E> mapper) {
+        return TryOptional.of(() -> {
+            try {
+                return Objects.requireNonNull(mapper, "Mapper must be provided").apply(execute().iterator().next());
+            } finally {
+                close();
+            }
+        });
     }
 
     @Nonnull
@@ -96,32 +95,32 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
         return StreamSupport.stream(jdbcTry(() -> {
             doExecute();
             if (rs != null) {
-                wrapper = new ImmutableResultSet(rs);
+                wrapper = isMutable ? rs : new ImmutableResultSet(rs);
             }
             return this;
         }), false).onClose(this::close);
     }
 
     protected void doExecute() {
-        jdbcTry(() -> rs = setParameters(statement, params).executeQuery());
+        withStatement(s -> rs = s.executeQuery());
     }
 
     @Nonnull
     @Override
     public final Select fetchSize(int size) {
-        return jdbcTry(() -> statement.setFetchSize(size > 0 ? size : 0)); // 0 value is ignored by ResultSet.setFetchSize;
+        return setStatementParameter(s -> s.setFetchSize(size > 0 ? size : 0)); // 0 value is ignored by ResultSet.setFetchSize;
     }
 
     @Nonnull
     @Override
     public Select maxRows(int max) {
-        return jdbcTry(() -> statement.setMaxRows(max > 0 ? max : 0));
+        return setStatementParameter(s -> s.setMaxRows(max > 0 ? max : 0));
     }
 
     @Nonnull
     @Override
     public Select maxRows(long max) {
-        return jdbcTry(() -> statement.setLargeMaxRows(max > 0 ? max : 0));
+        return setStatementParameter(s -> s.setLargeMaxRows(max > 0 ? max : 0));
     }
 
     @Nonnull
@@ -134,6 +133,13 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
     @Override
     public final Select timeout(int timeout) {
         return setTimeout(timeout);
+    }
+
+    @Nonnull
+    @Override
+    public Select mutable() {
+        isMutable = true;
+        return this;
     }
 
     @Override
@@ -169,5 +175,10 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
     public void forEachRemaining(Consumer<? super ResultSet> action) {
         while (tryAdvance(action)) {
         }
+    }
+
+    @Override
+    PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
+        return jdbcTry(() -> setQueryParameters(connectionSupplier.get().prepareStatement(query), params));
     }
 }

@@ -27,15 +27,15 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
-final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
+final class UpdateQuery extends AbstractQuery<TryOptional<Long, SQLException>, PreparedStatement> implements Update {
 
     private final Object[][] batch;
     private final TrySupplier<Connection, SQLException> connectionSupplier;
     private boolean isLarge;
     private boolean batchMode;
 
-    UpdateQuery(TrySupplier<Connection, SQLException> connectionSupplier, PreparedStatement statement, Object[]... batch) {
-        super(statement);
+    UpdateQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
+        super(connectionSupplier, query, (Object) batch);
         this.batch = Objects.requireNonNull(batch, "Batch must be provided");
         this.connectionSupplier = Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
     }
@@ -66,43 +66,49 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
 
     @Nonnull
     @Override
-    public Long execute() {
-        return jdbcTry(() -> {
-            Connection conn = connectionSupplier.get();
-            boolean autoCommit = true;
-            Savepoint savepoint = null;
-            long rowsAffected;
+    public TryOptional<Long, SQLException> execute() {
+        return TryOptional.of(() -> {
             try {
-                boolean transacted = batch.length > 1;
-                if (transacted) {
-                    autoCommit = conn.getAutoCommit();
-                    conn.setAutoCommit(false);
-                    savepoint = conn.setSavepoint();
-                }
-                rowsAffected = batchMode && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
-                if (transacted) {
-                    conn.commit();
-                }
-                return rowsAffected;
-            } catch (SQLException e) {
-                try {
-                    if (conn != null && savepoint != null) {
-                        conn.rollback(savepoint);
+                return jdbcTry(() -> {
+                    Connection conn = connectionSupplier.get();
+                    boolean autoCommit = true;
+                    Savepoint savepoint = null;
+                    long rowsAffected;
+                    try {
+                        boolean transacted = batch.length > 1;
+                        if (transacted) {
+                            autoCommit = conn.getAutoCommit();
+                            conn.setAutoCommit(false);
+                            savepoint = conn.setSavepoint();
+                        }
+                        rowsAffected = batchMode && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
+                        if (transacted) {
+                            conn.commit();
+                        }
+                        return rowsAffected;
+                    } catch (SQLException e) {
+                        try {
+                            if (conn != null && savepoint != null) {
+                                conn.rollback(savepoint);
+                            }
+                        } catch (SQLException ex) {
+                            // ignore
+                        }
+                        throw new SQLException(e);
+                    } finally {
+                        try {
+                            if (conn != null && savepoint != null) {
+                                conn.setAutoCommit(autoCommit);
+                                conn.releaseSavepoint(savepoint);
+                            }
+                        } catch (SQLException e) {
+                            // ignore
+                        }
+                        close();
                     }
-                } catch (SQLException ex) {
-                    // ignore
-                }
-                throw new SQLRuntimeException(e);
-            } finally {
-                try {
-                    if (conn != null && savepoint != null) {
-                        conn.setAutoCommit(autoCommit);
-                        conn.releaseSavepoint(savepoint);
-                    }
-                } catch (SQLException e) {
-                    // ignore
-                }
-                close();
+                });
+            } catch (Throwable t) {
+                throw new SQLException(t);
             }
         });
     }
@@ -110,24 +116,29 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     private long executeSimple() {
         return Stream.of(batch).reduce(
                 0L,
-                (rowsAffected, params) -> rowsAffected += jdbcTry(() -> isLarge ? setParameters(statement, params).executeLargeUpdate() : (long) setParameters(statement, params).executeUpdate()),
+                (rowsAffected, params) -> rowsAffected += jdbcTry(() -> isLarge ? withStatement(s -> setQueryParameters(s, params).executeLargeUpdate()) : (long) withStatement(s -> setQueryParameters(s, params).executeUpdate())),
                 (j, k) -> j + k
         );
     }
 
     private long executeBatch() {
-        return Stream.of(batch).map(params ->
-                jdbcTry(() -> {
-                    setParameters(statement, params).addBatch();
+        return Stream.of(batch)
+                .map(params -> withStatement(statement -> {
+                    setQueryParameters(statement, params).addBatch();
                     return statement;
-                })
-        ).reduce(
-                0L,
-                (rowsAffected, stmt) ->
-                        rowsAffected += Arrays.stream(
-                                jdbcTry(() -> isLarge ? stmt.executeLargeBatch() : Arrays.stream(stmt.executeBatch()).asLongStream().toArray())
-                        ).sum(),
-                (j, k) -> j + k
-        );
+                }))
+                .reduce(
+                        0L,
+                        (rowsAffected, stmt) ->
+                                rowsAffected += Arrays.stream(
+                                        jdbcTry(() -> isLarge ? stmt.executeLargeBatch() : Arrays.stream(stmt.executeBatch()).asLongStream().toArray())
+                                ).sum(),
+                        (j, k) -> j + k
+                );
+    }
+
+    @Override
+    PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
+        return jdbcTry(() -> connectionSupplier.get().prepareStatement(query));
     }
 }
