@@ -80,9 +80,12 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
     @Nonnull
     @Override
     public final <T, E extends SQLException> TryOptional<T, E> single(TryFunction<ResultSet, T, E> mapper) {
+        Objects.requireNonNull(mapper, "Mapper must be provided");
         return TryOptional.of(() -> {
             try {
-                return Objects.requireNonNull(mapper, "Mapper must be provided").apply(execute().iterator().next());
+                return mapper.apply(execute().iterator().next());
+            } catch (NoSuchElementException e) {
+                return null;
             } finally {
                 close();
             }
