@@ -32,7 +32,7 @@ import static java.util.AbstractMap.SimpleImmutableEntry;
 import static java.util.stream.StreamSupport.stream;
 
 /**
- * Database Query Factory
+ * Database query factory
  *
  * @see Query
  */

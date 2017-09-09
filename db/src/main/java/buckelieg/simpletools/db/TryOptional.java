@@ -23,7 +23,7 @@ import java.util.Optional;
 
 /**
  * A container for result of the computation which might throw an exception.
- * TODO create detailed docs
+ *
  *
  * @param <T> value type
  * @param <E> an exception type
