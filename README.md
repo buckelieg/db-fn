@@ -73,7 +73,7 @@ These operations could be run in batch mode. Just supply an array of parameters 
 
 with question marks:
 ```java
-long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute();
+long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute().toOptional().orElse(0L);
 ```
 Or with named parameters:
 ```java
@@ -81,26 +81,26 @@ long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutable
 ```
 ##### Update
 ```java
-long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute();
+long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute().toOptional().orElse(0L);
 ```
 or
 ```java
-long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute();
+long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute().toOptional().orElse(0L);
 ```
 For batch operation use:
 ```java
-long res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute();
+long res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute().toOptional().orElse(0L);
 ```  
 ##### Delete
 ```java
-long res = db.update("DELETE FROM TEST WHERE name=?", "name_2").execute();
+long res = db.update("DELETE FROM TEST WHERE name=?", "name_2").execute().toOptional().orElse(0L);
 ```
 and so on. Explore test suite for more examples.
 
 #### ETL
 implement simple ETL process:
 ```java
-long count = db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getLong(1)).orElse(0L);
+long count = db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getLong(1)).toOptional().orElse(0L);
 // calculate partitions here and split work to threads if needed
 Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end)
 .stream(rs -> {/*map rs here*/}).forEach(obj -> {/* do things here...*/}));
