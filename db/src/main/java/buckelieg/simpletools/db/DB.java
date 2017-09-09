@@ -31,6 +31,11 @@ import java.util.stream.Stream;
 import static java.util.AbstractMap.SimpleImmutableEntry;
 import static java.util.stream.StreamSupport.stream;
 
+/**
+ * Database Query Factory
+ *
+ * @see Query
+ */
 @ThreadSafe
 @ParametersAreNonnullByDefault
 public final class DB implements AutoCloseable {
@@ -69,6 +74,11 @@ public final class DB implements AutoCloseable {
         this.connectionSupplier = () -> Objects.requireNonNull(connection, "Connection must be provided");
     }
 
+    /**
+     * Closes underlying connection.
+     *
+     * @throws Exception if something went wrong
+     */
     @Override
     public void close() throws Exception {
         connectionSupplier.get().close();
@@ -78,7 +88,7 @@ public final class DB implements AutoCloseable {
      * Calls stored procedure.
      *
      * @param query procedure call string
-     * @return procedure call
+     * @return stored procedure call
      * @see StoredProcedure
      */
     @Nonnull
@@ -91,7 +101,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query  procedure call string
      * @param params procedure IN parameters' values
-     * @return procedure call
+     * @return stored procedure call
      * @see StoredProcedure
      */
     @Nonnull
@@ -106,7 +116,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query  procedure call string
      * @param params procedure parameters as declared (IN/OUT/INOUT)
-     * @return procedure call
+     * @return stored procedure call
      * @see StoredProcedure
      */
     @Nonnull

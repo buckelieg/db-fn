@@ -23,6 +23,12 @@ import java.sql.ParameterMetaData;
 import java.sql.SQLType;
 import java.util.Objects;
 
+/**
+ * Stored Procedure parameter
+ *
+ * @param <T> parameter value type
+ * @see StoredProcedure
+ */
 @ParametersAreNullableByDefault
 public final class P<T> {
     /**

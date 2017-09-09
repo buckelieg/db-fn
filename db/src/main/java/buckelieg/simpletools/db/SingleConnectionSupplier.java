@@ -23,6 +23,9 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * A single connection provided that tries to (re)open connection on demand
+ */
 public final class SingleConnectionSupplier implements TrySupplier<Connection, SQLException> {
 
     public static final String URL = "jdbc.url";

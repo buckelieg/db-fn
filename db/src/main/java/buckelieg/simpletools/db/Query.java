@@ -25,6 +25,9 @@ import java.util.function.Supplier;
  *
  * @param <R> query execution results type
  * @see AutoCloseable
+ * @see Select
+ * @see Update
+ * @see StoredProcedure
  */
 public interface Query<R> extends AutoCloseable {
 

@@ -36,7 +36,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * Like SELECT COUNT(*) FROM TABLE_NAME etc...
      *
      * @param mapper ResultSet mapper function
-     * @return mapped object as TryOptional
+     * @return mapped object as {@code TryOptional}
      * @see TryOptional
      */
     @Nonnull
@@ -51,7 +51,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * In such cases we rely on JDBC resources auto closing mechanism.
      * And it is strongly recommended to use <code>single</code> method for the cases above.
      *
-     * @return ResultSet as Iterable
+     * @return a {@link Stream} over {@link ResultSet}
      * @see #single(TryFunction)
      */
     @Nonnull
@@ -141,7 +141,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * Shorthand for stream mapping.
      *
      * @param mapper result set mapper which is not required to handle {@link SQLException}
-     * @return a stream over mapped objects
+     * @return a {@link Stream} over mapped {@link ResultSet}
      * @see #execute()
      */
     @Nonnull
