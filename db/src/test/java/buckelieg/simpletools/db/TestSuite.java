@@ -178,14 +178,14 @@ public class TestSuite {
     @Test
     public void testUpdate() throws Exception {
         long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute().toOptional().orElse(0L);
-        assertTrue(1L ==res);
+        assertTrue(1L == res);
         assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
     public void testUpdateNamed() throws Exception {
         long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute().toOptional().orElse(0L);
-        assertTrue(1L ==res);
+        assertTrue(1L == res);
         assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get()));
     }
 
@@ -358,9 +358,13 @@ public class TestSuite {
 
     @Test(expected = Exception.class)
     public void testExceptionHandler() throws Exception {
-        db.update("UPDATE TEST SET ID=? WHERE ID=?", 111, 1).poolable(true).execute().onException(e -> {
-            throw new Exception("TEST EXCEPTION");
-        });
+        db.update("UPDATE TEST SET ID=? WHERE ID=?", 111, 1)
+                .poolable(() -> true)
+                .timeout(() -> 0)
+                .execute()
+                .onException(e -> {
+                    throw new Exception("TEST EXCEPTION");
+                });
     }
 
 }

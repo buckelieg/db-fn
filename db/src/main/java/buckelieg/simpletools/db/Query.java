@@ -16,6 +16,9 @@
 package buckelieg.simpletools.db;
 
 import javax.annotation.Nonnull;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Query abstraction.
@@ -44,6 +47,19 @@ public interface Query<R> extends AutoCloseable {
     <Q extends Query<R>> Q timeout(int timeout);
 
     /**
+     * Sets query execution timeout
+     *
+     * @param supplier timeout value supplier
+     * @return query abstraction
+     * @throws NullPointerException if the supplier is null
+     * @see #timeout(int)
+     */
+    @Nonnull
+    default <Q extends Query<R>> Q timeout(Supplier<Integer> supplier) {
+        return timeout(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
+    }
+
+    /**
      * Tells JDBC driver that this query is poolable.
      *
      * @param poolable true if this query is poolable, false otherwise
@@ -52,6 +68,19 @@ public interface Query<R> extends AutoCloseable {
      */
     @Nonnull
     <Q extends Query<R>> Q poolable(boolean poolable);
+
+    /**
+     * Sets this query poolable.
+     *
+     * @param supplier poolable value supplier
+     * @return query abstraction
+     * @throws NullPointerException if the supplier is null
+     * @see #poolable(boolean)
+     */
+    @Nonnull
+    default <Q extends Query<R>> Q poolable(Supplier<Boolean> supplier) {
+        return poolable(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
+    }
 
     /**
      * Closes this query

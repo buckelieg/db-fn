@@ -104,7 +104,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * Whenever supplier returns a value that is less Integer#MAX_VALUE - then {@link #maxRows(int)} is used.
      * Otherwise - {@link #maxRows(long)}.
      *
-     * @param supplier max rows supplier
+     * @param supplier max rows value supplier
      * @return select abstraction
      * @throws NullPointerException if supplier is null
      * @see #maxRows(int)
@@ -136,16 +136,6 @@ public interface Select extends Query<Stream<ResultSet>> {
     @Nonnull
     @Override
     Select poolable(boolean poolable);
-
-    /**
-     * Sets {@link ResultSet} mutable.
-     * By default returned {@link ResultSet} is immutable.
-     * This means that "mutation" methods (like next, setXXX, last etc.) would result in {@link SQLException}
-     *
-     * @return select abstraction
-     */
-    @Nonnull
-    Select mutable();
 
     /**
      * Shorthand for stream mapping.

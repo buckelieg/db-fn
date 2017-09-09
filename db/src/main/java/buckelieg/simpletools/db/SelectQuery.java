@@ -36,7 +36,6 @@ import java.util.stream.StreamSupport;
 class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
     ResultSet rs;
-    private boolean isMutable;
     private boolean hasNext;
     private boolean hasMoved;
     private ResultSet wrapper;
@@ -98,7 +97,7 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
         return StreamSupport.stream(jdbcTry(() -> {
             doExecute();
             if (rs != null) {
-                wrapper = isMutable ? rs : new ImmutableResultSet(rs);
+                wrapper = new ImmutableResultSet(rs);
             }
             return this;
         }), false).onClose(this::close);
@@ -136,13 +135,6 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
     @Override
     public final Select timeout(int timeout) {
         return setTimeout(timeout);
-    }
-
-    @Nonnull
-    @Override
-    public Select mutable() {
-        isMutable = true;
-        return this;
     }
 
     @Override
