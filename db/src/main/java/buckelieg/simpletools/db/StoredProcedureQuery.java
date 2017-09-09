@@ -26,12 +26,12 @@ import java.util.function.Consumer;
 
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-final class ProcedureCallQuery extends SelectQuery implements ProcedureCall {
+final class StoredProcedureQuery extends SelectQuery implements StoredProcedure {
 
     private TryFunction<CallableStatement, ?, SQLException> mapper;
     private Consumer consumer;
 
-    ProcedureCallQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, P<?>... params) {
+    StoredProcedureQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, P<?>... params) {
         super(connectionSupplier, query, (Object[]) params);
     }
 

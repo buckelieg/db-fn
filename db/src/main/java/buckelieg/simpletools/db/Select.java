@@ -20,6 +20,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -67,6 +69,17 @@ public interface Select extends Query<Stream<ResultSet>> {
     Select fetchSize(int size);
 
     /**
+     * @param supplier fetch size value supplier
+     * @return select abstraction
+     * @throws NullPointerException if supplier is null
+     * @see #fetchSize(int)
+     */
+    @Nonnull
+    default Select fetchSize(Supplier<Integer> supplier) {
+        return fetchSize(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
+    }
+
+    /**
      * Updates max rows obtained with this query.
      *
      * @param max rows number limit
@@ -85,6 +98,30 @@ public interface Select extends Query<Stream<ResultSet>> {
      */
     @Nonnull
     Select maxRows(long max);
+
+    /**
+     * Set max rows for this statement to return.
+     * Whenever supplier returns a value that is less Integer#MAX_VALUE - then {@link #maxRows(int)} is used.
+     * Otherwise - {@link #maxRows(long)}.
+     *
+     * @param supplier max rows supplier
+     * @return select abstraction
+     * @throws NullPointerException if supplier is null
+     * @see #maxRows(int)
+     * @see #maxRows(long)
+     */
+    @Nonnull
+    default Select maxRows(Supplier<? extends Number> supplier) {
+        Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get())
+                .ifPresent(value -> {
+                    if (value.longValue() < Integer.MAX_VALUE) {
+                        maxRows(value.intValue());
+                    } else {
+                        maxRows(value.longValue());
+                    }
+                });
+        return this;
+    }
 
     /**
      * {@inheritDoc}

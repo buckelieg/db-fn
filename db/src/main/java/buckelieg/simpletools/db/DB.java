@@ -79,10 +79,10 @@ public final class DB implements AutoCloseable {
      *
      * @param query procedure call string
      * @return procedure call
-     * @see ProcedureCall
+     * @see StoredProcedure
      */
     @Nonnull
-    public ProcedureCall call(String query) {
+    public StoredProcedure call(String query) {
         return call(query, new P[0]);
     }
 
@@ -92,10 +92,10 @@ public final class DB implements AutoCloseable {
      * @param query  procedure call string
      * @param params procedure IN parameters' values
      * @return procedure call
-     * @see ProcedureCall
+     * @see StoredProcedure
      */
     @Nonnull
-    public ProcedureCall call(String query, Object... params) {
+    public StoredProcedure call(String query, Object... params) {
         return call(query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P<?>[params.length]));
     }
 
@@ -107,10 +107,10 @@ public final class DB implements AutoCloseable {
      * @param query  procedure call string
      * @param params procedure parameters as declared (IN/OUT/INOUT)
      * @return procedure call
-     * @see ProcedureCall
+     * @see StoredProcedure
      */
     @Nonnull
-    public ProcedureCall call(String query, P<?>... params) {
+    public StoredProcedure call(String query, P<?>... params) {
         String validatedQuery = validateQuery(query, null);
         P<?>[] preparedParams = params;
         int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
@@ -134,7 +134,7 @@ public final class DB implements AutoCloseable {
         if (!STORED_PROCEDURE.matcher(validatedQuery).matches()) {
             throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
         }
-        return new ProcedureCallQuery(connectionSupplier, validatedQuery, preparedParams);
+        return new StoredProcedureQuery(connectionSupplier, validatedQuery, preparedParams);
     }
 
     /**
