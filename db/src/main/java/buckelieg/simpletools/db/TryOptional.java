@@ -127,7 +127,7 @@ public final class TryOptional<T, E extends Throwable> {
     @SuppressWarnings("unchecked")
     @Nonnull
     public <U, UE extends Throwable> TryOptional<U, UE> map(TryFunction<? super T, ? extends U, UE> mapper) {
-        return isException() ? new TryOptional<>((UE) exception) : of(() -> mapper.apply(value));
+        return isException() ? (TryOptional<U, UE>) this : of(() -> mapper.apply(value));
     }
 
     /**
@@ -154,7 +154,7 @@ public final class TryOptional<T, E extends Throwable> {
     @SuppressWarnings("unchecked")
     @Nonnull
     public <U, UE extends Throwable> TryOptional<U, UE> recover(TryFunction<E, U, UE> handler) {
-        return isException() ? new TryOptional<>((U) value) : of(() -> handler.apply(exception));
+        return isException() ? of(() -> Objects.requireNonNull(handler).apply(exception)) : (TryOptional<U, UE>) this;
     }
 
     /**
