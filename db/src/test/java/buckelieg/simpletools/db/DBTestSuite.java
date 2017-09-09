@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 
 
 // TODO more test suites for other RDBMS
-public class TestSuite {
+public class DBTestSuite {
 
     private static Connection conn;
     private static DB db;
@@ -47,7 +47,7 @@ public class TestSuite {
         EmbeddedDataSource ds = new EmbeddedDataSource();
         ds.setDatabaseName("test");
         ds.setCreateDatabase("create");
-        TestSuite.ds = ds;
+        DBTestSuite.ds = ds;
         conn = ds.getConnection();
         conn.createStatement().execute("CREATE TABLE TEST(id int PRIMARY KEY generated always as IDENTITY, name varchar(255) not null)");
         conn.createStatement().execute("CREATE PROCEDURE CREATETESTROW1(NAME_TO_ADD VARCHAR(255)) DYNAMIC RESULT SETS 2 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA");
