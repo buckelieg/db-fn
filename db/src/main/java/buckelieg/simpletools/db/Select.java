@@ -37,6 +37,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      *
      * @param mapper ResultSet mapper function
      * @return mapped object as {@code TryOptional}
+     * @throws NullPointerException if mapper is null
      * @see TryOptional
      */
     @Nonnull
@@ -58,7 +59,7 @@ public interface Select extends Query<Stream<ResultSet>> {
     Stream<ResultSet> execute();
 
     /**
-     * Configures Statement fetch size parameter
+     * Configures {@link java.sql.Statement} fetch size parameter
      *
      * @param size desired fetch size. Should be greater than 0.
      * @return select abstraction
@@ -69,6 +70,8 @@ public interface Select extends Query<Stream<ResultSet>> {
     Select fetchSize(int size);
 
     /**
+     * Configures {@link java.sql.Statement} fetch size parameter via provided {@link Supplier}
+     *
      * @param supplier fetch size value supplier
      * @return select abstraction
      * @throws NullPointerException if supplier is null
@@ -142,6 +145,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      *
      * @param mapper result set mapper which is not required to handle {@link SQLException}
      * @return a {@link Stream} over mapped {@link ResultSet}
+     * @throws NullPointerException if mapper is null
      * @see #execute()
      */
     @Nonnull

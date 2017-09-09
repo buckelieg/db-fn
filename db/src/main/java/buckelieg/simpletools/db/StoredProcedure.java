@@ -22,6 +22,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -40,16 +41,17 @@ public interface StoredProcedure extends Select {
      * @param mapper   function for procedure call results processing
      * @param consumer mapper result consumer - will be called after mapper is finished
      * @return an abstraction for select statement
+     * @throws NullPointerException if mapper or consumer is null
      */
     @Nonnull
     <T> Select invoke(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
 
     /**
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
-     * Throws {@link SQLRuntimeException} in case of non empty results which could be obtained through {@link ResultSet} object.
      *
      * @param mapper function that constructs from {@link CallableStatement}
      * @return mapped result as {@link TryOptional}
+     * @throws NullPointerException if mapper is null
      * @see #invoke(TryFunction, Consumer)
      * @see TryOptional
      */
@@ -57,7 +59,7 @@ public interface StoredProcedure extends Select {
     default <T> TryOptional<T, SQLException> invoke(TryFunction<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
         return TryOptional.of(() -> {
-            if (invoke(mapper, results::add).single(rs -> rs).toOptional().isPresent()) {
+            if (invoke(Objects.requireNonNull(mapper, "Mapper must be provided"), results::add).single(rs -> rs).toOptional().isPresent()) {
                 throw new SQLException("Procedure has non-empty result set");
             }
             return results.get(0);
@@ -66,6 +68,7 @@ public interface StoredProcedure extends Select {
 
     /**
      * Calls this procedure that is without any results expected
+     * Throws {@link SQLRuntimeException} in case of non empty results which could be obtained through {@link ResultSet} object.
      *
      * @throws SQLRuntimeException if provided {@link ResultSet} is not empty.
      * @see #invoke(TryFunction)
