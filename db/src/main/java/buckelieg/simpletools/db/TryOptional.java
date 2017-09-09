@@ -20,10 +20,11 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * A container for result of the computation which might throw an exception.
- *
  *
  * @param <T> value type
  * @param <E> an exception type
@@ -127,6 +128,20 @@ public final class TryOptional<T, E extends Throwable> {
     @Nonnull
     public <U, UE extends Throwable> TryOptional<U, UE> map(TryFunction<? super T, ? extends U, UE> mapper) {
         return isException() ? new TryOptional<>((UE) exception) : of(() -> mapper.apply(value));
+    }
+
+    /**
+     * Creates a stream using {@code value} mapper function
+     * (as the (@code value} in this container could be of any type including collections).
+     *
+     * @param streamer a function that handle process of creating a {@code stream} from the {@code value}
+     * @return a (@code stream} from the {@code value}
+     * @throws NullPointerException if stream supplier is null
+     * @see Function
+     */
+    @Nonnull
+    public Stream<T> stream(Function<T, Stream<T>> streamer) {
+        return Optional.ofNullable(Objects.requireNonNull(streamer).apply(value)).orElse(Stream.empty());
     }
 
     /**
