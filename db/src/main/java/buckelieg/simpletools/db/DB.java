@@ -75,6 +75,18 @@ public final class DB implements AutoCloseable {
     }
 
     /**
+     * Calls stored procedure.
+     *
+     * @param query procedure call string
+     * @return procedure call
+     * @see ProcedureCall
+     */
+    @Nonnull
+    public ProcedureCall call(String query) {
+        return call(query, new P[0]);
+    }
+
+    /**
      * Calls stored procedure. Supplied params are considered as IN parameters
      *
      * @param query  procedure call string

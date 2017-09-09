@@ -20,7 +20,6 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * A container for result of the computation which might throw an exception.
@@ -145,7 +144,7 @@ public final class TryOptional<T, E extends Throwable> {
     /**
      * Exception consumer. This is expected to be terminal operation.
      *
-     * @param handler a {@link Consumer} for exception
+     * @param handler a {@link TryConsumer} for exception
      * @throws UE                   an optional exception. To make exception optional it must derive from {@link RuntimeException}
      * @throws NullPointerException if handler is null
      */

@@ -22,7 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -40,7 +39,6 @@ public interface ProcedureCall extends Select {
      *
      * @param mapper   function for procedure call results processing
      * @param consumer mapper result consumer - will be called after mapper is finished
-     * @param <T>      type bounds
      * @return an abstraction for select statement
      */
     @Nonnull
@@ -51,10 +49,9 @@ public interface ProcedureCall extends Select {
      * Throws {@link SQLRuntimeException} in case of non empty results which could be obtained through {@link ResultSet} object.
      *
      * @param mapper function that constructs from {@link CallableStatement}
-     * @param <T>    type bounds
-     * @return mapped result as {@link Optional}
+     * @return mapped result as {@link TryOptional}
      * @see #invoke(TryFunction, Consumer)
-     * @see Optional
+     * @see TryOptional
      */
     @Nonnull
     default <T> TryOptional<T, SQLException> invoke(TryFunction<CallableStatement, T, SQLException> mapper) {
