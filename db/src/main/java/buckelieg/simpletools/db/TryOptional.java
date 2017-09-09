@@ -151,9 +151,10 @@ public final class TryOptional<T, E extends Throwable> {
      * @return a new {@link TryOptional} with exception processing results.
      * @throws NullPointerException if the handler function is null
      */
+    @SuppressWarnings("unchecked")
     @Nonnull
     public <U, UE extends Throwable> TryOptional<U, UE> recover(TryFunction<E, U, UE> handler) {
-        return of(() -> handler.apply(exception));
+        return isException() ? new TryOptional<>((U) value) : of(() -> handler.apply(exception));
     }
 
     /**
