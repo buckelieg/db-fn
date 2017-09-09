@@ -140,7 +140,7 @@ public final class TryOptional<T, E extends Throwable> {
      * @see Function
      */
     @Nonnull
-    public Stream<T> stream(Function<T, Stream<T>> streamer) {
+    public <U> Stream<U> stream(Function<T, Stream<U>> streamer) {
         return Optional.ofNullable(Objects.requireNonNull(streamer).apply(value)).orElse(Stream.empty());
     }
 
