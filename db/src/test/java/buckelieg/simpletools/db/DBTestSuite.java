@@ -55,11 +55,6 @@ public class DBTestSuite {
         conn.createStatement().execute("CREATE PROCEDURE GETNAMEBYID(NAME_ID INTEGER, OUT NAME_NAME VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedureWithResults' PARAMETER STYLE JAVA");
 //        db = new DB(() -> conn);
 //        db = new DB(conn);
-//        Properties props = new Properties();
-//        props.setProperty(SingleConnectionSupplier.URL, "jdbc:derby:memory:test;create=true");
-//        props.setProperty(SingleConnectionSupplier.USER, "");
-//        props.setProperty(SingleConnectionSupplier.PASSWORD, "");
-//        single = new SingleConnectionSupplier(props);
         db = new DB(ds::getConnection);
 //        db = new DB(single);
 
