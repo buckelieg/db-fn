@@ -20,7 +20,6 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -131,17 +130,20 @@ public final class TryOptional<T, E extends Throwable> {
     }
 
     /**
-     * Creates a stream using {@code value} mapper function
-     * (as the (@code value} in this container could be of any type including collections).
+     * If this optional is a value, returns a sequential {@link Stream} containing
+     * only that value, otherwise returns an empty {@code Stream}.
      *
-     * @param streamer a function that handle process of creating a {@code stream} from the {@code value}
-     * @return a (@code stream} from the {@code value}
-     * @throws NullPointerException if stream supplier is null
-     * @see Function
+     * @return the optional value as a {@code Stream}
+     * @apiNote This method can be used to transform a {@code Stream} of optional
+     * elements to a {@code Stream} of present value elements:
+     * <pre>{@code
+     *     Stream<Optional<T>> os = ..
+     *     Stream<T> s = os.flatMap(Optional::stream)
+     * }</pre>
      */
     @Nonnull
-    public <U> Stream<U> stream(Function<T, Stream<U>> streamer) {
-        return Optional.ofNullable(Objects.requireNonNull(streamer).apply(value)).orElse(Stream.empty());
+    public Stream<T> stream() {
+        return isException() ? Stream.empty() : Stream.of(value);
     }
 
     /**

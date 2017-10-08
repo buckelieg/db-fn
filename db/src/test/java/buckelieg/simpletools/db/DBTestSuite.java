@@ -42,7 +42,7 @@ public class DBTestSuite {
 
     @BeforeClass
     public static void init() throws Exception {
-//        Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
+//        Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
 //        conn = DriverManager.getConnection("jdbc:derby:memory:test;create=true");
         EmbeddedDataSource ds = new EmbeddedDataSource();
         ds.setDatabaseName("test");
@@ -56,7 +56,6 @@ public class DBTestSuite {
 //        db = new DB(() -> conn);
 //        db = new DB(conn);
         db = new DB(ds::getConnection);
-//        db = new DB(single);
 
     }
 
@@ -66,6 +65,7 @@ public class DBTestSuite {
         conn.createStatement().execute("DROP PROCEDURE CREATETESTROW1");
         conn.createStatement().execute("DROP PROCEDURE CREATETESTROW2");
         conn.createStatement().execute("DROP PROCEDURE GETNAMEBYID");
+        conn.close();
         db.close();
     }
 
@@ -102,6 +102,9 @@ public class DBTestSuite {
         assertTrue(1 == db.select("select * from test").maxRows(1L).execute().count());
         assertTrue(2 == db.select("select * from test").maxRows(1).maxRows(2L).execute().count());
         assertTrue(2 == db.select("select * from test").maxRows(1L).maxRows(2).execute().count());
+        assertTrue(1 == db.select("select * from test").maxRows(() -> 1).execute().count());
+        assertTrue(1 == db.select("select * from test").maxRows(() -> 1L).execute().count());
+        assertTrue(1 == db.select("select count(*) from test").maxRows(() -> Integer.MAX_VALUE).execute().count());
     }
 
     @Test
