@@ -20,7 +20,6 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * A container for result of the computation which might throw an exception.
@@ -127,23 +126,6 @@ public final class TryOptional<T, E extends Throwable> {
     @Nonnull
     public <U, UE extends Throwable> TryOptional<U, UE> map(TryFunction<? super T, ? extends U, UE> mapper) {
         return isException() ? (TryOptional<U, UE>) this : of(() -> mapper.apply(value));
-    }
-
-    /**
-     * If this optional is a non-empty value (i.e. this optional represent no exception nor null),
-     * returns a sequential {@link Stream} containing only that value, otherwise returns an empty {@code Stream}.
-     *
-     * @return the optional value as a {@code Stream}
-     * @apiNote This method can be used to transform a {@code Stream} of optional
-     * elements to a {@code Stream} of present value elements:
-     * <pre>{@code
-     *     Stream<TryOptional<T>> os = ..
-     *     Stream<T> s = os.flatMap(TryOptional::stream)
-     * }</pre>
-     */
-    @Nonnull
-    public Stream<T> stream() {
-        return isException() || null == value ? Stream.empty() : Stream.of(value);
     }
 
     /**

@@ -146,13 +146,19 @@ public interface Select extends Query<Stream<ResultSet>> {
      * @param mapper result set mapper which is not required to handle {@link SQLException}
      * @return a {@link Stream} over mapped {@link ResultSet}
      * @throws NullPointerException if mapper is null
+     * @throws SQLRuntimeException as a wrapper for {@link SQLException} of the mapper
      * @see #execute()
-     * @see TryOptional#stream()
      */
     @Nonnull
     default <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper) {
         Objects.requireNonNull(mapper, "Mapper must be provided");
-        return execute().map(rs -> TryOptional.of(() -> mapper.apply(rs))).flatMap(TryOptional::stream);
+        return execute().map(rs -> {
+            try {
+                return mapper.apply(rs);
+            } catch (SQLException e) {
+                throw new SQLRuntimeException(e);
+            }
+        });
     }
 
 }
