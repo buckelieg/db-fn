@@ -130,20 +130,20 @@ public final class TryOptional<T, E extends Throwable> {
     }
 
     /**
-     * If this optional is a value, returns a sequential {@link Stream} containing
-     * only that value, otherwise returns an empty {@code Stream}.
+     * If this optional is a non-empty value (i.e. this optional represent no exception nor null),
+     * returns a sequential {@link Stream} containing only that value, otherwise returns an empty {@code Stream}.
      *
      * @return the optional value as a {@code Stream}
      * @apiNote This method can be used to transform a {@code Stream} of optional
      * elements to a {@code Stream} of present value elements:
      * <pre>{@code
-     *     Stream<Optional<T>> os = ..
-     *     Stream<T> s = os.flatMap(Optional::stream)
+     *     Stream<TryOptional<T>> os = ..
+     *     Stream<T> s = os.flatMap(TryOptional::stream)
      * }</pre>
      */
     @Nonnull
     public Stream<T> stream() {
-        return isException() ? Stream.empty() : Stream.of(value);
+        return isException() || null == value ? Stream.empty() : Stream.of(value);
     }
 
     /**

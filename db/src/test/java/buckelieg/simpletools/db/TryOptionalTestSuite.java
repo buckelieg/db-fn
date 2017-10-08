@@ -19,6 +19,14 @@ public class TryOptionalTestSuite {
     @Test
     public void testStream() throws Exception {
         assertTrue(3 == TryOptional.of(() -> Stream.of(1, 2, 3).collect(Collectors.toList())).stream().mapToLong(List::size).sum());
+        assertTrue(2 == Stream.of(
+                TryOptional.of(Object::new),
+                TryOptional.of(() -> {
+                    throw new Exception();
+                }),
+                TryOptional.of(() -> null),
+                TryOptional.of(() -> 5)
+        ).flatMap(TryOptional::stream).count());
     }
 
     @Test(expected = SQLException.class)
