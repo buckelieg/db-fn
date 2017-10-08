@@ -90,6 +90,7 @@ public final class DB implements AutoCloseable {
      * @param query procedure call string
      * @return stored procedure call
      * @see StoredProcedure
+     * @see #call(String, P[])
      */
     @Nonnull
     public StoredProcedure call(String query) {
@@ -103,6 +104,7 @@ public final class DB implements AutoCloseable {
      * @param params procedure IN parameters' values
      * @return stored procedure call
      * @see StoredProcedure
+     * @see #call(String, P[])
      */
     @Nonnull
     public StoredProcedure call(String query, Object... params) {
@@ -117,6 +119,7 @@ public final class DB implements AutoCloseable {
      * @param query  procedure call string
      * @param params procedure parameters as declared (IN/OUT/INOUT)
      * @return stored procedure call
+     * @throws IllegalArgumentException if provided query is not valid DML statement or named parameters provided along with unnamed ones
      * @see StoredProcedure
      */
     @Nonnull
@@ -150,8 +153,9 @@ public final class DB implements AutoCloseable {
     /**
      * Executes SELECT statement
      *
-     * @param query SELECT query to execute. Can be WITH query
+     * @param query SELECT query to execute. Can be recursive-WITH query
      * @return select query
+     * @throws IllegalArgumentException if provided query is not valid DML statement
      * @see Select
      */
     @Nonnull
@@ -162,9 +166,10 @@ public final class DB implements AutoCloseable {
     /**
      * Executes SELECT statement
      *
-     * @param query  SELECT query to execute. Can be WITH query
+     * @param query  SELECT query to execute. Can be recursive-WITH query
      * @param params query parameters on the declared order of '?'
      * @return select query
+     * @throws IllegalArgumentException if provided query is not valid DML statement
      * @see Select
      */
     @Nonnull
@@ -187,6 +192,8 @@ public final class DB implements AutoCloseable {
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @param batch an array of query parameters on the declared order of '?'
      * @return update query
+     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @see Update
      */
     @Nonnull
     public Update update(String query, Object[]... batch) {
@@ -206,9 +213,10 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       SELECT query to execute. Can be WITH query
+     * @param query       SELECT query to execute. Can be recursive-WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return select query
+     * @throws IllegalArgumentException if provided query is not valid DML statement
      * @see Select
      */
     @Nonnull
@@ -221,9 +229,10 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       SELECT query to execute. Can be WITH query
+     * @param query       SELECT query to execute. Can be recursive-WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return select query
+     * @throws IllegalArgumentException if provided query is not valid DML statement
      * @see Select
      */
     @SafeVarargs
@@ -237,6 +246,8 @@ public final class DB implements AutoCloseable {
      *
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @return update query
+     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @see Update
      */
     @Nonnull
     public Update update(String query) {
@@ -249,6 +260,8 @@ public final class DB implements AutoCloseable {
      * @param query  INSERT/UPDATE/DELETE query to execute.
      * @param params query parameters on the declared order of '?'
      * @return update query
+     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @see Update
      */
     @Nonnull
     public Update update(String query, Object... params) {
@@ -263,6 +276,8 @@ public final class DB implements AutoCloseable {
      * @param query       INSERT/UPDATE/DELETE query to execute.
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return update query
+     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @see Update
      */
     @SafeVarargs
     @Nonnull
@@ -278,6 +293,8 @@ public final class DB implements AutoCloseable {
      * @param query INSERT/UPDATE/DELETE query to execute.
      * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return update query
+     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @see Update
      */
     @SafeVarargs
     @Nonnull
