@@ -18,7 +18,6 @@ package buckelieg.simpletools.db;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -39,7 +38,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
 
     @Override
     public final void close() {
-        setStatementParameter(Statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
+        jdbcTry(() -> statement.toOptional().ifPresent(s -> jdbcTry(s::close))); // by JDBC spec: subsequently closes all result sets opened by this statement
     }
 
     final <Q extends Query<R>> Q setTimeout(int timeout) {
@@ -60,6 +59,14 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
             // ignore this possible vendor-specific JDBC driver's error.
         }
         return result;
+    }
+
+    final void jdbcTry(TryAction<SQLException> action) {
+        try {
+            Objects.requireNonNull(action, "Action must be provided").doTry();
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
     }
 
     final S setQueryParameters(S statement, Object... params) throws SQLException {
