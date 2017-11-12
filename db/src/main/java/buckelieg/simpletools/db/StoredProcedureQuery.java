@@ -21,6 +21,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -50,19 +51,19 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
 
     @SuppressWarnings("unchecked")
     protected boolean doHasNext() {
-        return withStatement(statement -> {
+        return jdbcTry(() -> {
             boolean moved = super.doHasNext();
             if (!moved) {
-                if (statement.getMoreResults()) {
+                if (withStatement(Statement::getMoreResults)) {
                     if (rs != null && !rs.isClosed()) {
                         rs.close();
                     }
-                    rs = statement.getResultSet();
+                    rs = withStatement(Statement::getResultSet);
                     return super.doHasNext();
                 }
                 try {
                     if (mapper != null && consumer != null) {
-                        consumer.accept(mapper.apply((CallableStatement) statement));
+                        consumer.accept(withStatement(statement -> mapper.apply((CallableStatement) statement)));
                     }
                 } finally {
                     close();
