@@ -117,7 +117,7 @@ public interface Select extends Query<Stream<ResultSet>> {
     default Select maxRows(Supplier<? extends Number> supplier) {
         Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get())
                 .ifPresent(value -> {
-                    if (value.longValue() < Integer.MAX_VALUE) {
+                    if (value.longValue() <= Integer.MAX_VALUE - 2) {
                         maxRows(value.intValue());
                     } else {
                         maxRows(value.longValue());
@@ -146,7 +146,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * @param mapper result set mapper which is not required to handle {@link SQLException}
      * @return a {@link Stream} over mapped {@link ResultSet}
      * @throws NullPointerException if mapper is null
-     * @throws SQLRuntimeException as a wrapper for {@link SQLException} of the mapper
+     * @throws SQLRuntimeException  as a wrapper for {@link SQLException} of the mapper
      * @see #execute()
      */
     @Nonnull

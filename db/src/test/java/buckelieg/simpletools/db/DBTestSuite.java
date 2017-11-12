@@ -26,6 +26,7 @@ import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.AbstractMap.SimpleImmutableEntry;
@@ -152,7 +153,19 @@ public class DBTestSuite {
 
     @Test
     public void testSelectNoParams() throws Exception {
-        assertTrue(10 == db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)).get());
+        assertTrue(10 == db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)).toOptional().orElse(0));
+    }
+
+    @Test
+    public void testSelectForEachSingle() throws Exception {
+        assertTrue(1 == db.select("SELECT * FROM TEST WHERE ID=1").execute().collect(Collectors.toList()).size());
+        db.select("SELECT COUNT(*) FROM TEST").execute().forEach(rs -> {
+            try {
+                System.out.println(rs.getInt(1));
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Test

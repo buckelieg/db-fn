@@ -54,7 +54,7 @@ public interface Query<R> extends AutoCloseable {
      *
      * @param supplier timeout value supplier
      * @return query abstraction
-     * @throws NullPointerException if the supplier is null
+     * @throws NullPointerException if supplier is null
      * @see #timeout(int)
      */
     @Nonnull
@@ -77,7 +77,7 @@ public interface Query<R> extends AutoCloseable {
      *
      * @param supplier poolable value supplier
      * @return query abstraction
-     * @throws NullPointerException if the supplier is null
+     * @throws NullPointerException if supplier is null
      * @see #poolable(boolean)
      */
     @Nonnull

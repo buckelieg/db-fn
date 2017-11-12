@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
@@ -140,5 +141,13 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long, SQLException>, P
     @Override
     PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
         return jdbcTry(() -> connectionSupplier.get().prepareStatement(query));
+    }
+
+    @Override
+    final String makeString(String query, Object... params) {
+        return Arrays.stream(params)
+                .flatMap(p -> Arrays.stream((Object[]) p))
+                .map(p -> super.makeString(query, (Object[]) p))
+                .collect(Collectors.joining("; "));
     }
 }

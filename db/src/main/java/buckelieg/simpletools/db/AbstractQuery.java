@@ -19,21 +19,31 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R> {
 
+    private static final Pattern PARAM = Pattern.compile("\\?");
+
     private TryOptional<S, ? extends SQLException> statement;
 
+    private final String query;
+
     AbstractQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        statement = TryOptional.of(
+        this.statement = TryOptional.of(
                 () -> prepareStatement(
                         Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided"),
                         Objects.requireNonNull(query, "SQL query must be provided"),
                         params
                 )
         );
+        this.query = makeString(query, params);
     }
 
     @Override
@@ -101,4 +111,26 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
     }
 
     abstract S prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params);
+
+    String makeString(String query, Object... params) {
+        String replaced = query;
+        int idx = 0;
+        Matcher matcher = PARAM.matcher(query);
+        while (matcher.find()) {
+            Object p = params[idx];
+            replaced = replaced.replaceFirst(
+                    "\\?",
+                    (p.getClass().isArray() ? Arrays.stream((Object[]) p) : Stream.of(p))
+                            .map(Object::toString)
+                            .collect(Collectors.joining(","))
+            );
+            idx++;
+        }
+        return replaced;
+    }
+
+    @Override
+    public String toString() {
+        return query;
+    }
 }
