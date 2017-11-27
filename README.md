@@ -1,9 +1,7 @@
-# simple-tools
-Simple dev tools for common day-to-day tasks.
-Project intended to simplify the things for java developer. 
+# db-fn
+DB functional style programming over plain JDBC
 
-## Getting Started with...
-### db-tools
+## Getting Started
 Add maven dependency:
 ```
 <dependency>
