@@ -115,6 +115,19 @@ public final class TryOptional<T, E extends Throwable> {
     }
 
     /**
+     * Method used to obtain a value as {@link Optional}.
+     * The difference between this method and {@link #toOptional()} is that if this TryOptional is an exception
+     * then {@link RuntimeException} is thrown.
+     *
+     * @return a value (as an {@link Optional}) of the computation regarding possible exception.
+     * @see #getUnchecked()
+     */
+    @Nonnull
+    public Optional<T> getOptional() {
+        return Optional.ofNullable(getUnchecked());
+    }
+
+    /**
      * Maps this {@link TryOptional} to another one with provided mapper.
      * Whenever this container represents an exception and mapper throws an exception of a new type - old exception is overwritten
      *
