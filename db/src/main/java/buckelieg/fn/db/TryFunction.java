@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package buckelieg.simpletools.db;
+package buckelieg.fn.db;
 
 import java.util.Objects;
 

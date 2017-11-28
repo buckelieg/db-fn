@@ -1,4 +1,4 @@
-package buckelieg.simpletools.db;
+package buckelieg.fn.db;
 
 import org.junit.Test;
 

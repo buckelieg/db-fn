@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package buckelieg.simpletools.db;
+package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
- * An abstraction for STORED PROCEDURE call statement.
+ * An abstraction for STORED PROCEDURE procedure statement.
  */
 @ParametersAreNonnullByDefault
 public interface StoredProcedure extends Select {
@@ -44,7 +44,7 @@ public interface StoredProcedure extends Select {
      * @throws NullPointerException if mapper or consumer is null
      */
     @Nonnull
-    <T> Select invoke(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
+    <T> Select call(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
 
     /**
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
@@ -52,14 +52,14 @@ public interface StoredProcedure extends Select {
      * @param mapper function that constructs from {@link CallableStatement}
      * @return mapped result as {@link TryOptional}
      * @throws NullPointerException if mapper is null
-     * @see #invoke(TryFunction, Consumer)
+     * @see #call(TryFunction, Consumer)
      * @see TryOptional
      */
     @Nonnull
-    default <T> TryOptional<T, SQLException> invoke(TryFunction<CallableStatement, T, SQLException> mapper) {
+    default <T> TryOptional<T, SQLException> call(TryFunction<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
         return TryOptional.of(() -> {
-            if (invoke(Objects.requireNonNull(mapper, "Mapper must be provided"), results::add).single(rs -> rs).toOptional().isPresent()) {
+            if (call(Objects.requireNonNull(mapper, "Mapper must be provided"), results::add).single(rs -> rs).toOptional().isPresent()) {
                 throw new SQLException("Procedure has non-empty result set");
             }
             return results.get(0);
@@ -71,10 +71,10 @@ public interface StoredProcedure extends Select {
      * Throws {@link SQLRuntimeException} in case of non empty results which could be obtained through {@link ResultSet} object.
      *
      * @throws SQLRuntimeException if provided {@link ResultSet} is not empty.
-     * @see #invoke(TryFunction)
+     * @see #call(TryFunction)
      */
-    default void invoke() {
-        invoke(cs -> null).onException(e -> {
+    default void call() {
+        call(cs -> null).onException(e -> {
             throw new SQLRuntimeException(e);
         });
     }

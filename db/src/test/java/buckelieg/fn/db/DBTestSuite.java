@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package buckelieg.simpletools.db;
+package buckelieg.fn.db;
 
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.AfterClass;
@@ -249,39 +249,39 @@ public class DBTestSuite {
 
     @Test
     public void testVoidStoredProcedure() throws Exception {
-        db.call("{call CREATETESTROW2(?)}", "new_name").invoke();
+        db.procedure("{call CREATETESTROW2(?)}", "new_name").call();
         assertTrue(Long.valueOf(11L).equals(db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test(expected = SQLRuntimeException.class)
     public void testStoredProcedureNonEmptyResult() throws Exception {
-        db.call("{call CREATETESTROW1(?)}", "new_name").invoke();
+        db.procedure("{call CREATETESTROW1(?)}", "new_name").call();
     }
 
     @Test
     public void testResultSetStoredProcedure() throws Exception {
-/*        DB.call(conn, "{call CREATETESTROW1(?)}", "new_name").stream().forEach((rs) -> {
+/*        DB.procedure(conn, "{procedure CREATETESTROW1(?)}", "new_name").stream().forEach((rs) -> {
             try {
                 System.out.println(String.format("ID='%s', NAME='%s'", rs.getInt(1), rs.getString(2)));
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         });*/
-        assertTrue(db.call("{call CREATETESTROW1(?)}", "new_name").execute().count() == 13);
+        assertTrue(db.procedure("{call CREATETESTROW1(?)}", "new_name").execute().count() == 13);
     }
 
     @Test
     public void testResultSetWithResultsStoredProcedure() throws Exception {
         List<String> name = new ArrayList<>(1);
-        long count = db.call("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
-                .invoke((cs) -> cs.getString(2), name::add).execute().count();
+        long count = db.procedure("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
+                .call((cs) -> cs.getString(2), name::add).execute().count();
         assertTrue(count == 0);
         assertTrue("name_1".equals(name.get(0)));
     }
 
     @Test
     public void testGetResult() throws Exception {
-        String name = db.call("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).invoke((cs) -> cs.getString(2)).get();
+        String name = db.procedure("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2)).get();
         assertTrue("name_1".equals(name));
     }
 

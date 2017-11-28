@@ -13,52 +13,58 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package buckelieg.simpletools.db;
+package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Query abstraction.
- *
- * @param <R> query execution results type
- * @see AutoCloseable
- * @see Select
- * @see Update
- * @see StoredProcedure
+ * An abstraction for INSERT/UPDATE/DELETE statements
  */
-public interface Query<R> extends AutoCloseable {
+@SuppressWarnings("unchecked")
+public interface Update extends Query<TryOptional<Long, SQLException>> {
 
     /**
-     * Executes this query with expected results of certain type.
+     * Tells this update will be a large update
      *
-     * @return query execution result
+     * @return an update abstraction
+     * @see PreparedStatement#executeLargeUpdate()
      */
-    @Nonnull
-    R execute();
+    Update large();
+
+    /**
+     * Tells DB to use batch (if possible)
+     *
+     * @return an update abstraction
+     * @see DatabaseMetaData#supportsBatchUpdates()
+     */
+    Update batched();
 
     /**
      * Sets query execution timeout
      *
      * @param timeout query timeout in seconds gt 0 (0 means no timeout)
-     * @return query abstraction
+     * @return update query abstraction
      * @see java.sql.Statement#setQueryTimeout(int)
      */
     @Nonnull
-    <Q extends Query<R>> Q timeout(int timeout);
+    Update timeout(int timeout);
 
     /**
      * Sets query execution timeout
      *
      * @param supplier timeout value supplier
-     * @return query abstraction
+     * @return update query abstraction
      * @throws NullPointerException if supplier is null
      * @see #timeout(int)
      */
     @Nonnull
-    default <Q extends Query<R>> Q timeout(Supplier<Integer> supplier) {
+    default Update timeout(Supplier<Integer> supplier) {
         return timeout(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
     }
 
@@ -66,31 +72,23 @@ public interface Query<R> extends AutoCloseable {
      * Tells JDBC driver that this query is poolable.
      *
      * @param poolable true if this query is poolable, false otherwise
-     * @return query abstraction
+     * @return update query abstraction
      * @see java.sql.Statement#setPoolable(boolean)
      */
     @Nonnull
-    <Q extends Query<R>> Q poolable(boolean poolable);
+    Update poolable(boolean poolable);
 
     /**
      * Sets this query poolable.
      *
      * @param supplier poolable value supplier
-     * @return query abstraction
+     * @return update query abstraction
      * @throws NullPointerException if supplier is null
      * @see #poolable(boolean)
      */
     @Nonnull
-    default <Q extends Query<R>> Q poolable(Supplier<Boolean> supplier) {
+    default Update poolable(Supplier<Boolean> supplier) {
         return poolable(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
     }
 
-    /**
-     * Closes this query
-     *
-     * @see AutoCloseable#close()
-     */
-    @Override
-    default void close() {
-    }
 }

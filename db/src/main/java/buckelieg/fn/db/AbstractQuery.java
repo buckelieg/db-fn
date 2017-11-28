@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package buckelieg.simpletools.db;
+package buckelieg.fn.db;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -71,7 +71,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
         return result;
     }
 
-    final void jdbcTry(TryAction<SQLException> action) {
+    private void jdbcTry(TryAction<SQLException> action) {
         try {
             Objects.requireNonNull(action, "Action must be provided").doTry();
         } catch (SQLException e) {

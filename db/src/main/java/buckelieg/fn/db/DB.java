@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package buckelieg.simpletools.db;
+package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -45,12 +45,12 @@ public final class DB implements AutoCloseable {
     private static final Pattern STORED_PROCEDURE = Pattern.compile(
             String.format(
                     "%s|%s|%s|%s|%s|%s",
-                    "(\\?\\s*=\\s*)?call\\s+\\w+\\s*(\\(\\s*)\\)",
-                    "(\\?\\s*=\\s*)?call\\s+\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)",
-                    "(\\?\\s*=\\s*)?call\\s+\\w+",
-                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+\\w+\\s*\\}",
-                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)\\s*\\}",
-                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+\\w+\\s*(\\(\\s*)\\)\\s*\\}"
+                    "(\\?\\s*=\\s*)?procedure\\s+\\w+\\s*(\\(\\s*)\\)",
+                    "(\\?\\s*=\\s*)?procedure\\s+\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)",
+                    "(\\?\\s*=\\s*)?procedure\\s+\\w+",
+                    "\\{\\s*(\\?\\s*=\\s*)?procedure\\s+\\w+\\s*\\}",
+                    "\\{\\s*(\\?\\s*=\\s*)?procedure\\s+\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)\\s*\\}",
+                    "\\{\\s*(\\?\\s*=\\s*)?procedure\\s+\\w+\\s*(\\(\\s*)\\)\\s*\\}"
             )
     );
 
@@ -90,11 +90,11 @@ public final class DB implements AutoCloseable {
      * @param query procedure call string
      * @return stored procedure call
      * @see StoredProcedure
-     * @see #call(String, P[])
+     * @see #procedure(String, P[])
      */
     @Nonnull
-    public StoredProcedure call(String query) {
-        return call(query, new P[0]);
+    public StoredProcedure procedure(String query) {
+        return procedure(query, new P[0]);
     }
 
     /**
@@ -104,11 +104,11 @@ public final class DB implements AutoCloseable {
      * @param params procedure IN parameters' values
      * @return stored procedure call
      * @see StoredProcedure
-     * @see #call(String, P[])
+     * @see #procedure(String, P[])
      */
     @Nonnull
-    public StoredProcedure call(String query, Object... params) {
-        return call(query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P<?>[params.length]));
+    public StoredProcedure procedure(String query, Object... params) {
+        return procedure(query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P<?>[params.length]));
     }
 
     /**
@@ -123,7 +123,7 @@ public final class DB implements AutoCloseable {
      * @see StoredProcedure
      */
     @Nonnull
-    public StoredProcedure call(String query, P<?>... params) {
+    public StoredProcedure procedure(String query, P<?>... params) {
         String validatedQuery = validateQuery(query, null);
         P<?>[] preparedParams = params;
         int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
@@ -145,7 +145,7 @@ public final class DB implements AutoCloseable {
             );
         }
         if (!STORED_PROCEDURE.matcher(validatedQuery).matches()) {
-            throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
+            throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure procedure statement", query));
         }
         return new StoredProcedureQuery(connectionSupplier, validatedQuery, preparedParams);
     }

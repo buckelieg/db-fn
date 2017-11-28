@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package buckelieg.simpletools.db;
+package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -153,7 +153,7 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
 
     @Override
     public final Spliterator<ResultSet> trySplit() {
-        return null; // not splittable. Parallel streams would not gain any performance benefits yet. May be implemented in future?
+        return null; // not splittable. Parallel streams would not gain any performance benefits.
     }
 
     @Override

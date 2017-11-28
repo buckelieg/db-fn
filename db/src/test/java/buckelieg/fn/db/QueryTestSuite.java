@@ -1,4 +1,4 @@
-package buckelieg.simpletools.db;
+package buckelieg.fn.db;
 
 import org.junit.Test;
 
@@ -16,7 +16,7 @@ public class QueryTestSuite {
         assertTrue("UPDATE TEST SET NAME=new_name_2 WHERE NAME=name_2".equals(db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new AbstractMap.SimpleImmutableEntry<>("name", "new_name_2"), new AbstractMap.SimpleImmutableEntry<>("new_name", "name_2")).toString()));
         assertTrue("INSERT INTO TEST(name) VALUES(name1); INSERT INTO TEST(name) VALUES(name2)".equals(db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).toString()));
         assertTrue("INSERT INTO TEST(name) VALUES(New_Name)".equals(db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").toString()));
-        assertTrue("{call CREATETESTROW2(IN:=new_name(JAVA_OBJECT))}".equals(db.call("{call CREATETESTROW2(?)}", "new_name").toString()));
+        assertTrue("{call CREATETESTROW2(IN:=new_name(JAVA_OBJECT))}".equals(db.procedure("{call CREATETESTROW2(?)}", "new_name").toString()));
     }
 
 }

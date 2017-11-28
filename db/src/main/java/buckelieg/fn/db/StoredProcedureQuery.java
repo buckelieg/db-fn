@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package buckelieg.simpletools.db;
+package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -38,7 +38,7 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
 
     @Nonnull
     @Override
-    public <T> Select invoke(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
+    public <T> Select call(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
         this.mapper = Objects.requireNonNull(mapper, "Mapper must be provided");
         this.consumer = Objects.requireNonNull(consumer, "Consumer must be provided");
         return this;
