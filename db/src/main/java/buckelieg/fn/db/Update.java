@@ -32,7 +32,7 @@ public interface Update extends Query<TryOptional<Long, SQLException>> {
     /**
      * Tells this update will be a large update
      *
-     * @return an update abstraction
+     * @return update query abstraction
      * @see PreparedStatement#executeLargeUpdate()
      */
     Update large();
@@ -40,7 +40,7 @@ public interface Update extends Query<TryOptional<Long, SQLException>> {
     /**
      * Tells DB to use batch (if possible)
      *
-     * @return an update abstraction
+     * @return update query abstraction
      * @see DatabaseMetaData#supportsBatchUpdates()
      */
     Update batched();

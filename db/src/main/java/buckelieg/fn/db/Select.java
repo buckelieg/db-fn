@@ -62,7 +62,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * Configures {@link java.sql.Statement} fetch size parameter
      *
      * @param size desired fetch size. Should be greater than 0.
-     * @return select abstraction
+     * @return select query abstraction
      * @see java.sql.Statement#setFetchSize(int)
      * @see ResultSet#setFetchSize(int)
      */
@@ -73,7 +73,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * Configures {@link java.sql.Statement} fetch size parameter via provided {@link Supplier}
      *
      * @param supplier fetch size value supplier
-     * @return select abstraction
+     * @return select query abstraction
      * @throws NullPointerException if supplier is null
      * @see #fetchSize(int)
      */
@@ -86,7 +86,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * Updates max rows obtained with this query.
      *
      * @param max rows number limit
-     * @return select abstraction
+     * @return select query abstraction
      * @see java.sql.Statement#setMaxRows(int)
      */
     @Nonnull
@@ -96,7 +96,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * Updates max rows obtained with this query
      *
      * @param max rows number limit
-     * @return select abstraction
+     * @return select query abstraction
      * @see java.sql.Statement#setLargeMaxRows(long)
      */
     @Nonnull
@@ -108,7 +108,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * Otherwise - {@link #maxRows(long)}.
      *
      * @param supplier max rows value supplier
-     * @return select abstraction
+     * @return select query abstraction
      * @throws NullPointerException if supplier is null
      * @see #maxRows(int)
      * @see #maxRows(long)

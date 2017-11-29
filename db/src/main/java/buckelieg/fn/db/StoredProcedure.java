@@ -40,7 +40,7 @@ public interface StoredProcedure extends Select {
      *
      * @param mapper   function for procedure call results processing
      * @param consumer mapper result consumer - will be called after mapper is finished
-     * @return an abstraction for select statement
+     * @return select query abstraction
      * @throws NullPointerException if mapper or consumer is null
      */
     @Nonnull
