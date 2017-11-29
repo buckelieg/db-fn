@@ -45,12 +45,12 @@ public final class DB implements AutoCloseable {
     private static final Pattern STORED_PROCEDURE = Pattern.compile(
             String.format(
                     "%s|%s|%s|%s|%s|%s",
-                    "(\\?\\s*=\\s*)?procedure\\s+\\w+\\s*(\\(\\s*)\\)",
-                    "(\\?\\s*=\\s*)?procedure\\s+\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)",
-                    "(\\?\\s*=\\s*)?procedure\\s+\\w+",
-                    "\\{\\s*(\\?\\s*=\\s*)?procedure\\s+\\w+\\s*\\}",
-                    "\\{\\s*(\\?\\s*=\\s*)?procedure\\s+\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)\\s*\\}",
-                    "\\{\\s*(\\?\\s*=\\s*)?procedure\\s+\\w+\\s*(\\(\\s*)\\)\\s*\\}"
+                    "(\\?\\s*=\\s*)?call\\s+[\\w.]*\\w+\\s*(\\(\\s*)\\)",
+                    "(\\?\\s*=\\s*)?call\\s+[\\w.]*\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)",
+                    "(\\?\\s*=\\s*)?call\\s+[\\w.]*\\w+",
+                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+[\\w.]*\\w+\\s*\\}",
+                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+[\\w.]*\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)\\s*\\}",
+                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+[\\w.]*\\w+\\s*(\\(\\s*)\\)\\s*\\}"
             )
     );
 

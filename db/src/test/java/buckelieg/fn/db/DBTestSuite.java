@@ -22,12 +22,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.sql.DataSource;
-import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.util.AbstractMap.SimpleImmutableEntry;
 import static org.junit.Assert.assertTrue;
@@ -328,43 +325,6 @@ public class DBTestSuite {
                         e.printStackTrace();
                     }
                 });
-    }
-
-    @Test
-    public void testStoredProcedureRegexp() throws Exception {
-        Field f = DB.class.getDeclaredField("STORED_PROCEDURE");
-        f.setAccessible(true);
-        Pattern STORED_PROCEDURE = (Pattern) f.get(null);
-        Stream.of(
-                new SimpleImmutableEntry<>("{call myProc()}", true),
-                new SimpleImmutableEntry<>("call myProc()", true),
-                new SimpleImmutableEntry<>("{call myProc}", true),
-                new SimpleImmutableEntry<>("call myProc", true),
-                new SimpleImmutableEntry<>("{?=call MyProc()}", true),
-                new SimpleImmutableEntry<>("?=call myProc()", true),
-                new SimpleImmutableEntry<>("{?=call MyProc}", true),
-                new SimpleImmutableEntry<>("?=call myProc", true),
-                new SimpleImmutableEntry<>("{call myProc(?)}", true),
-                new SimpleImmutableEntry<>("call myProc(?)", true),
-                new SimpleImmutableEntry<>("{?=call myProc(?)}", true),
-                new SimpleImmutableEntry<>("?=call myProc(?)", true),
-                new SimpleImmutableEntry<>("{call myProc(?,?)}", true),
-                new SimpleImmutableEntry<>("call myProc(?,?)", true),
-                new SimpleImmutableEntry<>("{?=call myProc(?,?)}", true),
-                new SimpleImmutableEntry<>("?=call myProc(?,?)", true),
-                new SimpleImmutableEntry<>("{call myProc(?,?,?)}", true),
-                new SimpleImmutableEntry<>("call myProc(?,?,?)", true),
-                new SimpleImmutableEntry<>("{?=call myProc(?,?,?)}", true),
-                new SimpleImmutableEntry<>("?=call myProc(?,?,?)", true),
-                new SimpleImmutableEntry<>("{}", false),
-                new SimpleImmutableEntry<>("call ", false),
-                new SimpleImmutableEntry<>("{call}", false),
-                new SimpleImmutableEntry<>("call myProc(?,?,?,?,?)", true)
-                // TODO more cases here
-        ).forEach(testCase -> assertTrue(
-                String.format("Test case '%s' failed", testCase.getKey()),
-                testCase.getValue() == STORED_PROCEDURE.matcher(testCase.getKey()).matches()
-        ));
     }
 
     @Test(expected = Exception.class)
