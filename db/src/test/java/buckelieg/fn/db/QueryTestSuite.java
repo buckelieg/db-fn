@@ -65,7 +65,9 @@ public class QueryTestSuite {
                 new SimpleImmutableEntry<>("{? = call mySchema.myPackage.myProc(?)}", true),
                 new SimpleImmutableEntry<>("{? = call mySchema.myPackage.myProc(?, ?)}", true),
                 new SimpleImmutableEntry<>("call mySchema.myPackage.myProc", true),
-                new SimpleImmutableEntry<>("? = call mySchema.myPackage.myProc", true)
+                new SimpleImmutableEntry<>("call mySchema....myPackage.myProc", false),
+                new SimpleImmutableEntry<>("? = call mySchema.myPackage.myProc", true),
+                new SimpleImmutableEntry<>("? = call mySchema.mySchema.myPackage.myProc", false)
                 // TODO more cases here
         ).forEach(testCase -> assertTrue(
                 String.format("Test case '%s' failed", testCase.getKey()),
