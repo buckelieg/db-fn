@@ -14,7 +14,7 @@ public class TryOptionalTestSuite {
     }
 
     @Test(expected = SQLException.class)
-    public void testException() {
+    public void testException() throws Throwable {
         TryOptional.of(() -> {
             throw new SQLException("TEST");
         }).map(x -> 5).map(x -> {
@@ -23,7 +23,7 @@ public class TryOptionalTestSuite {
     }
 
     @Test
-    public void testRecover() {
+    public void testRecover() throws Throwable {
         assertTrue(
                 "1".equals(TryOptional.of(() -> 5).map(x -> {
                     throw new UnsupportedOperationException("" + x);
@@ -32,7 +32,7 @@ public class TryOptionalTestSuite {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testGetOptional() {
+    public void testGetOptional() throws Throwable {
         TryOptional.of(() -> {
             throw new NullPointerException();
         }).getOptional();
