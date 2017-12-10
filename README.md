@@ -6,8 +6,8 @@ Add maven dependency:
 ```
 <dependency>
   <groupId>com.github.buckelieg</groupId>
-  <artifactId>db-tools</artifactId>
-  <version>1.0.5</version>
+  <artifactId>db-fn</artifactId>
+  <version>0.1</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -75,7 +75,7 @@ long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute().t
 ```
 Or with named parameters:
 ```java
-long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute();
+long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute().toOptional().orElse(0L);
 ```
 ##### Update
 ```java
