@@ -33,7 +33,7 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long, SQLException>, P
     private final Object[][] batch;
     private final TrySupplier<Connection, SQLException> connectionSupplier;
     private boolean isLarge;
-    private boolean batchMode;
+    private boolean isBatch;
 
     UpdateQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
         super(connectionSupplier, query, (Object) batch);
@@ -49,7 +49,7 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long, SQLException>, P
 
     @Override
     public Update batched() {
-        batchMode = true;
+        isBatch = true;
         return this;
     }
 
@@ -82,7 +82,7 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long, SQLException>, P
                             conn.setAutoCommit(false);
                             savepoint = conn.setSavepoint();
                         }
-                        rowsAffected = batchMode && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
+                        rowsAffected = isBatch && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
                         if (transacted) {
                             conn.commit();
                         }
