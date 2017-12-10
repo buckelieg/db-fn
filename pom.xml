@@ -4,7 +4,7 @@
 
     <groupId>com.github.buckelieg</groupId>
     <artifactId>db-fn</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
 
     <packaging>jar</packaging>
 
@@ -25,7 +25,7 @@
         <url>http://buckelieg.github.io/db-fn/</url>
         <connection>scm:git:git@github.com:buckelieg/db-fn.git</connection>
         <developerConnection>scm:git:git@github.com:buckelieg/db-fn.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>db-fn-0.1</tag>
     </scm>
 
     <developers>
