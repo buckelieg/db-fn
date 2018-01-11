@@ -6,8 +6,8 @@ Add maven dependency:
 ```
 <dependency>
   <groupId>com.github.buckelieg</groupId>
-  <artifactId>db-tools</artifactId>
-  <version>1.0.5</version>
+  <artifactId>db-fn</artifactId>
+  <version>0.1</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -75,7 +75,7 @@ long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute().t
 ```
 Or with named parameters:
 ```java
-long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute();
+long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute().toOptional().orElse(0L);
 ```
 ##### Update
 ```java
@@ -107,7 +107,7 @@ Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHER
 #### Stored Procedures
 Invoking stored procedures is also quite simple:
 ```java
-String name = db.call("{call GETNAMEBYID(?,?)}", P.in(12), P.out(JDBCType.VARCHAR)).invoke(cs -> cs.getString(2)).toOptional().orElse("Unknown");
+String name = db.procedure("{call GETNAMEBYID(?,?)}", P.in(12), P.out(JDBCType.VARCHAR)).call(cs -> cs.getString(2)).toOptional().orElse("Unknown");
 ```
 Note that in the latter case stored procedure must not return any result sets.
 If stored procedure is considered to return result sets it is handled similar to regular selects (see above).
