@@ -148,6 +148,6 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long, SQLException>, P
         return Arrays.stream(params)
                 .flatMap(p -> Arrays.stream((Object[]) p))
                 .map(p -> super.makeString(query, (Object[]) p))
-                .collect(Collectors.joining("; "));
+                .collect(Collectors.joining(";"));
     }
 }

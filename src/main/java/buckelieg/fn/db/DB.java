@@ -145,7 +145,7 @@ public final class DB implements AutoCloseable {
             );
         }
         if (!STORED_PROCEDURE.matcher(validatedQuery).matches()) {
-            throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure procedure statement", query));
+            throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure statement", query));
         }
         return new StoredProcedureQuery(connectionSupplier, validatedQuery, preparedParams);
     }
