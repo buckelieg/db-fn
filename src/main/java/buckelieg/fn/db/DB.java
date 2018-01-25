@@ -94,7 +94,7 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public StoredProcedure procedure(String query) {
-        return procedure(query, new P[0]);
+        return procedure(query, new Object[0]);
     }
 
     /**
@@ -127,7 +127,7 @@ public final class DB implements AutoCloseable {
         String validatedQuery = validateQuery(query, null);
         P<?>[] preparedParams = params;
         int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
-        if (namedParams == params.length) {
+        if (namedParams == params.length && params.length > 0) {
             Map.Entry<String, Object[]> preparedQuery = prepareQuery(
                     validatedQuery,
                     Stream.of(params)

@@ -47,10 +47,11 @@ public class DBTestSuite {
         ds.setCreateDatabase("create");
         DBTestSuite.ds = ds;
         conn = ds.getConnection();
-        conn.createStatement().execute("CREATE TABLE TEST(id int PRIMARY KEY generated always as IDENTITY, name varchar(255) not null)");
-        conn.createStatement().execute("CREATE PROCEDURE CREATETESTROW1(NAME_TO_ADD VARCHAR(255)) DYNAMIC RESULT SETS 2 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA");
-        conn.createStatement().execute("CREATE PROCEDURE CREATETESTROW2(NAME_TO_ADD VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA");
-        conn.createStatement().execute("CREATE PROCEDURE GETNAMEBYID(NAME_ID INTEGER, OUT NAME_NAME VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testProcedureWithResults' PARAMETER STYLE JAVA");
+        conn.createStatement().execute("CREATE TABLE TEST(id int PRIMARY KEY generated always as IDENTITY, name VARCHAR(255) NOT NULL)");
+        conn.createStatement().execute("CREATE PROCEDURE CREATETESTROW1(name_to_add VARCHAR(255)) DYNAMIC RESULT SETS 2 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA");
+        conn.createStatement().execute("CREATE PROCEDURE CREATETESTROW2(name_to_add VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA");
+        conn.createStatement().execute("CREATE PROCEDURE GETNAMEBYID(name_id INTEGER, OUT name_name VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testProcedureWithResults' PARAMETER STYLE JAVA");
+        conn.createStatement().execute("CREATE PROCEDURE GETALLNAMES() DYNAMIC RESULT SETS 1 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testNoArgProcedure' PARAMETER STYLE JAVA");
 //        db = new DB(() -> conn);
 //        db = new DB(conn);
         db = new DB(ds::getConnection);
@@ -63,6 +64,7 @@ public class DBTestSuite {
         conn.createStatement().execute("DROP PROCEDURE CREATETESTROW1");
         conn.createStatement().execute("DROP PROCEDURE CREATETESTROW2");
         conn.createStatement().execute("DROP PROCEDURE GETNAMEBYID");
+        conn.createStatement().execute("DROP PROCEDURE GETALLNAMES");
         conn.close();
         db.close();
     }
@@ -277,6 +279,16 @@ public class DBTestSuite {
     }
 
     @Test
+    public void testInvalidProcedureCall() throws Throwable {
+        db.procedure("{call UNEXISTINGPROCEDURE()}").call();
+    }
+
+    @Test
+    public void testNoArgsProcedure() throws Throwable {
+        assertTrue(10L == db.procedure("{call GETALLNAMES()}").stream(rs -> rs.getString("name")).peek(System.out::println).count());
+    }
+
+    @Test
     public void testGetResult() throws Throwable {
         String name = db.procedure("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2)).get();
         assertTrue("name_1".equals(name));
@@ -288,28 +300,19 @@ public class DBTestSuite {
                 .execute()
                 .forEach(rs -> {
                     testImmutableAction(rs, ResultSet::next);
-                    testImmutableAction(rs, (r) -> {
-                        r.afterLast();
-                        return null;
-                    });
-                    testImmutableAction(rs, (r) -> {
-                        r.beforeFirst();
-                        return null;
-                    });
+                    testImmutableAction(rs, ResultSet::afterLast);
+                    testImmutableAction(rs, ResultSet::beforeFirst);
                     testImmutableAction(rs, ResultSet::previous);
                     testImmutableAction(rs, (r) -> r.absolute(1));
                     testImmutableAction(rs, (r) -> r.relative(1));
-                    testImmutableAction(rs, (r) -> {
-                        r.updateObject(1, "Updated_val");
-                        return null;
-                    });
+                    testImmutableAction(rs, (r) -> r.updateObject(1, "Updated_val"));
                     // TODO test all unsupported actions
                 });
     }
 
-    private void testImmutableAction(ResultSet rs, TryFunction<ResultSet, ?, SQLException> action) {
+    private void testImmutableAction(ResultSet rs, TryConsumer<ResultSet, SQLException> action) {
         try {
-            action.apply(rs);
+            action.accept(rs);
         } catch (SQLException e) {
             assertTrue("Unsupported operation".equals(e.getMessage()));
         }

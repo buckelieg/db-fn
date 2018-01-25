@@ -34,7 +34,7 @@ public class DerbyStoredProcedures {
             stmt.executeUpdate();
             stmt = conn.prepareStatement("SELECT * FROM TEST");
             // set the result in OUT parameter
-            // IMPORTANT: Notice that we never instantiate the customerLastName array.
+            // IMPORTANT: Notice that we never instantiate the output array.
             // The array is instead initialized and passed in by Derby, our SQL/JRT implementor
             updatedContents[0] = stmt.executeQuery();
             anotherContent[0] = conn.prepareStatement("SELECT * FROM TEST WHERE ID IN(1,2)").executeQuery();
@@ -78,6 +78,23 @@ public class DerbyStoredProcedures {
             ResultSet rs = stmt.executeQuery();
             rs.next();
             name[0] = rs.getString(1);
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
+
+    public static void testNoArgProcedure(ResultSet[] names) throws SQLException {
+        LOG.debug("Calling testNoArgProcedure...");
+        Connection conn = null;
+        PreparedStatement stmt;
+        try {
+            conn = DriverManager.getConnection("jdbc:default:connection");
+            names[0] = conn.prepareStatement("SELECT name FROM TEST").executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e;
         } finally {
             if (conn != null) {
                 conn.close();
