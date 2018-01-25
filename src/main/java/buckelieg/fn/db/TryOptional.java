@@ -25,20 +25,19 @@ import java.util.Optional;
  * A container for result of the computation which might throw an exception.
  *
  * @param <T> value type
- * @param <E> an exception type
  */
 @ParametersAreNonnullByDefault
-public final class TryOptional<T, E extends Throwable> {
+public final class TryOptional<T> {
 
     private final T value;
-    private final E exception;
+    private final Throwable exception;
 
     private TryOptional(@Nullable T value) {
         this.value = value;
         this.exception = null;
     }
 
-    private TryOptional(E exception) {
+    private TryOptional(Throwable exception) {
         this.value = null;
         this.exception = Objects.requireNonNull(exception);
     }
@@ -53,14 +52,13 @@ public final class TryOptional<T, E extends Throwable> {
      * @return a {@link TryOptional} representing computation results
      * @throws NullPointerException if the supplier is null
      */
-    @SuppressWarnings("unchecked")
     @Nonnull
-    public static <T, E extends Throwable> TryOptional<T, E> of(TrySupplier<T, E> supplier) {
+    public static <T> TryOptional<T> of(TrySupplier<T, Throwable> supplier) {
         Objects.requireNonNull(supplier, "Value supplier must be provided");
         try {
             return new TryOptional<>(supplier.get());
         } catch (Throwable t) {
-            return new TryOptional<>((E) t);
+            return new TryOptional<>(t);
         }
     }
 
@@ -78,10 +76,9 @@ public final class TryOptional<T, E extends Throwable> {
      * Otherwise throw an exception.
      *
      * @return underlying value
-     * @throws E an exception
      */
     @Nullable
-    public T get() throws E {
+    public T get() throws Throwable {
         if (isException()) {
             throw exception;
         }
@@ -137,8 +134,8 @@ public final class TryOptional<T, E extends Throwable> {
      */
     @SuppressWarnings("unchecked")
     @Nonnull
-    public <U, UE extends Throwable> TryOptional<U, UE> map(TryFunction<? super T, ? extends U, UE> mapper) {
-        return isException() ? (TryOptional<U, UE>) this : of(() -> mapper.apply(value));
+    public <U> TryOptional<U> map(TryFunction<? super T, ? extends U, Throwable> mapper) {
+        return isException() ? (TryOptional<U>) this : of(() -> mapper.apply(value));
     }
 
     /**
@@ -150,18 +147,17 @@ public final class TryOptional<T, E extends Throwable> {
      */
     @SuppressWarnings("unchecked")
     @Nonnull
-    public <U, UE extends Throwable> TryOptional<U, UE> recover(TryFunction<E, U, UE> handler) {
-        return isException() ? of(() -> Objects.requireNonNull(handler).apply(exception)) : (TryOptional<U, UE>) this;
+    public <U> TryOptional<U> recover(TryFunction<Throwable, U, Throwable> handler) {
+        return isException() ? of(() -> Objects.requireNonNull(handler).apply(exception)) : (TryOptional<U>) this;
     }
 
     /**
      * Exception consumer. This is expected to be terminal operation.
      *
      * @param handler a {@link TryConsumer} for exception
-     * @throws UE                   an optional exception. To make exception optional it must derive from {@link RuntimeException}
      * @throws NullPointerException if handler is null
      */
-    public <UE extends Throwable> void onException(TryConsumer<E, UE> handler) throws UE {
+    public <E extends Throwable> void onException(TryConsumer<Throwable, E> handler) throws E {
         if (isException()) Objects.requireNonNull(handler).accept(exception);
     }
 
@@ -170,7 +166,7 @@ public final class TryOptional<T, E extends Throwable> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        TryOptional<?, ?> that = (TryOptional<?, ?>) o;
+        TryOptional<?> that = (TryOptional<?>) o;
 
         return (value != null ? value.equals(that.value) : that.value == null) && (isException() ? exception.equals(that.exception) : that.exception == null);
     }

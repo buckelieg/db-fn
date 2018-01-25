@@ -18,7 +18,6 @@ package buckelieg.fn.db;
 import javax.annotation.Nonnull;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -27,7 +26,7 @@ import java.util.function.Supplier;
  * An abstraction for INSERT/UPDATE/DELETE statements
  */
 @SuppressWarnings("unchecked")
-public interface Update extends Query<TryOptional<Long, SQLException>> {
+public interface Update extends Query<TryOptional<Long>> {
 
     /**
      * Tells this update will be a large update

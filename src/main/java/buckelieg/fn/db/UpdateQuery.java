@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
-final class UpdateQuery extends AbstractQuery<TryOptional<Long, SQLException>, PreparedStatement> implements Update {
+final class UpdateQuery extends AbstractQuery<TryOptional<Long>, PreparedStatement> implements Update {
 
     private final Object[][] batch;
     private final TrySupplier<Connection, SQLException> connectionSupplier;
@@ -67,7 +67,7 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long, SQLException>, P
 
     @Nonnull
     @Override
-    public TryOptional<Long, SQLException> execute() {
+    public TryOptional<Long> execute() {
         return TryOptional.of(() -> {
             try {
                 return jdbcTry(() -> {

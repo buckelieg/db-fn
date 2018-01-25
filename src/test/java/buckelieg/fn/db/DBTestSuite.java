@@ -48,9 +48,9 @@ public class DBTestSuite {
         DBTestSuite.ds = ds;
         conn = ds.getConnection();
         conn.createStatement().execute("CREATE TABLE TEST(id int PRIMARY KEY generated always as IDENTITY, name varchar(255) not null)");
-        conn.createStatement().execute("CREATE PROCEDURE CREATETESTROW1(NAME_TO_ADD VARCHAR(255)) DYNAMIC RESULT SETS 2 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA");
-        conn.createStatement().execute("CREATE PROCEDURE CREATETESTROW2(NAME_TO_ADD VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA");
-        conn.createStatement().execute("CREATE PROCEDURE GETNAMEBYID(NAME_ID INTEGER, OUT NAME_NAME VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.simpletools.db.DerbyStoredProcedures.testProcedureWithResults' PARAMETER STYLE JAVA");
+        conn.createStatement().execute("CREATE PROCEDURE CREATETESTROW1(NAME_TO_ADD VARCHAR(255)) DYNAMIC RESULT SETS 2 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.createTestRow' PARAMETER STYLE JAVA");
+        conn.createStatement().execute("CREATE PROCEDURE CREATETESTROW2(NAME_TO_ADD VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA");
+        conn.createStatement().execute("CREATE PROCEDURE GETNAMEBYID(NAME_ID INTEGER, OUT NAME_NAME VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testProcedureWithResults' PARAMETER STYLE JAVA");
 //        db = new DB(() -> conn);
 //        db = new DB(conn);
         db = new DB(ds::getConnection);
@@ -149,12 +149,12 @@ public class DBTestSuite {
     }
 
     @Test
-    public void testSelectNoParams() throws Exception {
+    public void testSelectNoParams() throws Throwable {
         assertTrue(10 == db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)).toOptional().orElse(0));
     }
 
     @Test
-    public void testSelectForEachSingle() throws Exception {
+    public void testSelectForEachSingle() throws Throwable {
         assertTrue(1 == db.select("SELECT * FROM TEST WHERE ID=1").execute().collect(Collectors.toList()).size());
         db.select("SELECT COUNT(*) FROM TEST").execute().forEach(rs -> {
             try {
@@ -166,32 +166,32 @@ public class DBTestSuite {
     }
 
     @Test
-    public void testUpdateNoParams() throws Exception {
+    public void testUpdateNoParams() throws Throwable {
         assertTrue(10L == db.update("DELETE FROM TEST").execute().toOptional().orElse(0L));
     }
 
     @Test
-    public void testInsert() throws Exception {
+    public void testInsert() throws Throwable {
         long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute().toOptional().orElse(0L);
         assertTrue(1L == res);
     }
 
     @Test
-    public void testInsertNamed() throws Exception {
+    public void testInsertNamed() throws Throwable {
         long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute().toOptional().orElse(0L);
         assertTrue(1L == res);
         assertTrue(Long.valueOf(11L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
-    public void testUpdate() throws Exception {
+    public void testUpdate() throws Throwable {
         long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute().toOptional().orElse(0L);
         assertTrue(1L == res);
         assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
-    public void testUpdateNamed() throws Exception {
+    public void testUpdateNamed() throws Throwable {
         long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute().toOptional().orElse(0L);
         assertTrue(1L == res);
         assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get()));
@@ -226,37 +226,37 @@ public class DBTestSuite {
     }
 
     @Test
-    public void testDelete() throws Exception {
+    public void testDelete() throws Throwable {
         long res = db.update("DELETE FROM TEST WHERE name=?", "name_2").execute().toOptional().orElse(0L);
         assertTrue(1L == res);
         assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test
-    public void testDeleteNamed() throws Exception {
+    public void testDeleteNamed() throws Throwable {
         long res = db.update("DELETE FROM TEST WHERE name=:name", new SimpleImmutableEntry<>("name", "name_2")).execute().toOptional().orElse(0L);
         assertTrue(1L == res);
         assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testDuplicatedNamedParameters() throws Exception {
+    public void testDuplicatedNamedParameters() throws Throwable {
         db.select("SELECT * FROM TEST WHERE 1=1 AND (NAME IN (:names) OR NAME=:names)", new SimpleImmutableEntry<>("names", "name_1"), new SimpleImmutableEntry<>("names", "name_2"));
     }
 
     @Test
-    public void testVoidStoredProcedure() throws Exception {
+    public void testVoidStoredProcedure() throws Throwable {
         db.procedure("{call CREATETESTROW2(?)}", "new_name").call();
         assertTrue(Long.valueOf(11L).equals(db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
     }
 
     @Test(expected = SQLRuntimeException.class)
-    public void testStoredProcedureNonEmptyResult() throws Exception {
+    public void testStoredProcedureNonEmptyResult() throws Throwable {
         db.procedure("{call CREATETESTROW1(?)}", "new_name").call();
     }
 
     @Test
-    public void testResultSetStoredProcedure() throws Exception {
+    public void testResultSetStoredProcedure() throws Throwable {
 /*        DB.procedure(conn, "{procedure CREATETESTROW1(?)}", "new_name").stream().forEach((rs) -> {
             try {
                 System.out.println(String.format("ID='%s', NAME='%s'", rs.getInt(1), rs.getString(2)));
@@ -268,7 +268,7 @@ public class DBTestSuite {
     }
 
     @Test
-    public void testResultSetWithResultsStoredProcedure() throws Exception {
+    public void testResultSetWithResultsStoredProcedure() throws Throwable {
         List<String> name = new ArrayList<>(1);
         long count = db.procedure("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
                 .call((cs) -> cs.getString(2), name::add).execute().count();
@@ -277,13 +277,13 @@ public class DBTestSuite {
     }
 
     @Test
-    public void testGetResult() throws Exception {
+    public void testGetResult() throws Throwable {
         String name = db.procedure("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2)).get();
         assertTrue("name_1".equals(name));
     }
 
     @Test
-    public void testImmutable() throws Exception {
+    public void testImmutable() throws Throwable {
         db.select("SELECT * FROM TEST WHERE 1=1 AND ID=?", 1)
                 .execute()
                 .forEach(rs -> {
@@ -328,7 +328,7 @@ public class DBTestSuite {
     }
 
     @Test(expected = Exception.class)
-    public void testExceptionHandler() throws Exception {
+    public void testExceptionHandler() throws Throwable {
         db.update("UPDATE TEST SET ID=? WHERE ID=?", 111, 1)
                 .poolable(() -> true)
                 .timeout(() -> 0)

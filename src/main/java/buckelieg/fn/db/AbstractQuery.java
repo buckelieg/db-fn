@@ -31,7 +31,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
 
     private static final Pattern PARAM = Pattern.compile("\\?");
 
-    private TryOptional<S, ? extends SQLException> statement;
+    private TryOptional<S> statement;
 
     private final String query;
 
@@ -95,19 +95,17 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
                 out.add(action.apply(s));
                 return s;
             });
-            return out.iterator().next();
+            return out.isEmpty() ? null : out.iterator().next();
         });
     }
 
-    @SuppressWarnings("unchecked")
+    //    @SuppressWarnings("unchecked")
     final <Q extends Query<R>> Q setStatementParameter(TryConsumer<S, SQLException> action) {
-        return jdbcTry(() -> {
-            statement = statement.map(s -> {
-                action.accept(s);
-                return s;
-            });
-            return (Q) this;
+        withStatement(s -> {
+            action.accept(s);
+            return null;
         });
+        return (Q) this;
     }
 
     abstract S prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params);

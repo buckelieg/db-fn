@@ -1,18 +1,18 @@
 /*
-* Copyright 2016-2017 Anatoly Kutyakov
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2016-2017 Anatoly Kutyakov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
- * An abstraction for STORED PROCEDURE procedure statement.
+ * An abstraction for STORED PROCEDURE call statement.
  */
 @ParametersAreNonnullByDefault
 public interface StoredProcedure extends Select {
@@ -56,10 +56,10 @@ public interface StoredProcedure extends Select {
      * @see TryOptional
      */
     @Nonnull
-    default <T> TryOptional<T, SQLException> call(TryFunction<CallableStatement, T, SQLException> mapper) {
+    default <T> TryOptional<T> call(TryFunction<CallableStatement, T, SQLException> mapper) {
         List<T> results = new ArrayList<>(1);
         return TryOptional.of(() -> {
-            if (call(Objects.requireNonNull(mapper, "Mapper must be provided"), results::add).single(rs -> rs).toOptional().isPresent()) {
+            if (call(Objects.requireNonNull(mapper, "Mapper must be provided"), results::add).single(rs -> rs).getOptional().isPresent()) {
                 throw new SQLException("Procedure has non-empty result set");
             }
             return results.get(0);

@@ -41,7 +41,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * @see TryOptional
      */
     @Nonnull
-    <T, E extends SQLException> TryOptional<T, E> single(TryFunction<ResultSet, T, E> mapper);
+    <T> TryOptional<T> single(TryFunction<ResultSet, T, SQLException> mapper);
 
     /**
      * Stream abstraction over ResultSet.

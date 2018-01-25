@@ -26,7 +26,7 @@ import javax.annotation.Nonnull;
  * @see Update
  * @see StoredProcedure
  */
-public interface Query<R> extends AutoCloseable {
+interface Query<R> extends AutoCloseable {
 
     /**
      * Executes this query with expected results of certain type.
