@@ -137,6 +137,12 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
         return setTimeout(timeout);
     }
 
+    @Nonnull
+    @Override
+    public Select print(Consumer<String> printer) {
+        return log(printer);
+    }
+
     @Override
     public final Spliterator<ResultSet> spliterator() {
         return this;

@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -57,6 +58,27 @@ public interface Select extends Query<Stream<ResultSet>> {
      */
     @Nonnull
     Stream<ResultSet> execute();
+
+    /**
+     * Shorthand for stream mapping.
+     *
+     * @param mapper result set mapper which is not required to handle {@link SQLException}
+     * @return a {@link Stream} over mapped {@link ResultSet}
+     * @throws NullPointerException if mapper is null
+     * @throws SQLRuntimeException  as a wrapper for {@link SQLException} of the mapper
+     * @see #execute()
+     */
+    @Nonnull
+    default <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper) {
+        Objects.requireNonNull(mapper, "Mapper must be provided");
+        return execute().map(rs -> {
+            try {
+                return mapper.apply(rs);
+            } catch (SQLException e) {
+                throw new SQLRuntimeException(e);
+            }
+        });
+    }
 
     /**
      * Configures {@link java.sql.Statement} fetch size parameter
@@ -127,12 +149,9 @@ public interface Select extends Query<Stream<ResultSet>> {
     }
 
     /**
-     * Sets query execution timeout
-     *
-     * @param timeout query timeout in seconds gt 0 (0 means no timeout)
-     * @return select query abstraction
-     * @see java.sql.Statement#setQueryTimeout(int)
+     * {@inheritDoc}
      */
+    @Override
     @Nonnull
     Select timeout(int timeout);
 
@@ -150,12 +169,9 @@ public interface Select extends Query<Stream<ResultSet>> {
     }
 
     /**
-     * Tells JDBC driver that this query is poolable.
-     *
-     * @param poolable true if this query is poolable, false otherwise
-     * @return select query abstraction
-     * @see java.sql.Statement#setPoolable(boolean)
+     * {@inheritDoc}
      */
+    @Override
     @Nonnull
     Select poolable(boolean poolable);
 
@@ -173,24 +189,22 @@ public interface Select extends Query<Stream<ResultSet>> {
     }
 
     /**
-     * Shorthand for stream mapping.
-     *
-     * @param mapper result set mapper which is not required to handle {@link SQLException}
-     * @return a {@link Stream} over mapped {@link ResultSet}
-     * @throws NullPointerException if mapper is null
-     * @throws SQLRuntimeException  as a wrapper for {@link SQLException} of the mapper
-     * @see #execute()
+     * Prints this query string to provided logger.
+     * @param printer query string consumer
+     * @return this query
      */
     @Nonnull
-    default <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper) {
-        Objects.requireNonNull(mapper, "Mapper must be provided");
-        return execute().map(rs -> {
-            try {
-                return mapper.apply(rs);
-            } catch (SQLException e) {
-                throw new SQLRuntimeException(e);
-            }
-        });
+    Select print(Consumer<String> printer);
+
+    /**
+     * Prints this query string to standard output.
+     *
+     * @return this query
+     * @see System#out
+     */
+    @Nonnull
+    default Select print() {
+        return print(System.out::println);
     }
 
 }

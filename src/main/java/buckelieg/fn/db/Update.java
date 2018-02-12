@@ -20,6 +20,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -45,12 +46,9 @@ public interface Update extends Query<TryOptional<Long>> {
     Update batched();
 
     /**
-     * Sets query execution timeout
-     *
-     * @param timeout query timeout in seconds gt 0 (0 means no timeout)
-     * @return update query abstraction
-     * @see java.sql.Statement#setQueryTimeout(int)
+     * {@inheritDoc}
      */
+    @Override
     @Nonnull
     Update timeout(int timeout);
 
@@ -67,13 +65,11 @@ public interface Update extends Query<TryOptional<Long>> {
         return timeout(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
     }
 
+
     /**
-     * Tells JDBC driver that this query is poolable.
-     *
-     * @param poolable true if this query is poolable, false otherwise
-     * @return update query abstraction
-     * @see java.sql.Statement#setPoolable(boolean)
+     * {@inheritDoc}
      */
+    @Override
     @Nonnull
     Update poolable(boolean poolable);
 
@@ -88,6 +84,25 @@ public interface Update extends Query<TryOptional<Long>> {
     @Nonnull
     default Update poolable(Supplier<Boolean> supplier) {
         return poolable(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
+    }
+
+    /**
+     * Prints this query string to provided logger.
+     * @param printer query string consumer
+     * @return this query
+     */
+    @Nonnull
+    Update print(Consumer<String> printer);
+
+    /**
+     * Prints this query string to standard output.
+     *
+     * @return this query
+     * @see System#out
+     */
+    @Nonnull
+    default Update print() {
+        return print(System.out::println);
     }
 
 }

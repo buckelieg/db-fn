@@ -1,18 +1,18 @@
 /*
-* Copyright 2016-2017 Anatoly Kutyakov
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2016-2017 Anatoly Kutyakov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package buckelieg.fn.db;
 
 import java.sql.Connection;
@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -57,6 +58,12 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
 
     final <Q extends Query<R>> Q setPoolable(boolean poolable) {
         return setStatementParameter(statement -> statement.setPoolable(poolable));
+    }
+
+    @SuppressWarnings("unchecked")
+    final <Q extends Query<R>> Q log(Consumer<String> printer) {
+        Objects.requireNonNull(printer, "Printer must be provided").accept(query);
+        return (Q) this;
     }
 
     final <O> O jdbcTry(TrySupplier<O, SQLException> supplier) {
@@ -99,7 +106,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
         });
     }
 
-    //    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     final <Q extends Query<R>> Q setStatementParameter(TryConsumer<S, SQLException> action) {
         withStatement(s -> {
             action.accept(s);

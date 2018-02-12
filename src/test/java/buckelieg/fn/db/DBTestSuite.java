@@ -278,7 +278,7 @@ public class DBTestSuite {
         assertTrue("name_1".equals(name.get(0)));
     }
 
-    @Test
+    @Test(expected = Throwable.class)
     public void testInvalidProcedureCall() throws Throwable {
         db.procedure("{call UNEXISTINGPROCEDURE()}").call();
     }

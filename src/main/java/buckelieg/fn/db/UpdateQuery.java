@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -63,6 +64,12 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long>, PreparedStateme
     @Override
     public final Update timeout(int timeout) {
         return setTimeout(timeout);
+    }
+
+    @Nonnull
+    @Override
+    public Update print(Consumer<String> printer) {
+        return log(printer);
     }
 
     @Nonnull
