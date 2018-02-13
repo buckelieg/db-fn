@@ -16,6 +16,7 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
+import java.io.PrintStream;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.util.Objects;
@@ -87,18 +88,19 @@ public interface Update extends Query<TryOptional<Long>> {
     }
 
     /**
-     * Prints this query string to provided logger.
+     * Prints this query string (as SQL) to provided logger.
      * @param printer query string consumer
-     * @return this query
+     * @return update query abstraction
      */
     @Nonnull
     Update print(Consumer<String> printer);
 
     /**
-     * Prints this query string to standard output.
+     * Prints this query string (as SQL) to standard output.
      *
-     * @return this query
+     * @return update query abstraction
      * @see System#out
+     * @see PrintStream#println
      */
     @Nonnull
     default Update print() {

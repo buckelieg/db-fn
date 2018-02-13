@@ -17,6 +17,7 @@ package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
@@ -189,18 +190,19 @@ public interface Select extends Query<Stream<ResultSet>> {
     }
 
     /**
-     * Prints this query string to provided logger.
+     * Prints this query string (as SQL) to provided logger.
      * @param printer query string consumer
-     * @return this query
+     * @return select query abstraction
      */
     @Nonnull
     Select print(Consumer<String> printer);
 
     /**
-     * Prints this query string to standard output.
+     * Prints this query string (as SQL) to standard output.
      *
-     * @return this query
+     * @return select query abstraction
      * @see System#out
+     * @see PrintStream#println
      */
     @Nonnull
     default Select print() {

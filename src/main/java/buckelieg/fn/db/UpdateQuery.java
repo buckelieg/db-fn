@@ -56,13 +56,13 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long>, PreparedStateme
 
     @Nonnull
     @Override
-    public final Update poolable(boolean poolable) {
+    public Update poolable(boolean poolable) {
         return setPoolable(poolable);
     }
 
     @Nonnull
     @Override
-    public final Update timeout(int timeout) {
+    public Update timeout(int timeout) {
         return setTimeout(timeout);
     }
 

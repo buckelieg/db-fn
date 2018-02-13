@@ -115,13 +115,13 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
 
     @Nonnull
     @Override
-    public Select maxRows(int max) {
+    public final Select maxRows(int max) {
         return setStatementParameter(s -> s.setMaxRows(max > 0 ? max : 0));
     }
 
     @Nonnull
     @Override
-    public Select maxRows(long max) {
+    public final Select maxRows(long max) {
         return setStatementParameter(s -> s.setLargeMaxRows(max > 0 ? max : 0));
     }
 

@@ -44,6 +44,12 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
         return this;
     }
 
+    @Nonnull
+    @Override
+    public StoredProcedure print(Consumer<String> printer) {
+        return log(printer);
+    }
+
     @Override
     protected void doExecute() {
         withStatement(s -> s.execute() ? rs = s.getResultSet() : null);

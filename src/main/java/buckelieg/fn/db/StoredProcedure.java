@@ -17,6 +17,7 @@ package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.PrintStream;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -77,5 +78,26 @@ public interface StoredProcedure extends Select {
         call(cs -> null).onException(e -> {
             throw new SQLRuntimeException(e);
         });
+    }
+
+    /**
+     * Prints this query string to provided logger.
+     *
+     * @param printer query string consumer
+     * @return stored procedure abstraction
+     */
+    @Nonnull
+    StoredProcedure print(Consumer<String> printer);
+
+    /**
+     * Prints this query string to standard output.
+     *
+     * @return stored procedure abstraction
+     * @see System#out
+     * @see PrintStream#println
+     */
+    @Nonnull
+    default StoredProcedure print() {
+        return print(System.out::println);
     }
 }
