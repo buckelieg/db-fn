@@ -8,13 +8,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 class BoxedPrimitiveIterable implements Iterable<Number> {
 
-    private Object array;
+    private final Object array;
 
     BoxedPrimitiveIterable(Object array) {
         this.array = Objects.requireNonNull(array, "Array must be provided");
-        if (!array.getClass().isArray()) {
-            throw new IllegalArgumentException("Provided object must be an array");
-        }
     }
 
     @Override
@@ -22,10 +19,11 @@ class BoxedPrimitiveIterable implements Iterable<Number> {
         return new Iterator<Number>() {
 
             private AtomicInteger currentIndex = new AtomicInteger();
+            private final int length = Array.getLength(array);
 
             @Override
             public boolean hasNext() {
-                return array != null && currentIndex.get() < Array.getLength(array);
+                return array != null && currentIndex.get() < length;
             }
 
             @Override
