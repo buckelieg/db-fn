@@ -343,13 +343,13 @@ public final class DB implements AutoCloseable {
     private Iterable<?> asIterable(Object o) {
         Iterable<?> iterable;
         if (o.getClass().isArray()) {
-            if (o instanceof long[] ||
-                    o instanceof int[] ||
-                    o instanceof double[] ||
-                    o instanceof float[] ||
-                    o instanceof short[] ||
-                    o instanceof byte[] ||
-                    o instanceof char[]
+            if (o instanceof long[]
+                    || o instanceof int[]
+                    || o instanceof double[]
+                    || o instanceof float[]
+                    || o instanceof short[]
+                    || o instanceof byte[]
+                    || o instanceof char[]
                     ) {
                 iterable = new BoxedPrimitiveIterable(o);
             } else {
