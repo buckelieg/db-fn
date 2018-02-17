@@ -1,18 +1,18 @@
 /*
-* Copyright 2016-2017 Anatoly Kutyakov
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2016-2017 Anatoly Kutyakov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.AbstractMap.SimpleImmutableEntry;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
 /**
@@ -108,7 +109,7 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public StoredProcedure procedure(String query, Object... params) {
-        return procedure(query, Arrays.stream(params).map(P::in).collect(Collectors.toList()).toArray(new P<?>[params.length]));
+        return procedure(query, Arrays.stream(params).map(P::in).collect(toList()).toArray(new P<?>[params.length]));
     }
 
     /**
@@ -126,13 +127,13 @@ public final class DB implements AutoCloseable {
     public StoredProcedure procedure(String query, P<?>... params) {
         String validatedQuery = validateQuery(query, null);
         P<?>[] preparedParams = params;
-        int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(Collectors.toList()).size();
+        int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(toList()).size();
         if (namedParams == params.length && params.length > 0) {
             Map.Entry<String, Object[]> preparedQuery = prepareQuery(
                     validatedQuery,
                     Stream.of(params)
                             .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
-                            .collect(Collectors.toList())
+                            .collect(toList())
             );
             validatedQuery = preparedQuery.getKey();
             preparedParams = (P<?>[]) preparedQuery.getValue();
@@ -299,8 +300,8 @@ public final class DB implements AutoCloseable {
     @SafeVarargs
     @Nonnull
     public final Update update(String query, Map<String, ?>... batch) {
-        List<Map.Entry<String, Object[]>> params = Stream.of(batch).map(np -> prepareQuery(query, np.entrySet())).collect(Collectors.toList());
-        return update(params.get(0).getKey(), params.stream().map(Map.Entry::getValue).collect(Collectors.toList()).toArray(new Object[params.size()][]));
+        List<Map.Entry<String, Object[]>> params = Stream.of(batch).map(np -> prepareQuery(query, np.entrySet())).collect(toList());
+        return update(params.get(0).getKey(), params.stream().map(Map.Entry::getValue).collect(toList()).toArray(new Object[params.size()][]));
     }
 
     private Select select(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
@@ -342,7 +343,18 @@ public final class DB implements AutoCloseable {
     private Iterable<?> asIterable(Object o) {
         Iterable<?> iterable;
         if (o.getClass().isArray()) {
-            iterable = Arrays.asList((Object[]) o);
+            if (o instanceof long[] ||
+                    o instanceof int[] ||
+                    o instanceof double[] ||
+                    o instanceof float[] ||
+                    o instanceof short[] ||
+                    o instanceof byte[] ||
+                    o instanceof char[]
+                    ) {
+                iterable = new BoxedPrimitiveIterable(o);
+            } else {
+                iterable = Arrays.asList((Object[]) o);
+            }
         } else if (o instanceof Iterable) {
             iterable = (Iterable<?>) o;
         } else {
