@@ -178,7 +178,7 @@ public final class DB implements AutoCloseable {
         return new SelectQuery(
                 connectionSupplier,
                 validateQuery(query, lowerQuery -> {
-                    if (!(lowerQuery.startsWith("select") || lowerQuery.startsWith("with"))) {
+                    if (lowerQuery.contains("insert") || lowerQuery.contains("update") || lowerQuery.contains("delete")) {
                         throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
                     }
                 }),
@@ -201,7 +201,7 @@ public final class DB implements AutoCloseable {
         return new UpdateQuery(
                 connectionSupplier,
                 validateQuery(query, lowerQuery -> {
-                    if (!(lowerQuery.startsWith("insert") || lowerQuery.startsWith("update") || lowerQuery.startsWith("delete"))) {
+                    if (!(lowerQuery.contains("insert") || lowerQuery.contains("update") || lowerQuery.contains("delete"))) {
                         throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
                     }
                 }),
