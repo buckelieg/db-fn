@@ -343,12 +343,12 @@ public final class DB implements AutoCloseable {
     }
 
     private boolean isSelect(String query) {
-        String lowerQuery = query.toLowerCase();
+        String lowerQuery = Objects.requireNonNull(query, "SQL query must be provided").toLowerCase();
         return !(lowerQuery.contains("insert") || lowerQuery.contains("update") || lowerQuery.contains("delete"));
     }
 
     private boolean isProcedure(String query) {
-        return STORED_PROCEDURE.matcher(query).matches();
+        return STORED_PROCEDURE.matcher(Objects.requireNonNull(query, "SQL query must be provided")).matches();
     }
 
 }
