@@ -1,5 +1,5 @@
 /*
-* Copyright 2016-2017 Anatoly Kutyakov
+* Copyright 2016-2018 Anatoly Kutyakov
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -79,10 +79,9 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
     @Nonnull
     @Override
     public final <T> TryOptional<T> single(TryFunction<ResultSet, T, SQLException> mapper) {
-        Objects.requireNonNull(mapper, "Mapper must be provided");
         return TryOptional.of(() -> {
             try {
-                return mapper.apply(execute().iterator().next());
+                return Objects.requireNonNull(mapper, "Mapper must be provided").apply(execute().iterator().next());
             } catch (NoSuchElementException e) {
                 return null;
             } finally {
