@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Anatoly Kutyakov
+ * Copyright 2016-2018 Anatoly Kutyakov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,11 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.ThreadSafe;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -125,17 +123,16 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public StoredProcedure procedure(String query, P<?>... params) {
-        String validatedQuery = validateQuery(query, null);
         P<?>[] preparedParams = params;
         int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(toList()).size();
         if (namedParams == params.length && params.length > 0) {
             Map.Entry<String, Object[]> preparedQuery = prepareQuery(
-                    validatedQuery,
+                    query,
                     Stream.of(params)
                             .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
                             .collect(toList())
             );
-            validatedQuery = preparedQuery.getKey();
+            query = preparedQuery.getKey();
             preparedParams = (P<?>[]) preparedQuery.getValue();
         } else if (0 < namedParams && namedParams < params.length) {
             throw new IllegalArgumentException(
@@ -145,10 +142,10 @@ public final class DB implements AutoCloseable {
                     )
             );
         }
-        if (!STORED_PROCEDURE.matcher(validatedQuery).matches()) {
-            throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure statement", query));
+        if (!isProcedure(query)) {
+            throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
         }
-        return new StoredProcedureQuery(connectionSupplier, validatedQuery, preparedParams);
+        return new StoredProcedureQuery(connectionSupplier, query, preparedParams);
     }
 
     /**
@@ -175,15 +172,10 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public Select select(String query, Object... params) {
-        return new SelectQuery(
-                connectionSupplier,
-                validateQuery(query, lowerQuery -> {
-                    if (lowerQuery.contains("insert") || lowerQuery.contains("update") || lowerQuery.contains("delete")) {
-                        throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
-                    }
-                }),
-                params
-        );
+        if (!isSelect(query) || isProcedure(query)) {
+            throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
+        }
+        return new SelectQuery(connectionSupplier, query, params);
     }
 
 
@@ -198,15 +190,10 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public Update update(String query, Object[]... batch) {
-        return new UpdateQuery(
-                connectionSupplier,
-                validateQuery(query, lowerQuery -> {
-                    if (!(lowerQuery.contains("insert") || lowerQuery.contains("update") || lowerQuery.contains("delete"))) {
-                        throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
-                    }
-                }),
-                batch
-        );
+        if (isSelect(query) || isProcedure(query)) {
+            throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
+        }
+        return new UpdateQuery(connectionSupplier, query, batch);
     }
 
     /**
@@ -315,13 +302,12 @@ public final class DB implements AutoCloseable {
     }
 
     private Map.Entry<String, Object[]> prepareQuery(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
-        String validatedQuery = validateQuery(query, null);
         Map<Integer, Object> indicesToValues = new TreeMap<>();
         Map<String, ?> transformedParams = stream(namedParams.spliterator(), false).collect(Collectors.toMap(
                 k -> k.getKey().startsWith(":") ? k.getKey() : String.format(":%s", k.getKey()),
                 Map.Entry::getValue
         ));
-        Matcher matcher = NAMED_PARAMETER.matcher(validatedQuery);
+        Matcher matcher = NAMED_PARAMETER.matcher(query);
         int idx = 0;
         while (matcher.find()) {
             Object val = transformedParams.get(matcher.group());
@@ -332,12 +318,12 @@ public final class DB implements AutoCloseable {
             }
         }
         for (Map.Entry<String, ?> e : transformedParams.entrySet()) {
-            validatedQuery = validatedQuery.replaceAll(
+            query = query.replaceAll(
                     e.getKey(),
                     stream(asIterable(e.getValue()).spliterator(), false).map(o -> "?").collect(Collectors.joining(", "))
             );
         }
-        return new SimpleImmutableEntry<>(validatedQuery, indicesToValues.values().toArray(new Object[indicesToValues.size()]));
+        return new SimpleImmutableEntry<>(query, indicesToValues.values().toArray(new Object[indicesToValues.size()]));
     }
 
     private Iterable<?> asIterable(Object o) {
@@ -356,12 +342,13 @@ public final class DB implements AutoCloseable {
         return iterable;
     }
 
-    private String validateQuery(String query, @Nullable Consumer<String> validator) {
-        String lowerQuery = Objects.requireNonNull(query, "SQL query must be provided").trim().toLowerCase();
-        if (validator != null) {
-            validator.accept(lowerQuery);
-        }
-        return query;
+    private boolean isSelect(String query) {
+        String lowerQuery = query.toLowerCase();
+        return !(lowerQuery.contains("insert") || lowerQuery.contains("update") || lowerQuery.contains("delete"));
+    }
+
+    private boolean isProcedure(String query) {
+        return STORED_PROCEDURE.matcher(query).matches();
     }
 
 }
