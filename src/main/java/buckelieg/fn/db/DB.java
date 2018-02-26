@@ -123,6 +123,9 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public StoredProcedure procedure(String query, P<?>... params) {
+        if (!isProcedure(query)) {
+            throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
+        }
         P<?>[] preparedParams = params;
         int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(toList()).size();
         if (namedParams == params.length && params.length > 0) {
@@ -141,9 +144,6 @@ public final class DB implements AutoCloseable {
                             namedParams, params.length - namedParams
                     )
             );
-        }
-        if (!isProcedure(query)) {
-            throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
         }
         return new StoredProcedureQuery(connectionSupplier, query, preparedParams);
     }
