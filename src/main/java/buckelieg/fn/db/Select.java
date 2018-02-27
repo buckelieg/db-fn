@@ -1,18 +1,18 @@
 /*
-* Copyright 2016-2017 Anatoly Kutyakov
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2016-2018 Anatoly Kutyakov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
@@ -20,6 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -43,12 +44,22 @@ public interface Select extends Query<Stream<ResultSet>> {
      * @see TryOptional
      */
     @Nonnull
-    <T> TryOptional<T> single(TryFunction<ResultSet, T, SQLException> mapper);
+    default <T> TryOptional<T> single(TryFunction<ResultSet, T, SQLException> mapper) {
+        return TryOptional.of(() -> {
+            try {
+                return execute(Objects.requireNonNull(mapper, "Mapper must be provided")).iterator().next();
+            } catch (NoSuchElementException e) {
+                return null;
+            } finally {
+                close();
+            }
+        });
+    }
 
     /**
      * Stream abstraction over ResultSet.
      * Note:
-     * Whenever we left stream without calling some 'reduction' (terminal) operation we left resource freeing to JDBC
+     * Whenever we left execute without calling some 'reduction' (terminal) operation we left resource freeing to JDBC
      * <code>execute().iterator().next().get(...)</code>
      * Thus there could be none or some rows more, but result set (and a statement) would not be closed forcibly.
      * In such cases we rely on JDBC resources auto closing mechanism.
@@ -191,6 +202,7 @@ public interface Select extends Query<Stream<ResultSet>> {
 
     /**
      * Prints this query string (as SQL) to provided logger.
+     *
      * @param printer query string consumer
      * @return select query abstraction
      */
