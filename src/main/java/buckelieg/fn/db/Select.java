@@ -70,7 +70,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * @see #execute()
      */
     @Nonnull
-    default <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper) {
+    default <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper) {
         Objects.requireNonNull(mapper, "Mapper must be provided");
         return execute().map(rs -> {
             try {
