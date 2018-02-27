@@ -259,7 +259,7 @@ public class DBTestSuite {
 
     @Test
     public void testResultSetStoredProcedure() throws Throwable {
-/*        DB.procedure(conn, "{procedure CREATETESTROW1(?)}", "new_name").stream().forEach((rs) -> {
+/*        DB.procedure(conn, "{procedure CREATETESTROW1(?)}", "new_name").execute().forEach((rs) -> {
             try {
                 System.out.println(String.format("ID='%s', NAME='%s'", rs.getInt(1), rs.getString(2)));
             } catch (SQLException e) {
@@ -285,7 +285,7 @@ public class DBTestSuite {
 
     @Test
     public void testNoArgsProcedure() throws Throwable {
-        assertTrue(10L == db.procedure("{call GETALLNAMES()}").stream(rs -> rs.getString("name")).peek(System.out::println).count());
+        assertTrue(10L == db.procedure("{call GETALLNAMES()}").execute(rs -> rs.getString("name")).peek(System.out::println).count());
     }
 
     @Test
