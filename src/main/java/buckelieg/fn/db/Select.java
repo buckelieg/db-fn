@@ -47,7 +47,7 @@ public interface Select extends Query<Stream<ResultSet>> {
     default <T> TryOptional<T> single(TryFunction<ResultSet, T, SQLException> mapper) {
         return TryOptional.of(() -> {
             try {
-                return execute(Objects.requireNonNull(mapper, "Mapper must be provided")).iterator().next();
+                return execute(mapper).iterator().next();
             } catch (NoSuchElementException e) {
                 return null;
             } finally {

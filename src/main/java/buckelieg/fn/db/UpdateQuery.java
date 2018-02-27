@@ -75,45 +75,44 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long>, PreparedStateme
     @Nonnull
     @Override
     public TryOptional<Long> execute() {
-        return TryOptional.of(() ->
-                jdbcTry(() -> {
-                    Connection conn = connectionSupplier.get();
-                    boolean autoCommit = true;
-                    Savepoint savepoint = null;
-                    long rowsAffected;
-                    try {
-                        boolean transacted = batch.length > 1;
-                        if (transacted) {
-                            autoCommit = conn.getAutoCommit();
-                            conn.setAutoCommit(false);
-                            savepoint = conn.setSavepoint();
-                        }
-                        rowsAffected = isBatch && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
-                        if (transacted) {
-                            conn.commit();
-                        }
-                        return rowsAffected;
-                    } catch (SQLException e) {
-                        try {
-                            if (conn != null && savepoint != null) {
-                                conn.rollback(savepoint);
-                            }
-                        } catch (SQLException ex) {
-                            // ignore
-                        }
-                        throw new SQLException(e);
-                    } finally {
-                        try {
-                            if (conn != null && savepoint != null) {
-                                conn.setAutoCommit(autoCommit);
-                                conn.releaseSavepoint(savepoint);
-                            }
-                        } catch (SQLException e) {
-                            // ignore
-                        }
-                        close();
+        return TryOptional.of(() -> {
+            Connection conn = connectionSupplier.get();
+            boolean autoCommit = true;
+            Savepoint savepoint = null;
+            long rowsAffected;
+            try {
+                boolean transacted = batch.length > 1;
+                if (transacted) {
+                    autoCommit = conn.getAutoCommit();
+                    conn.setAutoCommit(false);
+                    savepoint = conn.setSavepoint();
+                }
+                rowsAffected = isBatch && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
+                if (transacted) {
+                    conn.commit();
+                }
+                return rowsAffected;
+            } catch (SQLException e) {
+                try {
+                    if (conn != null && savepoint != null) {
+                        conn.rollback(savepoint);
                     }
-                }));
+                } catch (SQLException ex) {
+                    // ignore
+                }
+                throw new SQLException(e);
+            } finally {
+                try {
+                    if (conn != null && savepoint != null) {
+                        conn.setAutoCommit(autoCommit);
+                        conn.releaseSavepoint(savepoint);
+                    }
+                } catch (SQLException e) {
+                    // ignore
+                }
+                close();
+            }
+        });
     }
 
     private long executeSimple() {
