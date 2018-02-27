@@ -146,10 +146,10 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long>, PreparedStateme
     }
 
     @Override
-    final String makeString(String query, Object... params) {
+    final String asSQL(String query, Object... params) {
         return Arrays.stream(params)
                 .flatMap(p -> Arrays.stream((Object[]) p))
-                .map(p -> super.makeString(query, (Object[]) p))
+                .map(p -> super.asSQL(query, (Object[]) p))
                 .collect(Collectors.joining(";"));
     }
 }

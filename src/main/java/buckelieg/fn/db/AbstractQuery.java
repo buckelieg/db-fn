@@ -37,14 +37,10 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
     private final String query;
 
     AbstractQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        this.statement = TryOptional.of(
-                () -> prepareStatement(
-                        Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided"),
-                        Objects.requireNonNull(query, "SQL query must be provided"),
-                        params
-                )
-        );
-        this.query = makeString(query, params);
+        Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
+        Objects.requireNonNull(query, "SQL query must be provided");
+        this.statement = TryOptional.of(() -> prepareStatement(connectionSupplier, query, params));
+        this.query = asSQL(query, params);
     }
 
     @Override
@@ -117,7 +113,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
 
     abstract S prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params);
 
-    String makeString(String query, Object... params) {
+    String asSQL(String query, Object... params) {
         String replaced = query;
         int idx = 0;
         Matcher matcher = PARAM.matcher(query);
