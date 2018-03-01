@@ -48,8 +48,6 @@ public interface Select extends Query<Stream<ResultSet>> {
         return TryOptional.of(() -> {
             try {
                 return execute(mapper).iterator().next();
-            } catch (NoSuchElementException e) {
-                return null;
             } finally {
                 close();
             }
