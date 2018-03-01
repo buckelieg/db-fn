@@ -175,7 +175,7 @@ public final class DB implements AutoCloseable {
         if (!isSelect(query) || isProcedure(query)) {
             throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
         }
-        return new SelectQuery(connectionSupplier, query, params);
+        return new SelectQuery(connectionSupplier, checkAnonymous(query), params);
     }
 
 
@@ -193,7 +193,7 @@ public final class DB implements AutoCloseable {
         if (isSelect(query) || isProcedure(query)) {
             throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
         }
-        return new UpdateQuery(connectionSupplier, query, batch);
+        return new UpdateQuery(connectionSupplier, checkAnonymous(query), batch);
     }
 
     /**
@@ -349,6 +349,13 @@ public final class DB implements AutoCloseable {
 
     private boolean isProcedure(String query) {
         return STORED_PROCEDURE.matcher(Objects.requireNonNull(query, "SQL query must be provided")).matches();
+    }
+
+    private String checkAnonymous(String query) {
+        if (NAMED_PARAMETER.matcher(query).find()) {
+            throw new IllegalArgumentException(String.format("Query '%s' has named parameters whereas params are not", query));
+        }
+        return query;
     }
 
 }
