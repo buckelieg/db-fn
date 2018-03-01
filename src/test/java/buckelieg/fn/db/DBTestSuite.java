@@ -349,4 +349,9 @@ public class DBTestSuite {
         assertTrue(2 == db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new short[]{1, 2})).single(rs -> rs.getInt(1)).get());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidSelect() throws Throwable {
+        db.select("SELECT COUNT(*) FROM test WHERE id=:id", 1).single(rs -> rs.getInt(1)).getUnchecked();
+    }
+
 }
