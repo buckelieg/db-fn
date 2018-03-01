@@ -7,7 +7,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-fn</artifactId>
-  <version>0.1</version>
+  <version>0.2</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -38,7 +38,7 @@ try (DB db = new DB(/*init*/)) {
 Use question marks:
 ```java
 Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
-                .stream(rs ->{/*map rs here*/}).collect(Collectors.toList());
+                .execute(rs ->{/*map rs here*/}).collect(Collectors.toList());
 ```
 or use named parameters:
 ```java
