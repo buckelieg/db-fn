@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Anatoly Kutyakov
+ * Copyright 2016- Anatoly Kutyakov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
