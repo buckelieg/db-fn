@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
-final class UpdateQuery extends AbstractQuery<TryOptional<Long>, PreparedStatement> implements Update {
+final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
 
     private final Object[][] batch;
     private final TrySupplier<Connection, SQLException> connectionSupplier;
@@ -74,8 +74,8 @@ final class UpdateQuery extends AbstractQuery<TryOptional<Long>, PreparedStateme
 
     @Nonnull
     @Override
-    public TryOptional<Long> execute() {
-        return TryOptional.of(() -> {
+    public Long execute() {
+        return jdbcTry(() -> {
             Connection conn = connectionSupplier.get();
             boolean autoCommit = true;
             Savepoint savepoint = null;

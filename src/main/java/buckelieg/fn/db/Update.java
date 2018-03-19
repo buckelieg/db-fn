@@ -28,7 +28,7 @@ import java.util.function.Supplier;
  * An abstraction for INSERT/UPDATE/DELETE statements
  */
 @SuppressWarnings("unchecked")
-public interface Update extends Query<TryOptional<Long>> {
+public interface Update extends Query<Long> {
 
     /**
      * Tells this update will be a large update
