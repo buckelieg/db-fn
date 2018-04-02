@@ -141,7 +141,6 @@ interface Script extends Query<Long> {
      * Registers error or warning handler.
      * The default handler is noop handler. I.e. if skipErrors or skipWarnings flag is set to false
      * but no errorHandler is provided the default handler (which does nothing) is used.
-     * Default value is <code>true</code>
      *
      * @param handler error/warning handler.
      * @return script query abstraction
