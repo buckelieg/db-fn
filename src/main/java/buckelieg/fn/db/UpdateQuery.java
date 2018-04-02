@@ -16,6 +16,7 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,6 +30,7 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
+@ParametersAreNonnullByDefault
 final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
 
     private final Object[][] batch;
@@ -39,7 +41,7 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     UpdateQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
         super(connectionSupplier, query, (Object) batch);
         this.batch = Objects.requireNonNull(batch, "Batch must be provided");
-        this.connectionSupplier = Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
+        this.connectionSupplier = connectionSupplier;
     }
 
     @Override
@@ -68,10 +70,22 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
 
     @Nonnull
     @Override
+    public Update escaped(boolean escapeProcessing) {
+        return setEscapeProcessing(escapeProcessing);
+    }
+
+    @Nonnull
+    @Override
     public Update print(Consumer<String> printer) {
         return log(printer);
     }
 
+    /**
+     * Executes this DML query returning affected row count.
+     * If this query represents a batch then affected rows are summarized for all batches.
+     *
+     * @return a {@link TryOptional} with affected rows
+     */
     @Nonnull
     @Override
     public Long execute() {
@@ -94,13 +108,13 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
                 return rowsAffected;
             } catch (SQLException e) {
                 try {
-                    if (conn != null && savepoint != null) {
+                    if (savepoint != null) {
                         conn.rollback(savepoint);
                     }
                 } catch (SQLException ex) {
                     // ignore
                 }
-                throw new SQLException(e);
+                throw e;
             } finally {
                 try {
                     if (conn != null && savepoint != null) {

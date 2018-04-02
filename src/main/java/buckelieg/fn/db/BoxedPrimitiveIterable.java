@@ -1,5 +1,5 @@
 /*
- * Copyright 2016- Anatoly Kutyakov
+ * Copyright 2018- Anatoly Kutyakov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class BoxedPrimitiveIterable implements Iterable<Number> {
+final class BoxedPrimitiveIterable implements Iterable<Number> {
 
     private final Object array;
     private final int length;

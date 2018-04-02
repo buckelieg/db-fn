@@ -18,17 +18,20 @@ package buckelieg.fn.db;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.ThreadSafe;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
+import static buckelieg.fn.db.Utils.*;
 import static java.util.AbstractMap.SimpleImmutableEntry;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.StreamSupport.stream;
 
 /**
  * Database query factory
@@ -38,20 +41,6 @@ import static java.util.stream.StreamSupport.stream;
 @ThreadSafe
 @ParametersAreNonnullByDefault
 public final class DB implements AutoCloseable {
-
-    private static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
-    // Java regexp does not support conditional regexps. We will enumerate all possible variants.
-    private static final Pattern STORED_PROCEDURE = Pattern.compile(
-            String.format(
-                    "%s|%s|%s|%s|%s|%s",
-                    "(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+\\s*(\\(\\s*)\\)",
-                    "(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)",
-                    "(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+",
-                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+\\s*\\}",
-                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)\\s*\\}",
-                    "\\{\\s*(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+\\s*(\\(\\s*)\\)\\s*\\}"
-            )
-    );
 
     private final TrySupplier<Connection, SQLException> connectionSupplier;
 
@@ -70,7 +59,8 @@ public final class DB implements AutoCloseable {
      * @param connection the connection to operate on
      */
     public DB(Connection connection) {
-        this.connectionSupplier = () -> Objects.requireNonNull(connection, "Connection must be provided");
+        Objects.requireNonNull(connection, "Connection must be provided");
+        this.connectionSupplier = () -> connection;
     }
 
     /**
@@ -81,6 +71,32 @@ public final class DB implements AutoCloseable {
     @Override
     public void close() throws Exception {
         connectionSupplier.get().close();
+    }
+
+    /**
+     * Executes an arbitrary SQL statement(s) against provided connection.
+     *
+     * @param script (a series of) SQL statement(s) to execute
+     * @return script query abstraction
+     * @throws NullPointerException if script is null
+     * @see Script
+     */
+    @Nonnull
+    public Script script(String script) {
+        return new ScriptQuery(connectionSupplier, script);
+    }
+
+    /**
+     * Executes an arbitrary SQL statement(s) against provided connection.
+     *
+     * @param source file with a SQL script contained
+     * @return script query abstraction
+     * @throws NullPointerException if source is null
+     * @see #script(String)
+     */
+    @Nonnull
+    public Script script(File source) {
+        return script(TryOptional.of(() -> new String(Files.readAllBytes(Objects.requireNonNull(source, "Script source file must be provided").toPath()), StandardCharsets.UTF_8)).toOptional().orElse(""));
     }
 
     /**
@@ -299,63 +315,6 @@ public final class DB implements AutoCloseable {
     private Update update(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return update(preparedQuery.getKey(), preparedQuery.getValue());
-    }
-
-    private Map.Entry<String, Object[]> prepareQuery(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
-        Map<Integer, Object> indicesToValues = new TreeMap<>();
-        Map<String, ?> transformedParams = stream(namedParams.spliterator(), false).collect(Collectors.toMap(
-                k -> k.getKey().startsWith(":") ? k.getKey() : String.format(":%s", k.getKey()),
-                Map.Entry::getValue
-        ));
-        Matcher matcher = NAMED_PARAMETER.matcher(query);
-        int idx = 0;
-        while (matcher.find()) {
-            Object val = transformedParams.get(matcher.group());
-            if (val != null) {
-                for (Object o : asIterable(val)) {
-                    indicesToValues.put(++idx, o);
-                }
-            }
-        }
-        for (Map.Entry<String, ?> e : transformedParams.entrySet()) {
-            query = query.replaceAll(
-                    e.getKey(),
-                    stream(asIterable(e.getValue()).spliterator(), false).map(o -> "?").collect(Collectors.joining(", "))
-            );
-        }
-        return new SimpleImmutableEntry<>(query, indicesToValues.values().toArray(new Object[indicesToValues.size()]));
-    }
-
-    private Iterable<?> asIterable(Object o) {
-        Iterable<?> iterable;
-        if (o.getClass().isArray()) {
-            if (o instanceof Object[]) {
-                iterable = Arrays.asList((Object[]) o);
-            } else {
-                iterable = new BoxedPrimitiveIterable(o);
-            }
-        } else if (o instanceof Iterable) {
-            iterable = (Iterable<?>) o;
-        } else {
-            iterable = Collections.singletonList(o);
-        }
-        return iterable;
-    }
-
-    private boolean isSelect(String query) {
-        String lowerQuery = Objects.requireNonNull(query, "SQL query must be provided").toLowerCase();
-        return !(lowerQuery.contains("insert") || lowerQuery.contains("update") || lowerQuery.contains("delete"));
-    }
-
-    private boolean isProcedure(String query) {
-        return STORED_PROCEDURE.matcher(Objects.requireNonNull(query, "SQL query must be provided")).matches();
-    }
-
-    private String checkAnonymous(String query) {
-        if (NAMED_PARAMETER.matcher(query).find()) {
-            throw new IllegalArgumentException(String.format("Query '%s' has named parameters whereas params are not", query));
-        }
-        return query;
     }
 
 }

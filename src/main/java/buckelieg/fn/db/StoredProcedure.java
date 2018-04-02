@@ -30,7 +30,7 @@ import java.util.function.Consumer;
  * An abstraction for STORED PROCEDURE call statement.
  */
 @ParametersAreNonnullByDefault
-public interface StoredProcedure extends Select {
+interface StoredProcedure extends Select {
 
     /**
      * Calls procedure for results processing which are expected in the OUT/INOUT parameters.
@@ -60,9 +60,9 @@ public interface StoredProcedure extends Select {
     default <T> TryOptional<T> call(TryFunction<CallableStatement, T, SQLException> mapper) {
         return TryOptional.of(() -> {
             List<T> results = new ArrayList<>(1);
-            if (call(Objects.requireNonNull(mapper, "Mapper must be provided"), results::add).single(rs -> rs).toOptional().isPresent()) {
-                throw new SQLException("Procedure has non-empty result set");
-            }
+            call(Objects.requireNonNull(mapper, "Mapper must be provided"), results::add).single(rs -> rs).ifPresent(rs -> {
+                throw new SQLRuntimeException("Procedure has non-empty result set");
+            });
             return results.get(0);
         });
     }
@@ -75,7 +75,7 @@ public interface StoredProcedure extends Select {
      * @see #call(TryFunction)
      */
     default void call() {
-        call(cs -> null).onException(e -> {
+        call(cs -> cs).onException(e -> {
             throw new SQLRuntimeException(e);
         });
     }

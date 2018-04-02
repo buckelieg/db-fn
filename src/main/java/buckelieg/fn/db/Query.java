@@ -18,13 +18,14 @@ package buckelieg.fn.db;
 import javax.annotation.Nonnull;
 
 /**
- * Query abstraction.
+ * SQL query abstraction.
  *
  * @param <R> query execution results type
  * @see AutoCloseable
  * @see Select
  * @see Update
  * @see StoredProcedure
+ * @see Script
  */
 interface Query<R> extends AutoCloseable {
 
@@ -47,14 +48,24 @@ interface Query<R> extends AutoCloseable {
     <Q extends Query<R>> Q poolable(boolean poolable);
 
     /**
-     * Sets query execution timeout
+     * Sets query execution timeout. Negative values are silently ignored.
      *
-     * @param timeout query timeout in seconds gt 0 (0 means no timeout)
+     * @param timeout query timeout in seconds > 0 (0 means no timeout)
      * @return a query abstraction
      * @see java.sql.Statement#setQueryTimeout(int)
      */
     @Nonnull
     <Q extends Query<R>> Q timeout(int timeout);
+
+    /**
+     * Sets escape processing for this query
+     *
+     * @param escapeProcessing true (the default) if escape processing is enabled, false - otherwise
+     * @return a query abstraction
+     * @see java.sql.Statement#setEscapeProcessing(boolean)
+     */
+    @Nonnull
+    <Q extends Query<R>> Q escaped(boolean escapeProcessing);
 
     /**
      * Closes this query

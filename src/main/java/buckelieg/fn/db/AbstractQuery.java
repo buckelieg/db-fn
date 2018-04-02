@@ -15,37 +15,38 @@
  */
 package buckelieg.fn.db;
 
+import javax.annotation.Nonnull;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static buckelieg.fn.db.Utils.newSQLRuntimeException;
+
 abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R> {
 
     private static final Pattern PARAM = Pattern.compile("\\?");
 
-    private TryOptional<S> statement;
+    private S statement;
 
     private final String query;
 
     AbstractQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
         Objects.requireNonNull(query, "SQL query must be provided");
-        this.statement = TryOptional.of(() -> prepareStatement(connectionSupplier, query, params));
+        this.statement = prepareStatement(connectionSupplier, query, params);
         this.query = asSQL(query, params);
     }
 
     @Override
     public final void close() {
-        jdbcTry(() -> statement.toOptional().ifPresent(s -> jdbcTry(s::close))); // by JDBC spec: subsequently closes all result sets opened by this statement
+        jdbcTry(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
     }
 
     final <Q extends Query<R>> Q setTimeout(int timeout) {
@@ -54,6 +55,10 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
 
     final <Q extends Query<R>> Q setPoolable(boolean poolable) {
         return setStatementParameter(statement -> statement.setPoolable(poolable));
+    }
+
+    final <Q extends Query<R>> Q setEscapeProcessing(boolean escapeProcessing) {
+        return setStatementParameter(statement -> statement.setEscapeProcessing(escapeProcessing));
     }
 
     @SuppressWarnings("unchecked")
@@ -67,7 +72,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
         try {
             result = supplier.get();
         } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
+            throw newSQLRuntimeException(e);
         } catch (AbstractMethodError ame) {
             // ignore this possible vendor-specific JDBC driver's error.
         }
@@ -78,7 +83,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
         try {
             Objects.requireNonNull(action, "Action must be provided").doTry();
         } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
+            throw newSQLRuntimeException(e);
         }
     }
 
@@ -91,23 +96,18 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
         return statement;
     }
 
+    @Nonnull
     final <O> O withStatement(TryFunction<S, O, SQLException> action) {
-        return jdbcTry(() -> {
-            final List<O> out = new ArrayList<>(1);
-            statement = statement.map(s -> {
-                out.add(action.apply(s));
-                return s;
-            });
-            return out.isEmpty() ? null : out.iterator().next();
-        });
+        try {
+            return action.apply(statement);
+        } catch (SQLException e) {
+            throw newSQLRuntimeException(e);
+        }
     }
 
     @SuppressWarnings("unchecked")
     final <Q extends Query<R>> Q setStatementParameter(TryConsumer<S, SQLException> action) {
-        withStatement(s -> {
-            action.accept(s);
-            return null;
-        });
+        jdbcTry(() -> action.accept(statement));
         return (Q) this;
     }
 
@@ -121,7 +121,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
             Object p = params[idx];
             replaced = replaced.replaceFirst(
                     "\\?",
-                    (p.getClass().isArray() ? Arrays.stream((Object[]) p) : Stream.of(p))
+                    (p != null && p.getClass().isArray() ? Arrays.stream((Object[]) p) : Stream.of(Optional.ofNullable(p).orElse("null")))
                             .map(Object::toString)
                             .collect(Collectors.joining(","))
             );

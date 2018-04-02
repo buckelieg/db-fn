@@ -31,7 +31,7 @@ import java.util.stream.Stream;
  */
 @SuppressWarnings("unchecked")
 @ParametersAreNonnullByDefault
-public interface Select extends Query<Stream<ResultSet>> {
+interface Select extends Query<Stream<ResultSet>> {
 
     /**
      * In cases when single result of SELECT statement is expected.
@@ -41,16 +41,19 @@ public interface Select extends Query<Stream<ResultSet>> {
      * @return mapped object as {@code TryOptional}
      * @throws NullPointerException if mapper is null
      * @see TryOptional
+     * @see #execute(TryFunction)
      */
     @Nonnull
-    default <T> TryOptional<T> single(TryFunction<ResultSet, T, SQLException> mapper) {
-        return TryOptional.of(() -> {
-            try {
-                return execute(mapper).iterator().next();
-            } finally {
-                close();
-            }
-        });
+    default <T> Optional<T> single(TryFunction<ResultSet, T, SQLException> mapper) {
+        T result;
+        try {
+            result = execute(mapper).iterator().next();
+        } catch (Exception e) {
+            result = null;
+        } finally {
+            close();
+        }
+        return Optional.ofNullable(result);
     }
 
     /**
@@ -74,7 +77,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * @param mapper result set mapper which is not required to handle {@link SQLException}
      * @return a {@link Stream} over mapped {@link ResultSet}
      * @throws NullPointerException if mapper is null
-     * @throws SQLRuntimeException  as a wrapper for {@link SQLException} of the mapper
+     * @throws SQLRuntimeException  as a wrapper for {@link SQLException}
      * @see #execute()
      */
     @Nonnull
@@ -84,7 +87,7 @@ public interface Select extends Query<Stream<ResultSet>> {
             try {
                 return mapper.apply(rs);
             } catch (SQLException e) {
-                throw new SQLRuntimeException(e);
+                throw Utils.newSQLRuntimeException(e);
             }
         });
     }
@@ -195,6 +198,26 @@ public interface Select extends Query<Stream<ResultSet>> {
     @Nonnull
     default Select poolable(Supplier<Boolean> supplier) {
         return poolable(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Nonnull
+    Select escaped(boolean escapeProcessing);
+
+    /**
+     * Set escape processing for this query.
+     *
+     * @param supplier escaped processing value supplier
+     * @return select query abstraction
+     * @throws NullPointerException if supplier is null
+     * @see #escaped(boolean)
+     */
+    @Nonnull
+    default Select escaped(Supplier<Boolean> supplier) {
+        return escaped(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(true));
     }
 
     /**

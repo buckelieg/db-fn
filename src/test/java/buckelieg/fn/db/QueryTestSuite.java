@@ -2,11 +2,10 @@ package buckelieg.fn.db;
 
 import org.junit.Test;
 
-import java.lang.reflect.Field;
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
@@ -24,9 +23,6 @@ public class QueryTestSuite {
 
     @Test
     public void testStoredProcedureRegexp() throws Exception {
-        Field f = DB.class.getDeclaredField("STORED_PROCEDURE");
-        f.setAccessible(true);
-        Pattern STORED_PROCEDURE = (Pattern) f.get(null);
         Stream.of(
                 new SimpleImmutableEntry<>("{call myProc()}", true),
                 new SimpleImmutableEntry<>("call myProc()", true),
@@ -69,10 +65,13 @@ public class QueryTestSuite {
                 new SimpleImmutableEntry<>("? = call mySchema.myPackage.myProc", true),
                 new SimpleImmutableEntry<>("? = call mySchema.mySchema.myPackage.myProc", false)
                 // TODO more cases here
-        ).forEach(testCase -> assertTrue(
-                String.format("Test case '%s' failed", testCase.getKey()),
-                testCase.getValue() == STORED_PROCEDURE.matcher(testCase.getKey()).matches()
-        ));
+        ).forEach(testCase -> assertEquals(String.format("Test case '%s' failed", testCase.getKey()), (boolean) testCase.getValue(), Utils.STORED_PROCEDURE.matcher(testCase.getKey()).matches()));
     }
+
+    @Test
+    public void testScriptEliminateComments() throws Exception {
+        // TODO implement script parsing/execution tests
+    }
+
 
 }

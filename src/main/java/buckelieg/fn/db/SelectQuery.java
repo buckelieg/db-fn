@@ -124,6 +124,12 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
 
     @Nonnull
     @Override
+    public final Select escaped(boolean escapeProcessing) {
+        return setEscapeProcessing(escapeProcessing);
+    }
+
+    @Nonnull
+    @Override
     public Select print(Consumer<String> printer) {
         return log(printer);
     }

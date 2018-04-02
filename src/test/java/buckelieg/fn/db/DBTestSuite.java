@@ -1,18 +1,18 @@
 /*
-* Copyright 2016 Anatoly Kutyakov
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2016 Anatoly Kutyakov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package buckelieg.fn.db;
 
 import org.apache.derby.jdbc.EmbeddedDataSource;
@@ -152,7 +152,7 @@ public class DBTestSuite {
 
     @Test
     public void testSelectNoParams() throws Throwable {
-        assertTrue(10 == db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)).toOptional().orElse(0));
+        assertTrue(10 == db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)).orElse(0));
     }
 
     @Test
@@ -330,16 +330,13 @@ public class DBTestSuite {
                 });
     }
 
-/*    @Test(expected = Exception.class)
+    @Test(expected = Exception.class)
     public void testExceptionHandler() throws Throwable {
         db.update("UPDATE TEST SET ID=? WHERE ID=?", 111, 1)
                 .poolable(() -> true)
                 .timeout(() -> 0)
-                .execute()
-                .onException(e -> {
-                    throw new Exception("TEST EXCEPTION");
-                });
-    }*/
+                .execute();
+    }
 
     @Test
     public void testPrimitives() throws Throwable {
@@ -351,7 +348,22 @@ public class DBTestSuite {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidSelect() throws Throwable {
-        db.select("SELECT COUNT(*) FROM test WHERE id=:id", 1).single(rs -> rs.getInt(1)).getUnchecked();
+        db.select("SELECT COUNT(*) FROM test WHERE id=:id", 1).single(rs -> rs.getInt(1)).get();
+    }
+
+    @Test
+    public void testScript() throws Exception {
+        System.out.println(db.script(
+                "CREATE TABLE TEST1(id int PRIMARY KEY generated always as IDENTITY, name VARCHAR(255) NOT NULL);" +
+                        "ALTER TABLE TEST1 ADD COLUMN surname VARCHAR(255);" +
+                        "INSERT INTO TEST1(name, surname) VALUES ('test1', 'test2');" +
+                        "DROP TABLE TEST1;"
+        ).print().timeout(1).errorHandler(System.out::println).execute());
+    }
+
+    @Test(expected = SQLRuntimeException.class)
+    public void testInsertNull() throws Exception {
+        assertTrue(1L == db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", null)).execute());
     }
 
 }
