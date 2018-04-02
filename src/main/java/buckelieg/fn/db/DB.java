@@ -92,11 +92,13 @@ public final class DB implements AutoCloseable {
      * @param source file with a SQL script contained
      * @return script query abstraction
      * @throws NullPointerException if source is null
+     * @throws RuntimeException in case of any other errors (like {@link java.io.FileNotFoundException}
      * @see #script(String)
+     * @see TryOptional#getOptional()
      */
     @Nonnull
     public Script script(File source) {
-        return script(TryOptional.of(() -> new String(Files.readAllBytes(Objects.requireNonNull(source, "Script source file must be provided").toPath()), StandardCharsets.UTF_8)).toOptional().orElse(""));
+        return script(TryOptional.of(() -> new String(Files.readAllBytes(Objects.requireNonNull(source, "Script source file must be provided").toPath()), StandardCharsets.UTF_8)).getOptional().orElse(""));
     }
 
     /**
