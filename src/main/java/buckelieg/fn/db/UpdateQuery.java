@@ -84,7 +84,7 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
      * Executes this DML query returning affected row count.
      * If this query represents a batch then affected rows are summarized for all batches.
      *
-     * @return a {@link TryOptional} with affected rows
+     * @return an affected rows count
      */
     @Nonnull
     @Override
