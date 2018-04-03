@@ -15,7 +15,7 @@
  */
 package buckelieg.fn.db;
 
-class SQLRuntimeException extends RuntimeException {
+public class SQLRuntimeException extends RuntimeException {
 
     private String message;
 
