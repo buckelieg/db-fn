@@ -23,6 +23,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.StreamSupport.stream;
 
 final class Utils {
@@ -55,7 +59,7 @@ final class Utils {
         Map<Integer, Object> indicesToValues = new TreeMap<>();
         Map<String, Optional<?>> transformedParams = stream(namedParams.spliterator(), false).collect(Collectors.toMap(
                 e -> e.getKey().startsWith(":") ? e.getKey() : String.format(":%s", e.getKey()),
-                e -> Optional.ofNullable(e.getValue()) // HashMap/ConcurrentHashMap merge function fails on null values
+                e -> ofNullable(e.getValue()) // HashMap/ConcurrentHashMap merge function fails on null values
         ));
         Matcher matcher = NAMED_PARAMETER.matcher(query);
         int idx = 0;
@@ -73,33 +77,31 @@ final class Utils {
         return new SimpleImmutableEntry<>(query, indicesToValues.values().toArray());
     }
 
-    @SuppressWarnings("All")
-    private static Iterable<?> asIterable(Optional<?> o) {
+    @SuppressWarnings("all")
+    private static Iterable<?> asIterable(Optional o) {
         Iterable<?> iterable;
-        Object value = o.orElse(null);
-        if (value == null) {
-            iterable = Collections.singleton(value);
-        } else if (value.getClass().isArray()) {
+        Object value = o.orElse(singletonList(null));
+        if (value.getClass().isArray()) {
             if (value instanceof Object[]) {
-                iterable = Arrays.asList((Object[]) value);
+                iterable = asList((Object[]) value);
             } else {
                 iterable = new BoxedPrimitiveIterable(value);
             }
         } else if (value instanceof Iterable) {
             iterable = (Iterable<?>) value;
         } else {
-            iterable = Collections.singletonList(value);
+            iterable = singletonList(value);
         }
         return iterable;
     }
 
     static boolean isSelect(String query) {
-        String lowerQuery = Objects.requireNonNull(query, "SQL query must be provided").toLowerCase();
+        String lowerQuery = requireNonNull(query, "SQL query must be provided").toLowerCase();
         return !(lowerQuery.contains("insert") || lowerQuery.contains("update") || lowerQuery.contains("delete"));
     }
 
     static boolean isProcedure(String query) {
-        return STORED_PROCEDURE.matcher(Objects.requireNonNull(query, "SQL query must be provided")).matches();
+        return STORED_PROCEDURE.matcher(requireNonNull(query, "SQL query must be provided")).matches();
     }
 
     @Nonnull
@@ -114,17 +116,9 @@ final class Utils {
     static SQLRuntimeException newSQLRuntimeException(Throwable t) {
         StringBuilder message = new StringBuilder();
         while ((t = t.getCause()) != null) {
-            Optional.ofNullable(t.getMessage()).map(msg -> String.format("%s ", msg.trim())).ifPresent(message::append);
+            ofNullable(t.getMessage()).map(msg -> String.format("%s ", msg.trim())).ifPresent(message::append);
         }
         return new SQLRuntimeException(message.toString(), false);
-    }
-
-    @Nonnull
-    static String[] parseScript(String script) throws SQLException {
-        return Arrays.stream(cutComments(script).split(";"))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toArray(String[]::new);
     }
 
     static String cutComments(String query) throws SQLException {

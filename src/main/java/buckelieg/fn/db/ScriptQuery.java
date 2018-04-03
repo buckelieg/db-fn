@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -30,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static buckelieg.fn.db.Utils.newSQLRuntimeException;
-import static buckelieg.fn.db.Utils.parseScript;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -95,7 +95,7 @@ final class ScriptQuery implements Script {
         long start = System.currentTimeMillis();
         try {
             Connection conn = connectionSupplier.get();
-            for (String query : parseScript(script)) {
+            for (String query : Arrays.stream(script.split(";")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new)) {
                 try (Statement statement = conn.createStatement()) {
                     statement.setEscapeProcessing(escaped);
                     if (skipErrors) {
