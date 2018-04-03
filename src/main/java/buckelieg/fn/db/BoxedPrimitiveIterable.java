@@ -16,10 +16,12 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
-import java.lang.reflect.Array;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.reflect.Array.get;
+import static java.lang.reflect.Array.getLength;
+import static java.util.Objects.requireNonNull;
 
 final class BoxedPrimitiveIterable implements Iterable<Number> {
 
@@ -27,8 +29,8 @@ final class BoxedPrimitiveIterable implements Iterable<Number> {
     private final int length;
 
     BoxedPrimitiveIterable(Object array) {
-        this.array = Objects.requireNonNull(array, "Array must be provided");
-        this.length = Array.getLength(array);
+        this.array = requireNonNull(array, "Array must be provided");
+        this.length = getLength(array);
     }
 
     @Nonnull
@@ -45,7 +47,7 @@ final class BoxedPrimitiveIterable implements Iterable<Number> {
 
             @Override
             public Number next() {
-                return (Number) Array.get(array, currentIndex.getAndIncrement());
+                return (Number) get(array, currentIndex.getAndIncrement());
             }
         };
     }

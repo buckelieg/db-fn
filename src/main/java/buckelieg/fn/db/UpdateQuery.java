@@ -18,15 +18,13 @@ package buckelieg.fn.db;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Savepoint;
+import java.sql.*;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -40,7 +38,7 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
 
     UpdateQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
         super(connectionSupplier, query, (Object) batch);
-        this.batch = Objects.requireNonNull(batch, "Batch must be provided");
+        this.batch = requireNonNull(batch, "Batch must be provided");
         this.connectionSupplier = connectionSupplier;
     }
 
@@ -78,6 +76,12 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     @Override
     public Update print(Consumer<String> printer) {
         return log(printer);
+    }
+
+    @Override
+    public <T> T execute(TryFunction<ResultSet, T, SQLException> generatedValuesHandler) {
+        requireNonNull(generatedValuesHandler, "Generated values handler must be provided");
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**

@@ -20,11 +20,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 /**
  * An abstraction for SELECT statement
@@ -53,7 +55,7 @@ public interface Select extends Query<Stream<ResultSet>> {
         } finally {
             close();
         }
-        return Optional.ofNullable(result);
+        return ofNullable(result);
     }
 
     /**
@@ -82,7 +84,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      */
     @Nonnull
     default <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper) {
-        Objects.requireNonNull(mapper, "Mapper must be provided");
+        requireNonNull(mapper, "Mapper must be provided");
         return execute().map(rs -> {
             try {
                 return mapper.apply(rs);
@@ -113,7 +115,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      */
     @Nonnull
     default Select fetchSize(Supplier<Integer> supplier) {
-        return fetchSize(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
+        return fetchSize(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
     }
 
     /**
@@ -149,7 +151,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      */
     @Nonnull
     default Select maxRows(Supplier<? extends Number> supplier) {
-        Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get())
+        ofNullable(requireNonNull(supplier, "Value supplier must be provided").get())
                 .ifPresent(value -> {
                     if (value.longValue() <= Integer.MAX_VALUE - 2) {
                         maxRows(value.intValue());
@@ -177,7 +179,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      */
     @Nonnull
     default Select timeout(Supplier<Integer> supplier) {
-        return timeout(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
+        return timeout(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
     }
 
     /**
@@ -197,7 +199,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      */
     @Nonnull
     default Select poolable(Supplier<Boolean> supplier) {
-        return poolable(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
+        return poolable(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
     }
 
     /**
@@ -217,7 +219,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      */
     @Nonnull
     default Select escaped(Supplier<Boolean> supplier) {
-        return escaped(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(true));
+        return escaped(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(true));
     }
 
     /**

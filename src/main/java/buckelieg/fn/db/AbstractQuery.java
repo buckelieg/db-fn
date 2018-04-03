@@ -20,7 +20,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -29,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static buckelieg.fn.db.Utils.newSQLRuntimeException;
+import static java.util.Objects.requireNonNull;
 
 abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R> {
 
@@ -39,7 +39,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
     private final String query;
 
     AbstractQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        Objects.requireNonNull(query, "SQL query must be provided");
+        requireNonNull(query, "SQL query must be provided");
         this.statement = prepareStatement(connectionSupplier, query, params);
         this.query = asSQL(query, params);
     }
@@ -63,7 +63,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
 
     @SuppressWarnings("unchecked")
     final <Q extends Query<R>> Q log(Consumer<String> printer) {
-        Objects.requireNonNull(printer, "Printer must be provided").accept(query);
+        requireNonNull(printer, "Printer must be provided").accept(query);
         return (Q) this;
     }
 
@@ -81,14 +81,14 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
 
     private void jdbcTry(TryAction<SQLException> action) {
         try {
-            Objects.requireNonNull(action, "Action must be provided").doTry();
+            requireNonNull(action, "Action must be provided").doTry();
         } catch (SQLException e) {
             throw newSQLRuntimeException(e);
         }
     }
 
     final S setQueryParameters(S statement, Object... params) throws SQLException {
-        Objects.requireNonNull(params, "Parameters must be provided");
+        requireNonNull(params, "Parameters must be provided");
         int pNum = 0;
         for (Object p : params) {
             statement.setObject(++pNum, p); // introduce type conversion here?

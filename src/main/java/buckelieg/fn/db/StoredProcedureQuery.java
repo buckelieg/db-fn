@@ -22,8 +22,9 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Objects;
 import java.util.function.Consumer;
+
+import static java.util.Objects.requireNonNull;
 
 @NotThreadSafe
 @ParametersAreNonnullByDefault
@@ -39,8 +40,8 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
     @Nonnull
     @Override
     public <T> Select call(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer) {
-        this.mapper = Objects.requireNonNull(mapper, "Mapper must be provided");
-        this.consumer = Objects.requireNonNull(consumer, "Consumer must be provided");
+        this.mapper = requireNonNull(mapper, "Mapper must be provided");
+        this.consumer = requireNonNull(consumer, "Consumer must be provided");
         return this;
     }
 
@@ -88,7 +89,7 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
             for (int i = 1; i <= params.length; i++) {
                 P<?> p = (P<?>) params[i - 1];
                 if (p.isOut() || p.isInOut()) {
-                    cs.registerOutParameter(i, Objects.requireNonNull(p.getType(), String.format("Parameter '%s' must have SQLType set", p)));
+                    cs.registerOutParameter(i, requireNonNull(p.getType(), String.format("Parameter '%s' must have SQLType set", p)));
                 }
                 if (p.isIn() || p.isInOut()) {
                     cs.setObject(i, p.getValue());

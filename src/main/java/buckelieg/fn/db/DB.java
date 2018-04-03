@@ -20,18 +20,21 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 
+import static buckelieg.fn.db.TryOptional.of;
 import static buckelieg.fn.db.Utils.*;
+import static java.lang.String.format;
+import static java.nio.file.Files.readAllBytes;
 import static java.util.AbstractMap.SimpleImmutableEntry;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.of;
 
 /**
  * Database query factory
@@ -50,7 +53,7 @@ public final class DB implements AutoCloseable {
      * @param connectionSupplier the connection supplier.
      */
     public DB(TrySupplier<Connection, SQLException> connectionSupplier) {
-        this.connectionSupplier = Objects.requireNonNull(connectionSupplier, "Connection supplier must be provided");
+        this.connectionSupplier = requireNonNull(connectionSupplier, "Connection supplier must be provided");
     }
 
     /**
@@ -59,7 +62,7 @@ public final class DB implements AutoCloseable {
      * @param connection the connection to operate on
      */
     public DB(Connection connection) {
-        Objects.requireNonNull(connection, "Connection must be provided");
+        requireNonNull(connection, "Connection must be provided");
         this.connectionSupplier = () -> connection;
     }
 
@@ -98,7 +101,7 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public Script script(File source) {
-        return script(TryOptional.of(() -> new String(Files.readAllBytes(Objects.requireNonNull(source, "Script source file must be provided").toPath()), StandardCharsets.UTF_8)).getOptional().orElse(""));
+        return script(of(() -> new String(readAllBytes(requireNonNull(source, "Script source file must be provided").toPath()), StandardCharsets.UTF_8)).getOptional().orElse(""));
     }
 
     /**
@@ -125,7 +128,7 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public StoredProcedure procedure(String query, Object... params) {
-        return procedure(query, Arrays.stream(params).map(P::in).collect(toList()).toArray(new P<?>[params.length]));
+        return procedure(query, stream(params).map(P::in).collect(toList()).toArray(new P<?>[params.length]));
     }
 
     /**
@@ -142,14 +145,14 @@ public final class DB implements AutoCloseable {
     @Nonnull
     public StoredProcedure procedure(String query, P<?>... params) {
         if (!isProcedure(query)) {
-            throw new IllegalArgumentException(String.format("Query '%s' is not valid procedure call statement", query));
+            throw new IllegalArgumentException(format("Query '%s' is not valid procedure call statement", query));
         }
         P<?>[] preparedParams = params;
-        int namedParams = Arrays.stream(params).filter(p -> !p.getName().isEmpty()).collect(toList()).size();
+        int namedParams = stream(params).filter(p -> !p.getName().isEmpty()).collect(toList()).size();
         if (namedParams == params.length && params.length > 0) {
             Map.Entry<String, Object[]> preparedQuery = prepareQuery(
                     query,
-                    Stream.of(params)
+                    of(params)
                             .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
                             .collect(toList())
             );
@@ -157,7 +160,7 @@ public final class DB implements AutoCloseable {
             preparedParams = (P<?>[]) preparedQuery.getValue();
         } else if (0 < namedParams && namedParams < params.length) {
             throw new IllegalArgumentException(
-                    String.format(
+                    format(
                             "Cannot combine named parameters(count=%s) with unnamed ones(count=%s).",
                             namedParams, params.length - namedParams
                     )
@@ -191,7 +194,7 @@ public final class DB implements AutoCloseable {
     @Nonnull
     public Select select(String query, Object... params) {
         if (!isSelect(query) || isProcedure(query)) {
-            throw new IllegalArgumentException(String.format("Query '%s' is not valid select statement", query));
+            throw new IllegalArgumentException(format("Query '%s' is not valid select statement", query));
         }
         return new SelectQuery(connectionSupplier, checkAnonymous(query), params);
     }
@@ -209,7 +212,7 @@ public final class DB implements AutoCloseable {
     @Nonnull
     public Update update(String query, Object[]... batch) {
         if (isSelect(query) || isProcedure(query)) {
-            throw new IllegalArgumentException(String.format("Query '%s' is not valid DML statement", query));
+            throw new IllegalArgumentException(format("Query '%s' is not valid DML statement", query));
         }
         return new UpdateQuery(connectionSupplier, checkAnonymous(query), batch);
     }
@@ -244,7 +247,7 @@ public final class DB implements AutoCloseable {
     @SafeVarargs
     @Nonnull
     public final <T extends Map.Entry<String, ?>> Select select(String query, T... namedParams) {
-        return select(query, Arrays.asList(namedParams));
+        return select(query, asList(namedParams));
     }
 
     /**
@@ -288,7 +291,7 @@ public final class DB implements AutoCloseable {
     @SafeVarargs
     @Nonnull
     public final <T extends Map.Entry<String, ?>> Update update(String query, T... namedParams) {
-        return update(query, Arrays.asList(namedParams));
+        return update(query, asList(namedParams));
     }
 
     /**
@@ -305,7 +308,7 @@ public final class DB implements AutoCloseable {
     @SafeVarargs
     @Nonnull
     public final Update update(String query, Map<String, ?>... batch) {
-        List<Map.Entry<String, Object[]>> params = Stream.of(batch).map(np -> prepareQuery(query, np.entrySet())).collect(toList());
+        List<Map.Entry<String, Object[]>> params = of(batch).map(np -> prepareQuery(query, np.entrySet())).collect(toList());
         return update(params.get(0).getKey(), params.stream().map(Map.Entry::getValue).collect(toList()).toArray(new Object[params.size()][]));
     }
 

@@ -22,15 +22,17 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import static buckelieg.fn.db.Utils.cutComments;
 import static buckelieg.fn.db.Utils.newSQLRuntimeException;
+import static java.util.Arrays.stream;
+import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -59,7 +61,7 @@ final class ScriptQuery implements Script {
     ScriptQuery(TrySupplier<Connection, SQLException> connectionSupplier, String script) {
         this.connectionSupplier = connectionSupplier;
         try {
-            this.script = Utils.cutComments(Objects.requireNonNull(script, "Script string must be provided"));
+            this.script = cutComments(requireNonNull(script, "Script string must be provided"));
         } catch (SQLException e) {
             throw new IllegalArgumentException(e);
         }
@@ -82,7 +84,7 @@ final class ScriptQuery implements Script {
             }
             default: {
                 try {
-                    conveyor = Executors.newSingleThreadExecutor(); // TODO implement executor that uses current thread
+                    conveyor = newSingleThreadExecutor(); // TODO implement executor that uses current thread
                     return conveyor.submit(this::doExecute).get(timeout, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     throw newSQLRuntimeException(e);
@@ -95,7 +97,7 @@ final class ScriptQuery implements Script {
         long start = System.currentTimeMillis();
         try {
             Connection conn = connectionSupplier.get();
-            for (String query : Arrays.stream(script.split(";")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new)) {
+            for (String query : stream(script.split(";")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new)) {
                 try (Statement statement = conn.createStatement()) {
                     statement.setEscapeProcessing(escaped);
                     if (skipErrors) {
@@ -107,7 +109,7 @@ final class ScriptQuery implements Script {
                     } else {
                         statement.execute(query);
                     }
-                    Optional<SQLWarning> warning = Optional.ofNullable(statement.getWarnings());
+                    Optional<SQLWarning> warning = ofNullable(statement.getWarnings());
                     if (!skipWarnings && warning.isPresent()) {
                         throw warning.get();
                     } else {
@@ -133,7 +135,7 @@ final class ScriptQuery implements Script {
     @Nonnull
     @Override
     public Script print(Consumer<String> printer) {
-        Objects.requireNonNull(printer, "Printer must be provided").accept(script);
+        requireNonNull(printer, "Printer must be provided").accept(script);
         return this;
     }
 
@@ -161,7 +163,7 @@ final class ScriptQuery implements Script {
     @Nonnull
     @Override
     public Script errorHandler(Consumer<SQLException> handler) {
-        this.errorHandler = Objects.requireNonNull(handler, "Error handler must be provided");
+        this.errorHandler = requireNonNull(handler, "Error handler must be provided");
         return this;
     }
 

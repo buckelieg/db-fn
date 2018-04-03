@@ -20,10 +20,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
-import java.util.Objects;
-import java.util.Optional;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 /**
  * An abstraction for INSERT/UPDATE/DELETE statements.
@@ -33,6 +36,12 @@ import java.util.function.Supplier;
 @SuppressWarnings("unchecked")
 @ParametersAreNonnullByDefault
 public interface Update extends Query<Long> {
+
+    /**
+     * @param generatedValuesHandler handler which operates on {@link ResultSet} with generated values
+     * @return rows affected count
+     */
+    <T> T execute(TryFunction<ResultSet, T, SQLException> generatedValuesHandler);
 
     /**
      * Tells this update will be a large update
@@ -67,7 +76,7 @@ public interface Update extends Query<Long> {
      */
     @Nonnull
     default Update timeout(Supplier<Integer> supplier) {
-        return timeout(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
+        return timeout(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
     }
 
 
@@ -88,7 +97,7 @@ public interface Update extends Query<Long> {
      */
     @Nonnull
     default Update poolable(Supplier<Boolean> supplier) {
-        return poolable(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
+        return poolable(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
     }
 
     /**
@@ -108,7 +117,7 @@ public interface Update extends Query<Long> {
      */
     @Nonnull
     default Update escaped(Supplier<Boolean> supplier) {
-        return escaped(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(true));
+        return escaped(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(true));
     }
 
     /**

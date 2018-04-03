@@ -23,8 +23,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
+
+import static buckelieg.fn.db.TryOptional.of;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An abstraction for STORED PROCEDURE call statement.
@@ -58,9 +60,9 @@ public interface StoredProcedure extends Select {
      */
     @Nonnull
     default <T> TryOptional<T> call(TryFunction<CallableStatement, T, SQLException> mapper) {
-        return TryOptional.of(() -> {
+        return of(() -> {
             List<T> results = new ArrayList<>(1);
-            call(Objects.requireNonNull(mapper, "Mapper must be provided"), results::add).single(rs -> rs).ifPresent(rs -> {
+            call(requireNonNull(mapper, "Mapper must be provided"), results::add).single(rs -> rs).ifPresent(rs -> {
                 throw new SQLRuntimeException("Procedure has non-empty result set");
             });
             return results.get(0);

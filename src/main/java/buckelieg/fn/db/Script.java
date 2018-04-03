@@ -19,10 +19,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.SQLException;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 /**
  * An abstraction for SQL scripts.
@@ -66,7 +67,7 @@ public interface Script extends Query<Long> {
      */
     @Nonnull
     default Script escaped(Supplier<Boolean> supplier) {
-        return escaped(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(true));
+        return escaped(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(true));
     }
 
     /**
@@ -110,7 +111,7 @@ public interface Script extends Query<Long> {
      */
     @Nonnull
     default Script skipErrors(Supplier<Boolean> supplier) {
-        return skipErrors(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
+        return skipErrors(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
     }
 
     /**
@@ -134,7 +135,7 @@ public interface Script extends Query<Long> {
      */
     @Nonnull
     default Script skipWarnings(Supplier<Boolean> supplier) {
-        return skipWarnings(Optional.ofNullable(Objects.requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
+        return skipWarnings(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
     }
 
     /**

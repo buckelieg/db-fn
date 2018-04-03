@@ -24,11 +24,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -142,7 +143,7 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
     @Override
     public final boolean tryAdvance(Consumer<? super ResultSet> action) {
         if (hasNext()) {
-            Objects.requireNonNull(action).accept(next());
+            requireNonNull(action).accept(next());
             return true;
         }
         return false;
