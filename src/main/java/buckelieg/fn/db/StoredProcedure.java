@@ -30,7 +30,7 @@ import java.util.function.Consumer;
  * An abstraction for STORED PROCEDURE call statement.
  */
 @ParametersAreNonnullByDefault
-interface StoredProcedure extends Select {
+public interface StoredProcedure extends Select {
 
     /**
      * Calls procedure for results processing which are expected in the OUT/INOUT parameters.
