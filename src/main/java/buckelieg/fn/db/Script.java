@@ -31,7 +31,7 @@ import java.util.function.Supplier;
  */
 @SuppressWarnings("unchecked")
 @ParametersAreNonnullByDefault
-interface Script extends Query<Long> {
+public interface Script extends Query<Long> {
 
     /**
      * {@inheritDoc}
