@@ -32,7 +32,7 @@ import java.util.function.Supplier;
  */
 @SuppressWarnings("unchecked")
 @ParametersAreNonnullByDefault
-interface Update extends Query<Long> {
+public interface Update extends Query<Long> {
 
     /**
      * Tells this update will be a large update
