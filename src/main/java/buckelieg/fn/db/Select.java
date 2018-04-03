@@ -31,7 +31,7 @@ import java.util.stream.Stream;
  */
 @SuppressWarnings("unchecked")
 @ParametersAreNonnullByDefault
-interface Select extends Query<Stream<ResultSet>> {
+public interface Select extends Query<Stream<ResultSet>> {
 
     /**
      * In cases when single result of SELECT statement is expected.
