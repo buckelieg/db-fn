@@ -38,8 +38,11 @@ import static java.util.Optional.ofNullable;
 public interface Update extends Query<Long> {
 
     /**
+     * Executes an update query providing generated results
+     *
      * @param generatedValuesHandler handler which operates on {@link ResultSet} with generated values
      * @return rows affected count
+     * @see java.sql.Statement#executeUpdate(String, int)
      */
     <T> T execute(TryFunction<ResultSet, T, SQLException> generatedValuesHandler);
 
