@@ -50,7 +50,7 @@ interface Query<R> extends AutoCloseable {
     /**
      * Sets query execution timeout. Negative values are silently ignored.
      *
-     * @param timeout query timeout in seconds > 0 (0 means no timeout)
+     * @param timeout query timeout in seconds greater than 0 (0 means no timeout)
      * @return a query abstraction
      * @see java.sql.Statement#setQueryTimeout(int)
      */
