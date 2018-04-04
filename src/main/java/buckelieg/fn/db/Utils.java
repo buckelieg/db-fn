@@ -35,17 +35,14 @@ final class Utils {
     static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
 
     // Java regexp does not support conditional regexps. We will enumerate all possible variants.
-    static final Pattern STORED_PROCEDURE = Pattern.compile(
-            String.format(
-                    "%s|%s|%s|%s|%s|%s",
+    static final Pattern STORED_PROCEDURE = Pattern.compile(format("%s|%s|%s|%s|%s|%s",
                     "(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+\\s*(\\(\\s*)\\)",
                     "(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)",
                     "(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+",
                     "\\{\\s*(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+\\s*\\}",
                     "\\{\\s*(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+\\s*((\\(\\s*)\\?\\s*)(,\\s*\\?)*\\)\\s*\\}",
                     "\\{\\s*(\\?\\s*=\\s*)?call\\s+(\\w+.{1}){0,2}\\w+\\s*(\\(\\s*)\\)\\s*\\}"
-            )
-    );
+    ));
 
     private static final Pattern MULTILINE_COMMENT_DELIMITER = Pattern.compile("(/\\*)|(\\*/)*");
     private static final String MULTILINE_COMMENT_DELIMITER_START = "/*";
