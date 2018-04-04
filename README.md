@@ -7,7 +7,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-fn</artifactId>
-  <version>0.2</version>
+  <version>0.3.1</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -83,22 +83,22 @@ long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_
 ```
 or
 ```java
-long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute().toOptional().orElse(0L);
+long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute();
 ```
 For batch operation use:
 ```java
-long res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute().toOptional().orElse(0L);
+long res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute();
 ```  
 ##### Delete
 ```java
-long res = db.update("DELETE FROM TEST WHERE name=?", "name_2").execute().toOptional().orElse(0L);
+long res = db.update("DELETE FROM TEST WHERE name=?", "name_2").execute();
 ```
 and so on. Explore test suite for more examples.
 
 #### ETL
 implement simple ETL process:
 ```java
-long count = db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getLong(1)).toOptional().orElse(0L);
+long count = db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getLong(1)).orElse(0L);
 // calculate partitions here and split work to threads if needed
 Executors.newCachedThreadPool().submit(() -> db.select(" SELECT * FROM TEST WHERE 1=1 AND ID>? AND ID<?", start, end)
 .execute(rs -> {/*map rs here*/}).forEach(obj -> {/* do things here...*/}));
@@ -111,6 +111,18 @@ String name = db.procedure("{call GETNAMEBYID(?,?)}", P.in(12), P.out(JDBCType.V
 ```
 Note that in the latter case stored procedure must not return any result sets.
 If stored procedure is considered to return result sets it is handled similar to regular selects (see above).
+
+### Scripts
+There are two options to run an arbitrary SQL scripts:
+1) Provide a srcipt itself
+```java
+db.script("SELECT * FROM DUAL;SELECT x FROM DUAL;INSERT INTO TEST(name) VALUES('whatever');DROP TABLE TEST;").execute();
+```
+2) Provide a file with a SQL script in it
+```java
+  db.script(new File("path/to/script.sql")).execute();
+```
+Script can contain single- and multiline commtents. Each statement must be separated by semicolon (";").
 
 ### Prerequisites
 Java8, Git, Maven.
