@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static buckelieg.fn.db.TryOptional.of;
+import static buckelieg.fn.db.Utils.newSQLRuntimeException;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -78,7 +79,7 @@ public interface StoredProcedure extends Select {
      */
     default void call() {
         call(cs -> cs).onException(e -> {
-            throw new SQLRuntimeException(e);
+            throw newSQLRuntimeException(e);
         });
     }
 

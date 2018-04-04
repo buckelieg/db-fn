@@ -1,4 +1,4 @@
 /**
- * Functional style programming with plain JDBC
+ * Functional style programming over plain JDBC
  */
 package buckelieg.fn.db;

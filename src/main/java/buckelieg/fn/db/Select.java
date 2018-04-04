@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static buckelieg.fn.db.Utils.newSQLRuntimeException;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -89,7 +90,7 @@ public interface Select extends Query<Stream<ResultSet>> {
             try {
                 return mapper.apply(rs);
             } catch (SQLException e) {
-                throw Utils.newSQLRuntimeException(e);
+                throw newSQLRuntimeException(e);
             }
         });
     }

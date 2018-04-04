@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.function.Consumer;
 
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 @NotThreadSafe
@@ -89,7 +90,7 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
             for (int i = 1; i <= params.length; i++) {
                 P<?> p = (P<?>) params[i - 1];
                 if (p.isOut() || p.isInOut()) {
-                    cs.registerOutParameter(i, requireNonNull(p.getType(), String.format("Parameter '%s' must have SQLType set", p)));
+                    cs.registerOutParameter(i, requireNonNull(p.getType(), format("Parameter '%s' must have SQLType set", p)));
                 }
                 if (p.isIn() || p.isInOut()) {
                     cs.setObject(i, p.getValue());

@@ -24,15 +24,16 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static buckelieg.fn.db.Utils.cutComments;
 import static buckelieg.fn.db.Utils.newSQLRuntimeException;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -85,7 +86,7 @@ final class ScriptQuery implements Script {
             default: {
                 try {
                     conveyor = newSingleThreadExecutor(); // TODO implement executor that uses current thread
-                    return conveyor.submit(this::doExecute).get(timeout, TimeUnit.SECONDS);
+                    return conveyor.submit(this::doExecute).get(timeout, SECONDS);
                 } catch (Exception e) {
                     throw newSQLRuntimeException(e);
                 }
@@ -94,7 +95,7 @@ final class ScriptQuery implements Script {
     }
 
     private long doExecute() {
-        long start = System.currentTimeMillis();
+        long start = currentTimeMillis();
         try {
             Connection conn = connectionSupplier.get();
             for (String query : stream(script.split(";")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new)) {
@@ -122,7 +123,7 @@ final class ScriptQuery implements Script {
         } finally {
             close();
         }
-        return System.currentTimeMillis() - start;
+        return currentTimeMillis() - start;
     }
 
     @Nonnull

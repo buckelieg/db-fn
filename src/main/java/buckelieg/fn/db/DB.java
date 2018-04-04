@@ -19,7 +19,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -28,6 +27,7 @@ import java.util.Map;
 import static buckelieg.fn.db.TryOptional.of;
 import static buckelieg.fn.db.Utils.*;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.AbstractMap.SimpleImmutableEntry;
 import static java.util.Arrays.asList;
@@ -101,7 +101,7 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public Script script(File source) {
-        return script(of(() -> new String(readAllBytes(requireNonNull(source, "Script source file must be provided").toPath()), StandardCharsets.UTF_8)).getOptional().orElse(""));
+        return script(of(() -> new String(readAllBytes(requireNonNull(source, "Script source file must be provided").toPath()), UTF_8)).getOptional().orElse(""));
     }
 
     /**

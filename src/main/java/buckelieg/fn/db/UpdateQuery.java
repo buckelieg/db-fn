@@ -19,12 +19,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.*;
-import java.util.Arrays;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -150,8 +150,8 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
                 .reduce(
                         0L,
                         (rowsAffected, stmt) ->
-                                rowsAffected += Arrays.stream(
-                                        jdbcTry(() -> isLarge ? stmt.executeLargeBatch() : Arrays.stream(stmt.executeBatch()).asLongStream().toArray())
+                                rowsAffected += stream(
+                                        jdbcTry(() -> isLarge ? stmt.executeLargeBatch() : stream(stmt.executeBatch()).asLongStream().toArray())
                                 ).sum(),
                         (j, k) -> j + k
                 );
@@ -164,9 +164,9 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
 
     @Override
     final String asSQL(String query, Object... params) {
-        return Arrays.stream(params)
-                .flatMap(p -> Arrays.stream((Object[]) p))
+        return stream(params)
+                .flatMap(p -> stream((Object[]) p))
                 .map(p -> super.asSQL(query, (Object[]) p))
-                .collect(Collectors.joining(";"));
+                .collect(joining(";"));
     }
 }
