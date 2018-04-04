@@ -89,7 +89,6 @@ long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Simp
 ```
 For batch operation use:
 ```java
-Object[][] params 
 long res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{ {"name1"}, {"name2"} }).execute();
 ```  
 ##### Delete
