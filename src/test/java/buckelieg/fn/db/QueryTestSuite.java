@@ -2,9 +2,6 @@ package buckelieg.fn.db;
 
 import org.junit.Test;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.stream.Stream;
 
@@ -73,11 +70,7 @@ public class QueryTestSuite {
 
     @Test
     public void testScriptEliminateComments() throws Exception {
-        String script1 =
-                "SELECT * FROM TEST; --WHERE id = 1;" +
-                        "SELECT * FROM TEST WHERE id = ?; -- comments";
-//        System.out.println(Arrays.toString(Utils.parseScript(script1)));
-        System.out.println(Utils.cutComments(new String(Files.readAllBytes(new File("D:\\WORKS\\IDEA\\db-fn\\src\\test\\resources\\script2.sql").toPath()), StandardCharsets.UTF_8)));
+        // TODO implement script parsing/execution tests
     }
 
 
