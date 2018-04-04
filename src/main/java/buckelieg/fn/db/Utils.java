@@ -28,6 +28,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.StreamSupport.stream;
+import static java.lang.String.format;
 
 final class Utils {
 
@@ -58,7 +59,7 @@ final class Utils {
     static Map.Entry<String, Object[]> prepareQuery(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map<Integer, Object> indicesToValues = new TreeMap<>();
         Map<String, Optional<?>> transformedParams = stream(namedParams.spliterator(), false).collect(Collectors.toMap(
-                e -> e.getKey().startsWith(":") ? e.getKey() : String.format(":%s", e.getKey()),
+                e -> e.getKey().startsWith(":") ? e.getKey() : format(":%s", e.getKey()),
                 e -> ofNullable(e.getValue()) // HashMap/ConcurrentHashMap merge function fails on null values
         ));
         Matcher matcher = NAMED_PARAMETER.matcher(query);
@@ -107,7 +108,7 @@ final class Utils {
     @Nonnull
     static String checkAnonymous(String query) {
         if (NAMED_PARAMETER.matcher(query).find()) {
-            throw new IllegalArgumentException(String.format("Query '%s' has named placeholders for parameters whereas parameters themselves are unnamed", query));
+            throw new IllegalArgumentException(format("Query '%s' has named placeholders for parameters whereas parameters themselves are unnamed", query));
         }
         return query;
     }
@@ -116,7 +117,7 @@ final class Utils {
     static SQLRuntimeException newSQLRuntimeException(Throwable t) {
         StringBuilder message = new StringBuilder();
         while ((t = t.getCause()) != null) {
-            ofNullable(t.getMessage()).map(msg -> String.format("%s ", msg.trim())).ifPresent(message::append);
+            ofNullable(t.getMessage()).map(msg -> format("%s ", msg.trim())).ifPresent(message::append);
         }
         return new SQLRuntimeException(message.toString(), false);
     }
@@ -143,18 +144,10 @@ final class Utils {
             throw new SQLException("Unmatched start multiline comment at " + startIndices.get(0));
         }
         for (int i = 0; i < startIndices.size(); i++) {
-            replaced = replaced.replace(replaced.substring(startIndices.get(i), endIndices.get(i)), whitespaces(endIndices.get(i) - startIndices.get(i)));
+            replaced = replaced.replace(replaced.substring(startIndices.get(i), endIndices.get(i)), format("%"+ (endIndices.get(i) - startIndices.get(i)) +"s", " "));
         }
         replaced = replaced.replaceAll("( ){2,}", " ");
         return replaced;
-    }
-
-    private static String whitespaces(int length) {
-        StringBuilder whitespaces = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            whitespaces.append(" ");
-        }
-        return whitespaces.toString();
     }
 
 }
