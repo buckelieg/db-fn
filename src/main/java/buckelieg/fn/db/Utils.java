@@ -138,7 +138,7 @@ final class Utils {
             throw new SQLException("Multiline comments count mismatch");
         }
         if (!startIndices.isEmpty() && (startIndices.get(0) > endIndices.get(0))) {
-            throw new SQLException("Unmatched start multiline comment at " + startIndices.get(0));
+            throw new SQLException(format("Unmatched start multiline comment at %s", startIndices.get(0)));
         }
         for (int i = 0; i < startIndices.size(); i++) {
             replaced = replaced.replace(replaced.substring(startIndices.get(i), endIndices.get(i)), format("%" + (endIndices.get(i) - startIndices.get(i)) + "s", " "));
