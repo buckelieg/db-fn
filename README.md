@@ -120,9 +120,10 @@ db.script("SELECT * FROM DUAL;SELECT x FROM DUAL;INSERT INTO TEST(name) VALUES('
 ```
 2) Provide a file with a SQL script in it
 ```java
-  db.script(new File("path/to/script.sql")).execute();
+  db.script(new File("path/to/script.sql")).timeot(60).execute();
 ```
 Script can contain single- and multiline commtents. Each statement must be separated by semicolon (";").
+Script execution results are ignored and not handled after all.
 
 ### Prerequisites
 Java8, Git, Maven.
