@@ -23,7 +23,8 @@ import java.net.URL;
 import java.sql.*;
 import java.util.Calendar;
 import java.util.Map;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 final class ImmutableResultSet implements ResultSet {
 
@@ -32,7 +33,7 @@ final class ImmutableResultSet implements ResultSet {
     private ResultSet delegate;
 
     ImmutableResultSet(@Nonnull ResultSet delegate) {
-        this.delegate = Objects.requireNonNull(delegate, "ResultSet must be provided");
+        this.delegate = requireNonNull(delegate, "ResultSet must be provided");
     }
 
     @Override

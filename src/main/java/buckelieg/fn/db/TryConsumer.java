@@ -15,7 +15,7 @@
 */
 package buckelieg.fn.db;
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Represents an operation that accepts a single input argument and returns no
@@ -49,7 +49,7 @@ public interface TryConsumer<T, E extends Throwable> {
      * @throws NullPointerException if {@code after} is null
      */
     default TryConsumer<T, E> andThen(TryConsumer<? super T, E> after) throws E {
-        Objects.requireNonNull(after);
+        requireNonNull(after);
         return (T t) -> {
             accept(t);
             after.accept(t);

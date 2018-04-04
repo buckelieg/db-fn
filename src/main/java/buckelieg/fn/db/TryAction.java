@@ -15,7 +15,7 @@
 */
 package buckelieg.fn.db;
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An arbitrary action that might throw an exception
@@ -46,7 +46,7 @@ public interface TryAction<E extends Throwable> {
      * @throws NullPointerException if {@code after} is null
      */
     default TryAction<E> andThen(TryAction<E> after) throws E {
-        Objects.requireNonNull(after);
+        requireNonNull(after);
         return () -> {
             doTry();
             after.doTry();

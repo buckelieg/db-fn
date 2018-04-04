@@ -21,13 +21,14 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.StreamSupport.stream;
 
 final class Utils {
@@ -55,7 +56,7 @@ final class Utils {
     @Nonnull
     static Map.Entry<String, Object[]> prepareQuery(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map<Integer, Object> indicesToValues = new TreeMap<>();
-        Map<String, Optional<?>> transformedParams = stream(namedParams.spliterator(), false).collect(Collectors.toMap(
+        Map<String, Optional<?>> transformedParams = stream(namedParams.spliterator(), false).collect(toMap(
                 e -> e.getKey().startsWith(":") ? e.getKey() : format(":%s", e.getKey()),
                 e -> ofNullable(e.getValue()) // HashMap/ConcurrentHashMap merge function fails on null values
         ));
@@ -69,7 +70,7 @@ final class Utils {
         for (Map.Entry<String, Optional<?>> e : transformedParams.entrySet()) {
             query = query.replaceAll(
                     e.getKey(),
-                    stream(asIterable(e.getValue()).spliterator(), false).map(o -> "?").collect(Collectors.joining(", "))
+                    stream(asIterable(e.getValue()).spliterator(), false).map(o -> "?").collect(joining(", "))
             );
         }
         return new SimpleImmutableEntry<>(query, indicesToValues.values().toArray());

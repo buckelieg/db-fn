@@ -18,8 +18,11 @@ package buckelieg.fn.db;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Objects;
 import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 /**
  * A container for result of the computation which might throw an exception.
@@ -39,7 +42,7 @@ public final class TryOptional<T> {
 
     private TryOptional(Throwable exception) {
         this.value = null;
-        this.exception = Objects.requireNonNull(exception);
+        this.exception = requireNonNull(exception);
     }
 
     /**
@@ -54,7 +57,7 @@ public final class TryOptional<T> {
      */
     @Nonnull
     public static <T> TryOptional<T> of(TrySupplier<T, Throwable> supplier) {
-        Objects.requireNonNull(supplier, "Value supplier must be provided");
+        requireNonNull(supplier, "Value supplier must be provided");
         try {
             return new TryOptional<>(supplier.get());
         } catch (Throwable t) {
@@ -108,7 +111,7 @@ public final class TryOptional<T> {
      */
     @Nonnull
     public Optional<T> toOptional() {
-        return Optional.ofNullable(value);
+        return ofNullable(value);
     }
 
     /**
@@ -121,7 +124,7 @@ public final class TryOptional<T> {
      */
     @Nonnull
     public Optional<T> getOptional() {
-        return Optional.ofNullable(getUnchecked());
+        return ofNullable(getUnchecked());
     }
 
     /**
@@ -148,7 +151,7 @@ public final class TryOptional<T> {
     @SuppressWarnings("unchecked")
     @Nonnull
     public <U> TryOptional<U> recover(TryFunction<Throwable, U, Throwable> handler) {
-        return isException() ? of(() -> Objects.requireNonNull(handler).apply(exception)) : (TryOptional<U>) this;
+        return isException() ? of(() -> requireNonNull(handler).apply(exception)) : (TryOptional<U>) this;
     }
 
     /**
@@ -158,7 +161,7 @@ public final class TryOptional<T> {
      * @throws NullPointerException if handler is null
      */
     public <E extends Throwable> void onException(TryConsumer<Throwable, E> handler) throws E {
-        if (isException()) Objects.requireNonNull(handler).accept(exception);
+        if (isException()) requireNonNull(handler).accept(exception);
     }
 
     @Override
@@ -180,6 +183,6 @@ public final class TryOptional<T> {
 
     @Override
     public String toString() {
-        return String.format("%s.%s(%s)", getClass().getSimpleName(), isException() ? "exception" : "value", isException() ? exception : value);
+        return format("%s.%s(%s)", getClass().getSimpleName(), isException() ? "exception" : "value", isException() ? exception : value);
     }
 }

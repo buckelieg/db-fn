@@ -23,6 +23,8 @@ import java.sql.ParameterMetaData;
 import java.sql.SQLType;
 import java.util.Objects;
 
+import static java.lang.String.format;
+
 /**
  * Stored Procedure parameter
  *
@@ -120,6 +122,6 @@ public final class P<T> {
 
     @Override
     public String toString() {
-        return String.format("%s:%s=%s(%s)", isInOut() ? "INOUT" : isOut() ? "OUT" : "IN", name, value, type.getName());
+        return format("%s:%s=%s(%s)", isInOut() ? "INOUT" : isOut() ? "OUT" : "IN", name, value, type.getName());
     }
 }

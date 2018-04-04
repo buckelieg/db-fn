@@ -15,7 +15,7 @@
 */
 package buckelieg.fn.db;
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 @FunctionalInterface
 public interface TryFunction<I, O, E extends Throwable> {
@@ -53,7 +53,7 @@ public interface TryFunction<I, O, E extends Throwable> {
      * @see #andThen(TryFunction)
      */
     default <V> TryFunction<V, O, E> compose(TryFunction<? super V, ? extends I, ? extends E> before) throws E {
-        return (V v) -> apply(Objects.requireNonNull(before).apply(v));
+        return (V v) -> apply(requireNonNull(before).apply(v));
     }
 
     /**
@@ -70,6 +70,6 @@ public interface TryFunction<I, O, E extends Throwable> {
      * @see #compose(TryFunction)
      */
     default <V> TryFunction<I, V, E> andThen(TryFunction<? super O, ? extends V, ? extends E> after) throws E {
-        return (I t) -> Objects.requireNonNull(after).apply(apply(t));
+        return (I t) -> requireNonNull(after).apply(apply(t));
     }
 }
