@@ -42,10 +42,12 @@ Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
 ```
 or use named parameters:
 ```java
-Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>(){{
+Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>(){
+        {
             put("ID", new Object[]{1, 2}); 
             put("name", "name_5"); // for example only: do not use this IRL
-        }}).execute().reduce(
+        }
+}).execute().reduce(
                 new LinkedList<T>(),
                 (list, rs) -> {
                     try {
