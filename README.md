@@ -44,7 +44,7 @@ or use named parameters:
 ```java
 Map<String, Object> params = new HashMap<>();
 put("ID", new Object[]{1, 2});
-put("name", "name_5"); // for example only: do not use this IRL
+put("name", "name_5");
 Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", params).execute()
             .reduce(
                 new LinkedList<T>(),
@@ -88,7 +88,8 @@ long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new Simp
 ```
 For batch operation use:
 ```java
-long res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute();
+Object[][] params 
+long res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{ {"name1"}, {"name2"} }).execute();
 ```  
 ##### Delete
 ```java
