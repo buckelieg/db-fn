@@ -2,7 +2,10 @@ package buckelieg.fn.db;
 
 import org.junit.Test;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
@@ -70,7 +73,15 @@ public class QueryTestSuite {
 
     @Test
     public void testScriptEliminateComments() throws Exception {
-        // TODO implement script parsing/execution tests
+        System.out.println(
+                Utils.cutComments(
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        Thread.currentThread().getContextClassLoader().getResourceAsStream("script.sql"))
+                        ).lines().collect(Collectors.joining(""))
+                )
+        );
+        // TODO perform script test here
     }
 
 
