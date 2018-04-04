@@ -80,7 +80,7 @@ long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutable
 ```
 ##### Update
 ```java
-long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute().toOptional().orElse(0L);
+long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute().orElse(0L);
 ```
 or
 ```java
