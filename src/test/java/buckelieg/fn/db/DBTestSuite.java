@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.AbstractMap.SimpleImmutableEntry;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 
 // TODO more test suites for other RDBMS
@@ -87,24 +87,24 @@ public class DBTestSuite {
             while (rs.next()) {
                 rows++;
             }
-            assertTrue(rows == 10);
+            assertEquals(10, rows);
         }
     }
 
     @Test
     public void testFetchSize() throws Exception {
-        assertTrue(10 == db.select("SELECT * FROM TEST").fetchSize(1).execute().count());
+        assertEquals(10, db.select("SELECT * FROM TEST").fetchSize(1).execute().count());
     }
 
     @Test
     public void testMaxRows() throws Exception {
-        assertTrue(1 == db.select("select * from test").maxRows(1).execute().count());
-        assertTrue(1 == db.select("select * from test").maxRows(1L).execute().count());
-        assertTrue(2 == db.select("select * from test").maxRows(1).maxRows(2L).execute().count());
-        assertTrue(2 == db.select("select * from test").maxRows(1L).maxRows(2).execute().count());
-        assertTrue(1 == db.select("select * from test").maxRows(() -> 1).execute().count());
-        assertTrue(1 == db.select("select * from test").maxRows(() -> 1L).execute().count());
-        assertTrue(1 == db.select("select count(*) from test").maxRows(() -> Integer.MAX_VALUE).execute().count());
+        assertEquals(1, db.select("select * from test").maxRows(1).execute().count());
+        assertEquals(1, db.select("select * from test").maxRows(1L).execute().count());
+        assertEquals(2, db.select("select * from test").maxRows(1).maxRows(2L).execute().count());
+        assertEquals(2, db.select("select * from test").maxRows(1L).maxRows(2).execute().count());
+        assertEquals(1, db.select("select * from test").maxRows(() -> 1).execute().count());
+        assertEquals(1, db.select("select * from test").maxRows(() -> 1L).execute().count());
+        assertEquals(1, db.select("select count(*) from test").maxRows(() -> Integer.MAX_VALUE).execute().count());
     }
 
     @Test
@@ -123,7 +123,7 @@ public class DBTestSuite {
                         },
                         Collection::addAll
                 );
-        assertTrue(results.size() == 2);
+        assertEquals(2, results.size());
     }
 
     @Test
@@ -147,17 +147,17 @@ public class DBTestSuite {
                         },
                         Collection::addAll
                 );
-        assertTrue(results.size() == 4);
+        assertEquals(4, results.size());
     }
 
     @Test
     public void testSelectNoParams() throws Throwable {
-        assertTrue(10 == db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)).orElse(0));
+        assertEquals(10, (int) db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)).orElse(0));
     }
 
     @Test
     public void testSelectForEachSingle() throws Throwable {
-        assertTrue(1 == db.select("SELECT * FROM TEST WHERE ID=1").execute().collect(Collectors.toList()).size());
+        assertEquals(1, db.select("SELECT * FROM TEST WHERE ID=1").execute().collect(Collectors.toList()).size());
         db.select("SELECT COUNT(*) FROM TEST").execute().forEach(rs -> {
             try {
                 System.out.println(rs.getInt(1));
@@ -169,39 +169,39 @@ public class DBTestSuite {
 
     @Test
     public void testUpdateNoParams() throws Throwable {
-        assertTrue(10L == db.update("DELETE FROM TEST").execute());
+        assertEquals(10L, (long) db.update("DELETE FROM TEST").execute());
     }
 
     @Test
     public void testInsert() throws Throwable {
         long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute();
-        assertTrue(1L == res);
+        assertEquals(1L, res);
     }
 
     @Test
     public void testInsertNamed() throws Throwable {
         long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute();
-        assertTrue(1L == res);
-        assertTrue(Long.valueOf(11L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
+        assertEquals(1L, res);
+        assertEquals(Long.valueOf(11L), db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get());
     }
 
     @Test
     public void testUpdate() throws Throwable {
         long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute();
-        assertTrue(1L == res);
-        assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get()));
+        assertEquals(1L, res);
+        assertEquals(Long.valueOf(1L), db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get());
     }
 
     @Test
     public void testUpdateNamed() throws Throwable {
         long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute();
-        assertTrue(1L == res);
-        assertTrue(Long.valueOf(1L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get()));
+        assertEquals(1L, res);
+        assertEquals(Long.valueOf(1L), db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get());
     }
 
     @Test
     public void testUpdateBatch() throws Exception {
-        assertTrue(2L == db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute());
+        assertEquals(2L, (long) db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute());
     }
 
     @Test
@@ -213,32 +213,32 @@ public class DBTestSuite {
             put("names", "name2");
         }};
         long res = db.update("INSERT INTO TEST(name) VALUES(:names)", params1, params2).execute();
-        assertTrue(2L == res);
+        assertEquals(2L, res);
     }
 
     @Test
     public void testUpdateBatchBatch() throws Exception {
-        assertTrue(2L == db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).batched().execute());
+        assertEquals(2L, (long) db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).batched().execute());
     }
 
     @Test
     public void testLargeUpdate() throws Exception {
         long res = db.update("INSERT INTO TEST(name) VALUES(?)", "largeupdatenametest").execute();
-        assertTrue(1L == res);
+        assertEquals(1L, res);
     }
 
     @Test
     public void testDelete() throws Throwable {
         long res = db.update("DELETE FROM TEST WHERE name=?", "name_2").execute();
-        assertTrue(1L == res);
-        assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
+        assertEquals(1L, res);
+        assertEquals(Long.valueOf(9L), db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get());
     }
 
     @Test
     public void testDeleteNamed() throws Throwable {
         long res = db.update("DELETE FROM TEST WHERE name=:name", new SimpleImmutableEntry<>("name", "name_2")).execute();
-        assertTrue(1L == res);
-        assertTrue(Long.valueOf(9L).equals(db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
+        assertEquals(1L, res);
+        assertEquals(Long.valueOf(9L), db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -249,7 +249,7 @@ public class DBTestSuite {
     @Test
     public void testVoidStoredProcedure() throws Throwable {
         db.procedure("{call CREATETESTROW2(?)}", "new_name").call();
-        assertTrue(Long.valueOf(11L).equals(db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get()));
+        assertEquals(Long.valueOf(11L), db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get());
     }
 
     @Test(expected = SQLRuntimeException.class)
@@ -266,7 +266,7 @@ public class DBTestSuite {
                 e.printStackTrace();
             }
         });*/
-        assertTrue(db.procedure("{call CREATETESTROW1(?)}", "new_name").execute().count() == 13);
+        assertEquals(13, db.procedure("{call CREATETESTROW1(?)}", "new_name").execute().count());
     }
 
     @Test
@@ -274,8 +274,8 @@ public class DBTestSuite {
         List<String> name = new ArrayList<>(1);
         long count = db.procedure("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
                 .call((cs) -> cs.getString(2), name::add).execute().count();
-        assertTrue(count == 0);
-        assertTrue("name_1".equals(name.get(0)));
+        assertEquals(0, count);
+        assertEquals("name_1", name.get(0));
     }
 
     @Test(expected = Throwable.class)
@@ -285,13 +285,13 @@ public class DBTestSuite {
 
     @Test
     public void testNoArgsProcedure() throws Throwable {
-        assertTrue(10L == db.procedure("{call GETALLNAMES()}").execute(rs -> rs.getString("name")).peek(System.out::println).count());
+        assertEquals(10L, db.procedure("{call GETALLNAMES()}").execute(rs -> rs.getString("name")).peek(System.out::println).count());
     }
 
     @Test
     public void testGetResult() throws Throwable {
         String name = db.procedure("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2)).get();
-        assertTrue("name_1".equals(name));
+        assertEquals("name_1", name);
     }
 
     @Test
@@ -314,7 +314,7 @@ public class DBTestSuite {
         try {
             action.accept(rs);
         } catch (SQLException e) {
-            assertTrue("Unsupported operation".equals(e.getMessage()));
+            assertEquals("Unsupported operation", e.getMessage());
         }
     }
 
@@ -340,10 +340,10 @@ public class DBTestSuite {
 
     @Test
     public void testPrimitives() throws Throwable {
-        assertTrue(2 == db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new long[]{1, 2})).single(rs -> rs.getInt(1)).get());
-        assertTrue(2 == db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new int[]{1, 2})).single(rs -> rs.getInt(1)).get());
-        assertTrue(2 == db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new byte[]{1, 2})).single(rs -> rs.getInt(1)).get());
-        assertTrue(2 == db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new short[]{1, 2})).single(rs -> rs.getInt(1)).get());
+        assertEquals(2, (int) db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new long[]{1, 2})).single(rs -> rs.getInt(1)).get());
+        assertEquals(2, (int) db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new int[]{1, 2})).single(rs -> rs.getInt(1)).get());
+        assertEquals(2, (int) db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new byte[]{1, 2})).single(rs -> rs.getInt(1)).get());
+        assertEquals(2, (int) db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new short[]{1, 2})).single(rs -> rs.getInt(1)).get());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -363,7 +363,7 @@ public class DBTestSuite {
 
     @Test(expected = SQLRuntimeException.class)
     public void testInsertNull() throws Exception {
-        assertTrue(1L == db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", null)).execute());
+        assertEquals(1L, (long) db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", null)).execute());
     }
 
 }

@@ -23,11 +23,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
-import static buckelieg.fn.db.TryOptional.of;
-import static buckelieg.fn.db.Utils.newSQLRuntimeException;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 /**
  * An abstraction for STORED PROCEDURE call statement.
@@ -54,20 +54,18 @@ public interface StoredProcedure extends Select {
      * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
      *
      * @param mapper function that constructs from {@link CallableStatement}
-     * @return mapped result as {@link TryOptional}
+     * @return mapped result as {@link Optional}
      * @throws NullPointerException if mapper is null
      * @see #call(TryFunction, Consumer)
-     * @see TryOptional
+     * @see Optional
      */
     @Nonnull
-    default <T> TryOptional<T> call(TryFunction<CallableStatement, T, SQLException> mapper) {
-        return of(() -> {
-            List<T> results = new ArrayList<>(1);
-            call(requireNonNull(mapper, "Mapper must be provided"), results::add).single(rs -> rs).ifPresent(rs -> {
-                throw new SQLRuntimeException("Procedure has non-empty result set");
-            });
-            return results.get(0);
+    default <T> Optional<T> call(TryFunction<CallableStatement, T, SQLException> mapper) {
+        List<Optional<T>> results = new ArrayList<>(1);
+        call(cs -> ofNullable(requireNonNull(mapper, "Mapper must be provided").apply(cs)), results::add).single(rs -> rs).ifPresent(rs -> {
+            throw new SQLRuntimeException("Procedure has non-empty result set");
         });
+        return results.get(0);
     }
 
     /**
@@ -78,9 +76,7 @@ public interface StoredProcedure extends Select {
      * @see #call(TryFunction)
      */
     default void call() {
-        call(cs -> cs).onException(e -> {
-            throw newSQLRuntimeException(e);
-        });
+        call(cs -> null);
     }
 
     /**

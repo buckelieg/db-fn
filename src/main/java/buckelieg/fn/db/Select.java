@@ -43,7 +43,6 @@ public interface Select extends Query<Stream<ResultSet>> {
      * @param mapper ResultSet mapper function
      * @return mapped object as {@code TryOptional}
      * @throws NullPointerException if mapper is null
-     * @see TryOptional
      * @see #execute(TryFunction)
      */
     @Nonnull
