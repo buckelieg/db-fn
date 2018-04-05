@@ -42,10 +42,12 @@ Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
 ```
 or use named parameters:
 ```java
-Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object>(){{
-            put("ID", new Object[]{1, 2}); 
-            put("name", "name_5"); // for example only: do not use this IRL
-        }}).execute().reduce(
+Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name", new HashMap<String, Object> {
+          {
+            put("ID", new Object[]{1, 2});
+            put("name", "name_5"); // for example only. Do not use this IRL.
+          }
+}).execute().reduce(
                 new LinkedList<T>(),
                 (list, rs) -> {
                     try {
@@ -71,23 +73,26 @@ These operations could be run in batch mode. Just supply an array of parameters 
 
 with question marks:
 ```java
-long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute().toOptional().orElse(0L);
+long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute();
 ```
 Or with named parameters:
 ```java
-long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute().toOptional().orElse(0L);
+long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name","New_Name")).execute();
 ```
 ##### Update
 ```java
-long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute().toOptional().orElse(0L);
+long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute();
 ```
 or
 ```java
-long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute();
+long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", 
+  new SimpleImmutableEntry<>("name", "new_name_2"), 
+  new SimpleImmutableEntry<>("new_name", "name_2")
+).execute();
 ```
 For batch operation use:
 ```java
-long res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute();
+long res = db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{ {"name1"}, {"name2"} }).execute();
 ```  
 ##### Delete
 ```java
@@ -116,11 +121,11 @@ If stored procedure is considered to return result sets it is handled similar to
 There are two options to run an arbitrary SQL scripts:
 1) Provide a srcipt itself
 ```java
-db.script("SELECT * FROM DUAL;SELECT x FROM DUAL;INSERT INTO TEST(name) VALUES('whatever');DROP TABLE TEST;").execute();
+db.script("CREATE TABLE TEST ( id INTEGER NOT NULL, name VARCHAR(255));INSERT INTO TEST(id, name) VALUES(1, 'whatever');UPDATE TEST SET name = 'whatever_new' WHERE name = 'whatever';DROP TABLE TEST;").execute();
 ```
 2) Provide a file with a SQL script in it
 ```java
-  db.script(new File("path/to/script.sql")).timeot(60).execute();
+  db.script(new File("path/to/script.sql")).timeout(60).execute();
 ```
 Script can contain single- and multiline commtents. Each statement must be separated by semicolon (";").
 Script execution results are ignored and not handled after all.
