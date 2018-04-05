@@ -147,7 +147,6 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
             requireNonNull(action).accept(next());
             return true;
         }
-        close();
         return false;
     }
 

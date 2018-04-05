@@ -17,7 +17,12 @@ package buckelieg.fn.db;
 
 import org.apache.log4j.Logger;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import static java.sql.DriverManager.getConnection;
 
 public class DerbyStoredProcedures {
 
@@ -25,10 +30,8 @@ public class DerbyStoredProcedures {
 
     public static void createTestRow(String name, ResultSet[] updatedContents, ResultSet[] anotherContent) throws SQLException {
         LOG.debug("Calling createTestRow...");
-        Connection conn = null;
         PreparedStatement stmt;
-        try {
-            conn = DriverManager.getConnection("jdbc:default:connection");
+        try (Connection conn = getConnection("jdbc:default:connection")) {
             stmt = conn.prepareStatement("INSERT INTO TEST(name) VALUES(?)");
             stmt.setString(1, name);
             stmt.executeUpdate();
@@ -41,64 +44,34 @@ public class DerbyStoredProcedures {
         } catch (SQLException e) {
             e.printStackTrace();
             throw e;
-        } finally {
-            if (conn != null) {
-                conn.close();
-            }
         }
     }
 
     public static void testProcedure(String name) throws SQLException {
         LOG.debug("Calling testProcedure...");
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            conn = DriverManager.getConnection("jdbc:default:connection");
-            stmt = conn.prepareStatement("INSERT INTO TEST(name) VALUES(?)");
+        try (Connection conn = getConnection("jdbc:default:connection"); PreparedStatement stmt = conn.prepareStatement("INSERT INTO TEST(name) VALUES(?)")) {
             stmt.setString(1, name);
             stmt.executeUpdate();
-        } finally {
-            if (stmt != null) {
-                stmt.close();
-            }
-            if (conn != null) {
-                conn.close();
-            }
         }
     }
 
     public static void testProcedureWithResults(int id, String[] name) throws SQLException {
         LOG.debug("Calling testProcedureWithResults...");
-        Connection conn = null;
-        PreparedStatement stmt;
-        try {
-            conn = DriverManager.getConnection("jdbc:default:connection");
-            stmt = conn.prepareStatement("SELECT NAME FROM TEST WHERE ID=?");
+        try (Connection conn = getConnection("jdbc:default:connection"); PreparedStatement stmt = conn.prepareStatement("SELECT NAME FROM TEST WHERE ID=?")) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             rs.next();
             name[0] = rs.getString(1);
-        } finally {
-            if (conn != null) {
-                conn.close();
-            }
         }
     }
 
     public static void testNoArgProcedure(ResultSet[] names) throws SQLException {
         LOG.debug("Calling testNoArgProcedure...");
-        Connection conn = null;
-        PreparedStatement stmt;
-        try {
-            conn = DriverManager.getConnection("jdbc:default:connection");
+        try (Connection conn = getConnection("jdbc:default:connection")) {
             names[0] = conn.prepareStatement("SELECT name FROM TEST").executeQuery();
         } catch (SQLException e) {
             e.printStackTrace();
             throw e;
-        } finally {
-            if (conn != null) {
-                conn.close();
-            }
         }
     }
 
