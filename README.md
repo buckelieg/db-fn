@@ -125,7 +125,7 @@ db.script("CREATE TABLE TEST ( id INTEGER NOT NULL, name VARCHAR(255));INSERT IN
 ```
 2) Provide a file with a SQL script in it
 ```java
-  db.script(new File("path/to/script.sql")).timeot(60).execute();
+  db.script(new File("path/to/script.sql")).timeout(60).execute();
 ```
 Script can contain single- and multiline commtents. Each statement must be separated by semicolon (";").
 Script execution results are ignored and not handled after all.
