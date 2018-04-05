@@ -119,6 +119,7 @@ If stored procedure is considered to return result sets it is handled similar to
 
 ### Scripts
 There are two options to run an arbitrary SQL scripts:
+
 1) Provide a srcipt itself
 ```java
 db.script("CREATE TABLE TEST ( id INTEGER NOT NULL, name VARCHAR(255));INSERT INTO TEST(id, name) VALUES(1, 'whatever');UPDATE TEST SET name = 'whatever_new' WHERE name = 'whatever';DROP TABLE TEST;").execute();
