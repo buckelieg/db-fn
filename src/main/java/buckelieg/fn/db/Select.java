@@ -89,6 +89,8 @@ public interface Select extends Query<Stream<ResultSet>> {
                 return mapper.apply(rs);
             } catch (SQLException e) {
                 throw new SQLRuntimeException(e);
+            } finally {
+                close();
             }
         });
     }

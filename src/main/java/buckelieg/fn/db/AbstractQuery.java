@@ -72,6 +72,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
         try {
             result = supplier.get();
         } catch (SQLException e) {
+            close();
             throw newSQLRuntimeException(e);
         } catch (AbstractMethodError ame) {
             // ignore this possible vendor-specific JDBC driver's error.

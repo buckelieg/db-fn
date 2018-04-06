@@ -71,7 +71,6 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
     @Override
     public final ResultSet next() {
         if (!hasNext()) {
-            close();
             throw new NoSuchElementException();
         }
         hasMoved = false;
