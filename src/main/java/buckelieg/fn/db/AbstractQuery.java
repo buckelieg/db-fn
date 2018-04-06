@@ -84,6 +84,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
         try {
             requireNonNull(action, "Action must be provided").doTry();
         } catch (SQLException e) {
+            close();
             throw newSQLRuntimeException(e);
         }
     }
