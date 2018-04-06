@@ -103,6 +103,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
         try {
             return action.apply(statement);
         } catch (SQLException e) {
+            close();
             throw newSQLRuntimeException(e);
         }
     }
