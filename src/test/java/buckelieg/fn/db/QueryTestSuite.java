@@ -79,7 +79,7 @@ public class QueryTestSuite {
                         new BufferedReader(
                                 new InputStreamReader(
                                         currentThread().getContextClassLoader().getResourceAsStream("script.sql"))
-                        ).lines().collect(Collectors.joining(""))
+                        ).lines().collect(Collectors.joining("\r\n"))
                 )
         );
         // TODO perform script test here

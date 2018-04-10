@@ -144,8 +144,7 @@ final class Utils {
         for (int i = 0; i < startIndices.size(); i++) {
             replaced = replaced.replace(replaced.substring(startIndices.get(i), endIndices.get(i)), format("%" + (endIndices.get(i) - startIndices.get(i)) + "s", " "));
         }
-        replaced = replaced.replaceAll("(\\s){2,}", " ");
-        return replaced;
+        return replaced.replaceAll("(\\s){2,}", " ");
     }
 
 }
