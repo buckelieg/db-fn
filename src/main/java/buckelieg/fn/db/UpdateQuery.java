@@ -18,10 +18,14 @@ package buckelieg.fn.db;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static buckelieg.fn.db.Utils.doInTransaction;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -93,44 +97,11 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     @Nonnull
     @Override
     public Long execute() {
-        return jdbcTry(() -> {
-            Connection conn = connectionSupplier.get();
-            boolean autoCommit = true;
-            Savepoint savepoint = null;
-            long rowsAffected;
-            try {
-                boolean transacted = batch.length > 1;
-                if (transacted) {
-                    autoCommit = conn.getAutoCommit();
-                    conn.setAutoCommit(false);
-                    savepoint = conn.setSavepoint();
-                }
-                rowsAffected = isBatch && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
-                if (transacted) {
-                    conn.commit();
-                }
-                return rowsAffected;
-            } catch (SQLException e) {
-                try {
-                    if (savepoint != null) {
-                        conn.rollback(savepoint);
-                    }
-                } catch (SQLException ex) {
-                    // ignore
-                }
-                throw e;
-            } finally {
-                try {
-                    if (conn != null && savepoint != null) {
-                        conn.setAutoCommit(autoCommit);
-                        conn.releaseSavepoint(savepoint);
-                    }
-                } catch (SQLException e) {
-                    // ignore
-                }
-                close();
-            }
-        });
+        return jdbcTry(() -> batch.length > 1 ? doInTransaction(connectionSupplier.get(), this::doExecute) : doExecute(connectionSupplier.get()));
+    }
+
+    private long doExecute(Connection conn) throws SQLException {
+        return isBatch && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
     }
 
     private long executeSimple() {
@@ -159,7 +130,7 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
 
     @Override
     PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        return jdbcTry(() -> connectionSupplier.get().prepareStatement(query));
+        return jdbcTry(() -> requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query));
     }
 
     @Override

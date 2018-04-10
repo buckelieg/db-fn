@@ -172,6 +172,6 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
 
     @Override
     PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        return jdbcTry(() -> setQueryParameters(connectionSupplier.get().prepareStatement(query), params));
+        return jdbcTry(() -> setQueryParameters(requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query), params));
     }
 }

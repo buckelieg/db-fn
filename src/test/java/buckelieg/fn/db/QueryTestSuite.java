@@ -5,11 +5,11 @@ import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static buckelieg.fn.db.Utils.cutComments;
 import static java.lang.Thread.currentThread;
+import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.assertEquals;
 
 
@@ -69,7 +69,7 @@ public class QueryTestSuite {
                 new SimpleImmutableEntry<>("? = call mySchema.myPackage.myProc", true),
                 new SimpleImmutableEntry<>("? = call mySchema.mySchema.myPackage.myProc", false)
                 // TODO more cases here
-        ).forEach(testCase -> assertEquals(String.format("Test case '%s' failed", testCase.getKey()), (boolean) testCase.getValue(), Utils.STORED_PROCEDURE.matcher(testCase.getKey()).matches()));
+        ).forEach(testCase -> assertEquals(String.format("Test case '%s' failed", testCase.getKey()), testCase.getValue(), Utils.STORED_PROCEDURE.matcher(testCase.getKey()).matches()));
     }
 
     @Test
@@ -79,7 +79,7 @@ public class QueryTestSuite {
                         new BufferedReader(
                                 new InputStreamReader(
                                         currentThread().getContextClassLoader().getResourceAsStream("script.sql"))
-                        ).lines().collect(Collectors.joining("\r\n"))
+                        ).lines().collect(joining("\r\n"))
                 )
         );
         // TODO perform script test here

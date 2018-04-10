@@ -16,7 +16,9 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -103,7 +105,6 @@ final class Utils {
         return STORED_PROCEDURE.matcher(requireNonNull(query, "SQL query must be provided")).matches();
     }
 
-    @Nonnull
     static String checkAnonymous(String query) {
         if (NAMED_PARAMETER.matcher(query).find()) {
             throw new IllegalArgumentException(format("Query '%s' has named placeholders for parameters whereas parameters themselves are unnamed", query));
@@ -111,7 +112,6 @@ final class Utils {
         return query;
     }
 
-    @Nonnull
     static SQLRuntimeException newSQLRuntimeException(Throwable t) {
         StringBuilder message = new StringBuilder();
         while ((t = t.getCause()) != null) {
@@ -136,7 +136,7 @@ final class Utils {
             }
         }
         if (startIndices.size() != endIndices.size()) {
-            throw new SQLException("Multiline comments count mismatch");
+            throw new SQLException("Multiline comments open/close tags count mismatch");
         }
         if (!startIndices.isEmpty() && (startIndices.get(0) > endIndices.get(0))) {
             throw new SQLException(format("Unmatched start multiline comment at %s", startIndices.get(0)));
@@ -145,6 +145,27 @@ final class Utils {
             replaced = replaced.replace(replaced.substring(startIndices.get(i), endIndices.get(i)), format("%" + (endIndices.get(i) - startIndices.get(i)) + "s", " "));
         }
         return replaced.replaceAll("(\\s){2,}", " ");
+    }
+
+    static <T> T doInTransaction(Connection conn, TryFunction<Connection, T, SQLException> action) throws SQLException {
+        requireNonNull(conn, "Connection must be provided");
+        boolean autoCommit = true;
+        Savepoint savepoint = null;
+        T result;
+        try {
+            autoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            savepoint = conn.setSavepoint();
+            result = requireNonNull(action, "Action must be provided").apply(conn);
+            conn.commit();
+            return result;
+        } catch (SQLException e) {
+            conn.rollback(savepoint);
+            conn.releaseSavepoint(savepoint);
+            throw e;
+        } finally {
+            conn.setAutoCommit(autoCommit);
+        }
     }
 
 }

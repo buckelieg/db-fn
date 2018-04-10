@@ -71,7 +71,6 @@ final class ScriptQuery implements Script {
     /**
      * Executes script. All comments are cut out.
      * Therefore all RDBMS-scpecific hints are ignored (like Oracle <code>APPEND</code>) etc.
-     * Note that script commit must be done inside script itself.
      *
      * @return a time, taken by this script to complete in milliseconds
      * @throws SQLRuntimeException in case of any errors including {@link SQLWarning} (if corresponding option is set) OR (if timeout is set) - in case of execution run out of time.
