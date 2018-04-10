@@ -24,7 +24,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import static buckelieg.fn.db.TryOptional.of;
 import static buckelieg.fn.db.Utils.*;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -94,14 +93,16 @@ public final class DB implements AutoCloseable {
      *
      * @param source file with a SQL script contained
      * @return script query abstraction
-     * @throws NullPointerException if source is null
-     * @throws RuntimeException in case of any other errors (like {@link java.io.FileNotFoundException}
+     * @throws RuntimeException in case of any errors (like {@link java.io.FileNotFoundException} or source file is null)
      * @see #script(String)
-     * @see TryOptional#getOptional()
      */
     @Nonnull
     public Script script(File source) {
-        return script(of(() -> new String(readAllBytes(requireNonNull(source, "Script source file must be provided").toPath()), UTF_8)).getOptional().orElse(""));
+        try {
+            return script(new String(readAllBytes(requireNonNull(source, "Source file must be provided").toPath()), UTF_8));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

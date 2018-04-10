@@ -40,7 +40,6 @@ public interface Select extends Query<Stream<ResultSet>> {
      * Like SELECT COUNT(*) FROM TABLE_NAME etc...
      *
      * @param mapper ResultSet mapper function
-     * @return mapped object as {@code TryOptional}
      * @throws NullPointerException if mapper is null
      * @see #execute(TryFunction)
      */
