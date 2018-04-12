@@ -125,7 +125,7 @@ final class Utils {
         // multiline comments cut
         List<Integer> startIndices = new ArrayList<>();
         List<Integer> endIndices = new ArrayList<>();
-        Matcher matcher = MULTILINE_COMMENT_DELIMITER.matcher(query);
+        Matcher matcher = MULTILINE_COMMENT_DELIMITER.matcher(replaced);
         while (matcher.find()) {
             String delimiter = matcher.group();
             if (delimiter.isEmpty()) continue;
