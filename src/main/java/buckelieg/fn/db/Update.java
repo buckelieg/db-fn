@@ -25,8 +25,7 @@ import java.sql.SQLException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
+import static buckelieg.fn.db.Utils.toOptional;
 
 /**
  * An abstraction for INSERT/UPDATE/DELETE statements.
@@ -79,7 +78,7 @@ public interface Update extends Query<Long> {
      */
     @Nonnull
     default Update timeout(Supplier<Integer> supplier) {
-        return timeout(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(0));
+        return timeout(toOptional(supplier).orElse(0));
     }
 
 
@@ -100,7 +99,7 @@ public interface Update extends Query<Long> {
      */
     @Nonnull
     default Update poolable(Supplier<Boolean> supplier) {
-        return poolable(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
+        return poolable(toOptional(supplier).orElse(false));
     }
 
     /**
@@ -120,7 +119,7 @@ public interface Update extends Query<Long> {
      */
     @Nonnull
     default Update escaped(Supplier<Boolean> supplier) {
-        return escaped(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(true));
+        return escaped(toOptional(supplier).orElse(true));
     }
 
     /**

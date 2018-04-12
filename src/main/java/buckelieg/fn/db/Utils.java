@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -118,6 +119,10 @@ final class Utils {
             ofNullable(t.getMessage()).map(msg -> format("%s ", msg.trim())).ifPresent(message::append);
         }
         return new SQLRuntimeException(message.toString(), false);
+    }
+
+    static <T> Optional<T> toOptional(Supplier<T> supplier) {
+        return ofNullable(requireNonNull(supplier, "Value supplier must be provided").get());
     }
 
     static String cutComments(String query) throws SQLException {

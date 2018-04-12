@@ -1,5 +1,5 @@
 /*
-this is multiline comments eliminator test script
+this is an SQL comments eliminator test script
 */
 SELECT * FROM TEST;
 SELECT /*ignore this*/ * FROM TEST t1/* WHERE /*nested com

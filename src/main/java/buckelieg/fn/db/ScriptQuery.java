@@ -26,8 +26,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import static buckelieg.fn.db.Utils.cutComments;
-import static buckelieg.fn.db.Utils.newSQLRuntimeException;
+import static buckelieg.fn.db.Utils.*;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
@@ -95,34 +94,37 @@ final class ScriptQuery implements Script {
 
     private long doExecute() {
         long start = currentTimeMillis();
+        long end;
         try {
-            Connection conn = connectionSupplier.get();
-            for (String query : stream(script.split(";")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new)) {
-                try (Statement statement = conn.createStatement()) {
-                    statement.setEscapeProcessing(escaped);
-                    if (skipErrors) {
-                        try {
+            end = doInTransaction(connectionSupplier.get(), conn -> {
+                for (String query : stream(script.split(";")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new)) {
+                    try (Statement statement = conn.createStatement()) {
+                        statement.setEscapeProcessing(escaped);
+                        if (skipErrors) {
+                            try {
+                                statement.execute(query);
+                            } catch (SQLException e) {
+                                errorHandler.accept(e);
+                            }
+                        } else {
                             statement.execute(query);
-                        } catch (SQLException e) {
-                            errorHandler.accept(e);
                         }
-                    } else {
-                        statement.execute(query);
-                    }
-                    Optional<SQLWarning> warning = ofNullable(statement.getWarnings());
-                    if (!skipWarnings && warning.isPresent()) {
-                        throw warning.get();
-                    } else {
-                        warning.ifPresent(errorHandler::accept);
+                        Optional<SQLWarning> warning = ofNullable(statement.getWarnings());
+                        if (!skipWarnings && warning.isPresent()) {
+                            throw warning.get();
+                        } else {
+                            warning.ifPresent(errorHandler::accept);
+                        }
                     }
                 }
-            }
+                return currentTimeMillis();
+            });
         } catch (Exception e) {
             throw newSQLRuntimeException(e);
         } finally {
             close();
         }
-        return currentTimeMillis() - start;
+        return end - start;
     }
 
     @Nonnull

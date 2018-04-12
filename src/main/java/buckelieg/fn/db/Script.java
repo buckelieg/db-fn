@@ -22,8 +22,7 @@ import java.sql.SQLException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
+import static buckelieg.fn.db.Utils.toOptional;
 
 /**
  * An abstraction for SQL scripts.
@@ -67,7 +66,7 @@ public interface Script extends Query<Long> {
      */
     @Nonnull
     default Script escaped(Supplier<Boolean> supplier) {
-        return escaped(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(true));
+        return escaped(toOptional(supplier).orElse(true));
     }
 
     /**
@@ -111,7 +110,7 @@ public interface Script extends Query<Long> {
      */
     @Nonnull
     default Script skipErrors(Supplier<Boolean> supplier) {
-        return skipErrors(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
+        return skipErrors(toOptional(supplier).orElse(false));
     }
 
     /**
@@ -135,7 +134,7 @@ public interface Script extends Query<Long> {
      */
     @Nonnull
     default Script skipWarnings(Supplier<Boolean> supplier) {
-        return skipWarnings(ofNullable(requireNonNull(supplier, "Value supplier must be provided").get()).orElse(false));
+        return skipWarnings(toOptional(supplier).orElse(false));
     }
 
     /**
