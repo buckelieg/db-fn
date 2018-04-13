@@ -21,9 +21,9 @@ import javax.annotation.ParametersAreNullableByDefault;
 import java.sql.JDBCType;
 import java.sql.ParameterMetaData;
 import java.sql.SQLType;
-import java.util.Objects;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Stored Procedure parameter
@@ -44,7 +44,7 @@ public final class P<T> {
     private P(int mode, SQLType type, @Nonnull String name, T value) {
         this.mode = mode;
         this.type = type;
-        this.name = Objects.requireNonNull(name, "Name must be provided");
+        this.name = requireNonNull(name, "Name must be provided");
         this.value = value;
     }
 

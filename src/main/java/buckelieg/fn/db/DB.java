@@ -149,7 +149,7 @@ public final class DB implements AutoCloseable {
             throw new IllegalArgumentException(format("Query '%s' is not valid procedure call statement", query));
         }
         P<?>[] preparedParams = params;
-        int namedParams = stream(params).filter(p -> !p.getName().isEmpty()).collect(toList()).size();
+        int namedParams = of(params).filter(p -> !p.getName().isEmpty()).collect(toList()).size();
         if (namedParams == params.length && params.length > 0) {
             Map.Entry<String, Object[]> preparedQuery = prepareQuery(
                     query,

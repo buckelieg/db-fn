@@ -23,12 +23,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static buckelieg.fn.db.Utils.doInTransaction;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Stream.of;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -105,7 +105,7 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     }
 
     private long executeSimple() {
-        return Stream.of(batch).reduce(
+        return of(batch).reduce(
                 0L,
                 (rowsAffected, params) -> rowsAffected += jdbcTry(() -> isLarge ? withStatement(s -> setQueryParameters(s, params).executeLargeUpdate()) : (long) withStatement(s -> setQueryParameters(s, params).executeUpdate())),
                 (j, k) -> j + k
@@ -113,7 +113,7 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     }
 
     private long executeBatch() {
-        return Stream.of(batch)
+        return of(batch)
                 .map(params -> withStatement(statement -> {
                     setQueryParameters(statement, params).addBatch();
                     return statement;
@@ -136,7 +136,7 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
     @Override
     final String asSQL(String query, Object... params) {
         return stream(params)
-                .flatMap(p -> stream((Object[]) p))
+                .flatMap(p -> of((Object[]) p))
                 .map(p -> super.asSQL(query, (Object[]) p))
                 .collect(joining(";"));
     }

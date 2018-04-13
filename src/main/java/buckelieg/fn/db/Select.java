@@ -152,12 +152,12 @@ public interface Select extends Query<Stream<ResultSet>> {
     @Nonnull
     default Select maxRows(Supplier<? extends Number> supplier) {
         toOptional(supplier).ifPresent(value -> {
-                    if (value.longValue() <= Integer.MAX_VALUE - 2) {
-                        maxRows(value.intValue());
-                    } else {
-                        maxRows(value.longValue());
-                    }
-                });
+            if (value.longValue() <= Integer.MAX_VALUE - 2) {
+                maxRows(value.intValue());
+            } else {
+                maxRows(value.longValue());
+            }
+        });
         return this;
     }
 

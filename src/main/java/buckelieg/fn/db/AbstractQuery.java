@@ -24,7 +24,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static buckelieg.fn.db.Utils.newSQLRuntimeException;
-import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
@@ -124,7 +123,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
             Object p = params[idx];
             replaced = replaced.replaceFirst(
                     "\\?",
-                    (p != null && p.getClass().isArray() ? stream((Object[]) p) : of(ofNullable(p).orElse("null")))
+                    (p != null && p.getClass().isArray() ? of((Object[]) p) : of(ofNullable(p).orElse("null")))
                             .map(Object::toString)
                             .collect(joining(","))
             );

@@ -27,9 +27,9 @@ import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.StreamSupport.stream;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -80,7 +80,7 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
     @Nonnull
     @Override
     public final Stream<ResultSet> execute() {
-        return StreamSupport.stream(jdbcTry(() -> {
+        return stream(jdbcTry(() -> {
             doExecute();
             if (rs != null) {
                 wrapper = new ImmutableResultSet(rs);

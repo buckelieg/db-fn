@@ -56,7 +56,7 @@ final class ScriptQuery implements Script {
      *
      * @param connectionSupplier db connection provider
      * @param script             an arbitrary SQL script to execute
-     * @throws IllegalArgumentException in case of illegal comment lines encountered
+     * @throws IllegalArgumentException in case of cirrupted script (like illegal comment lines encountered)
      */
     ScriptQuery(TrySupplier<Connection, SQLException> connectionSupplier, String script) {
         this.connectionSupplier = connectionSupplier;

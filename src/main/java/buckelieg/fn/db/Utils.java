@@ -166,9 +166,9 @@ final class Utils {
             return result;
         } catch (SQLException e) {
             conn.rollback(savepoint);
+            conn.releaseSavepoint(savepoint);
             throw e;
         } finally {
-            conn.releaseSavepoint(savepoint);
             conn.setAutoCommit(autoCommit);
         }
     }
