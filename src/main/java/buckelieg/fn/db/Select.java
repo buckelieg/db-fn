@@ -151,8 +151,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      */
     @Nonnull
     default Select maxRows(Supplier<? extends Number> supplier) {
-        ofNullable(requireNonNull(supplier, "Value supplier must be provided").get())
-                .ifPresent(value -> {
+        toOptional(supplier).ifPresent(value -> {
                     if (value.longValue() <= Integer.MAX_VALUE - 2) {
                         maxRows(value.intValue());
                     } else {
