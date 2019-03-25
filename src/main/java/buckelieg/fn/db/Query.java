@@ -20,22 +20,13 @@ import javax.annotation.Nonnull;
 /**
  * SQL query abstraction.
  *
- * @param <R> query execution results type
  * @see AutoCloseable
  * @see Select
  * @see Update
  * @see StoredProcedure
  * @see Script
  */
-interface Query<R> extends AutoCloseable {
-
-    /**
-     * Executes this query with expected results of certain type.
-     *
-     * @return query execution result
-     */
-    @Nonnull
-    R execute();
+interface Query extends AutoCloseable {
 
     /**
      * Tells JDBC driver that this query is poolable.
@@ -45,7 +36,7 @@ interface Query<R> extends AutoCloseable {
      * @see java.sql.Statement#setPoolable(boolean)
      */
     @Nonnull
-    <Q extends Query<R>> Q poolable(boolean poolable);
+    <Q extends Query> Q poolable(boolean poolable);
 
     /**
      * Sets query execution timeout. Negative values are silently ignored.
@@ -55,7 +46,7 @@ interface Query<R> extends AutoCloseable {
      * @see java.sql.Statement#setQueryTimeout(int)
      */
     @Nonnull
-    <Q extends Query<R>> Q timeout(int timeout);
+    <Q extends Query> Q timeout(int timeout);
 
     /**
      * Sets escape processing for this query
@@ -65,7 +56,16 @@ interface Query<R> extends AutoCloseable {
      * @see java.sql.Statement#setEscapeProcessing(boolean)
      */
     @Nonnull
-    <Q extends Query<R>> Q escaped(boolean escapeProcessing);
+    <Q extends Query> Q escaped(boolean escapeProcessing);
+
+    /**
+     * Represents this <code>query</code> AS <code>SQL</code> string.
+     * All parameters are substituted by calling its' <code>toString()</code> methods.
+     *
+     * @return this query as a SQL string
+     */
+    @Nonnull
+    String asSQL();
 
     /**
      * Closes this query

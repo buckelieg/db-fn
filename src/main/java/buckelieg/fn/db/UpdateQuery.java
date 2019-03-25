@@ -16,6 +16,7 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.Connection;
@@ -23,8 +24,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static buckelieg.fn.db.Utils.doInTransaction;
+import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -33,7 +37,7 @@ import static java.util.stream.Stream.of;
 @SuppressWarnings("unchecked")
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implements Update {
+class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
 
     private final Object[][] batch;
     private final TrySupplier<Connection, SQLException> connectionSupplier;
@@ -46,15 +50,32 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
         this.connectionSupplier = connectionSupplier;
     }
 
+    UpdateQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
+        this(() -> connectionSupplier.get().prepareStatement(query), connectionSupplier, query, batch);
+    }
+
+    UpdateQuery(@Nullable int[] colIndices, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
+        this(
+                () -> colIndices == null || colIndices.length == 0 ?
+                        connectionSupplier.get().prepareStatement(query, RETURN_GENERATED_KEYS) :
+                        connectionSupplier.get().prepareStatement(query, colIndices),
+                connectionSupplier, query, batch
+        );
+    }
+
+    UpdateQuery(String[] colNames, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
+        this(() -> connectionSupplier.get().prepareStatement(query, requireNonNull(colNames, "Column names must be provided")), connectionSupplier, query, batch);
+    }
+
     @Override
-    public Update large() {
-        isLarge = true;
+    public Update large(boolean isLarge) {
+        this.isLarge = isLarge;
         return this;
     }
 
     @Override
-    public Update batched() {
-        isBatch = true;
+    public Update batched(boolean isBatch) {
+        this.isBatch = isBatch;
         return this;
     }
 
@@ -82,10 +103,13 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
         return log(printer);
     }
 
+    @Nonnull
     @Override
-    public <T> T execute(TryFunction<ResultSet, T, SQLException> generatedValuesHandler) {
-        requireNonNull(generatedValuesHandler, "Generated values handler must be provided");
-        throw new UnsupportedOperationException("Not implemented yet");
+    public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler) {
+        return jdbcTry(() -> doInTransaction(connectionSupplier.get(), TryFunction.of(this::doExecute).andThen(count -> {
+            setStatementParameter(s -> requireNonNull(generatedValuesHandler, "Generated values handler must be provided").accept(StreamSupport.stream(new ResultSetSpliterator(s::getGeneratedKeys), false).onClose(this::close)));
+            return count;
+        })));
     }
 
     /**
@@ -95,7 +119,6 @@ final class UpdateQuery extends AbstractQuery<Long, PreparedStatement> implement
      * @return an affected rows count
      */
     @Nonnull
-    @Override
     public Long execute() {
         return jdbcTry(() -> batch.length > 1 ? doInTransaction(connectionSupplier.get(), this::doExecute) : doExecute(connectionSupplier.get()));
     }

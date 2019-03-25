@@ -29,7 +29,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Stream.of;
 
-abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R> {
+abstract class AbstractQuery<S extends PreparedStatement> implements Query {
 
     private static final Pattern PARAM = Pattern.compile("\\?");
 
@@ -48,20 +48,20 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
         jdbcTry(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
     }
 
-    final <Q extends Query<R>> Q setTimeout(int timeout) {
+    final <Q extends Query> Q setTimeout(int timeout) {
         return setStatementParameter(statement -> statement.setQueryTimeout(timeout > 0 ? timeout : 0));
     }
 
-    final <Q extends Query<R>> Q setPoolable(boolean poolable) {
+    final <Q extends Query> Q setPoolable(boolean poolable) {
         return setStatementParameter(statement -> statement.setPoolable(poolable));
     }
 
-    final <Q extends Query<R>> Q setEscapeProcessing(boolean escapeProcessing) {
+    final <Q extends Query> Q setEscapeProcessing(boolean escapeProcessing) {
         return setStatementParameter(statement -> statement.setEscapeProcessing(escapeProcessing));
     }
 
     @SuppressWarnings("unchecked")
-    final <Q extends Query<R>> Q log(Consumer<String> printer) {
+    final <Q extends Query> Q log(Consumer<String> printer) {
         requireNonNull(printer, "Printer must be provided").accept(query);
         return (Q) this;
     }
@@ -108,7 +108,7 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
     }
 
     @SuppressWarnings("unchecked")
-    final <Q extends Query<R>> Q setStatementParameter(TryConsumer<S, SQLException> action) {
+    final <Q extends Query> Q setStatementParameter(TryConsumer<S, SQLException> action) {
         jdbcTry(() -> action.accept(statement));
         return (Q) this;
     }
@@ -132,8 +132,14 @@ abstract class AbstractQuery<R, S extends PreparedStatement> implements Query<R>
         return replaced;
     }
 
+    @Nonnull
+    @Override
+    public final String asSQL() {
+        return query;
+    }
+
     @Override
     public String toString() {
-        return query;
+        return asSQL();
     }
 }

@@ -1,18 +1,18 @@
 /*
  * Copyright 2016- Anatoly Kutyakov
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
@@ -34,7 +34,7 @@ import static java.util.stream.StreamSupport.stream;
 @SuppressWarnings("unchecked")
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
+class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
     ResultSet rs;
     private boolean hasNext;
@@ -79,14 +79,22 @@ class SelectQuery extends AbstractQuery<Stream<ResultSet>, PreparedStatement> im
 
     @Nonnull
     @Override
-    public final Stream<ResultSet> execute() {
+    public final <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper) {
+        requireNonNull(mapper, "Mapper must be provided");
         return stream(jdbcTry(() -> {
             doExecute();
             if (rs != null) {
                 wrapper = new ImmutableResultSet(rs);
             }
             return this;
-        }), false).onClose(this::close);
+        }), false).map(rs -> {
+            try {
+                return mapper.apply(rs);
+            } catch (SQLException e) {
+                close();
+                throw new SQLRuntimeException(e);
+            }
+        }).onClose(this::close);
     }
 
     protected void doExecute() {

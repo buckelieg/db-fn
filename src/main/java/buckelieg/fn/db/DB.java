@@ -20,6 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.File;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,15 @@ import static java.util.stream.Stream.of;
 public final class DB implements AutoCloseable {
 
     private final TrySupplier<Connection, SQLException> connectionSupplier;
+
+    /**
+     * Creates DB from connection string
+     *
+     * @param connectionUrl rdbms-specific connection URL
+     */
+    public DB(String connectionUrl) {
+        this(() -> DriverManager.getConnection(requireNonNull(connectionUrl, "Connection string must be provided")));
+    }
 
     /**
      * Creates DB with connection supplier.
@@ -194,7 +204,7 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public Select select(String query, Object... params) {
-        if (!isSelect(query) || isProcedure(query)) {
+        if (isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid select statement", query));
         }
         return new SelectQuery(connectionSupplier, checkAnonymous(query), params);
@@ -212,10 +222,10 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public Update update(String query, Object[]... batch) {
-        if (isSelect(query) || isProcedure(query)) {
+        if (isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid DML statement", query));
         }
-        return new UpdateQuery(connectionSupplier, checkAnonymous(query), batch);
+        return new UpdateQueryDecorator(connectionSupplier, checkAnonymous(query), batch);
     }
 
     /**

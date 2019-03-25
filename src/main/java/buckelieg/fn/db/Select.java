@@ -20,11 +20,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static buckelieg.fn.db.Utils.defaultMapper;
 import static buckelieg.fn.db.Utils.toOptional;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -34,7 +37,7 @@ import static java.util.Optional.ofNullable;
  */
 @SuppressWarnings("unchecked")
 @ParametersAreNonnullByDefault
-public interface Select extends Query<Stream<ResultSet>> {
+public interface Select extends Query {
 
     /**
      * In cases when single result of SELECT statement is expected.
@@ -58,6 +61,15 @@ public interface Select extends Query<Stream<ResultSet>> {
     }
 
     /**
+     * Executes SELECT statement for SINGLE result with default mapper applied
+     * @return a {@link Map} with key-value pairs
+     */
+    @Nonnull
+    default Map<String, Object> single() {
+        return single(defaultMapper).orElse(Collections.emptyMap());
+    }
+
+    /**
      * Stream abstraction over ResultSet.
      * Note:
      * Whenever we left execute without calling some 'reduction' (terminal) operation we left resource freeing to JDBC
@@ -70,7 +82,9 @@ public interface Select extends Query<Stream<ResultSet>> {
      * @see #single(TryFunction)
      */
     @Nonnull
-    Stream<ResultSet> execute();
+    default Stream<Map<String, Object>> execute() {
+        return execute(defaultMapper);
+    }
 
     /**
      * Shorthand for stream mapping.
@@ -82,17 +96,7 @@ public interface Select extends Query<Stream<ResultSet>> {
      * @see #execute()
      */
     @Nonnull
-    default <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper) {
-        requireNonNull(mapper, "Mapper must be provided");
-        return execute().map(rs -> {
-            try {
-                return mapper.apply(rs);
-            } catch (SQLException e) {
-                close();
-                throw new SQLRuntimeException(e);
-            }
-        });
-    }
+    <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper);
 
     /**
      * Configures {@link java.sql.Statement} fetch size parameter

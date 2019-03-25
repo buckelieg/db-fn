@@ -22,6 +22,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <E> exception type
  */
+@SuppressWarnings("unchecked")
 @FunctionalInterface
 public interface TryAction<E extends Throwable> {
 
@@ -31,6 +32,15 @@ public interface TryAction<E extends Throwable> {
      * @throws E an exception
      */
     void doTry() throws E;
+
+    /**
+     * @param tryAction an action
+     * @return {@link TryAction} reference
+     * @throws NullPointerException if tryAction is null
+     */
+    static <E extends Throwable> TryAction<E> of(TryAction<E> tryAction) {
+        return requireNonNull(tryAction);
+    }
 
     /**
      * Returns a composed {@code TryAction} that performs, in sequence, this
@@ -47,10 +57,14 @@ public interface TryAction<E extends Throwable> {
      */
     default TryAction<E> andThen(TryAction<E> after) throws E {
         requireNonNull(after);
-        return () -> {
-            doTry();
-            after.doTry();
-        };
+        try {
+            return () -> {
+                doTry();
+                after.doTry();
+            };
+        } catch (Throwable t) {
+            throw (E) t;
+        }
     }
 
 }

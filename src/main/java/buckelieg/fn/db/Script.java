@@ -16,12 +16,14 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.SQLException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static buckelieg.fn.db.Utils.STATEMENT_DELIMITER;
 import static buckelieg.fn.db.Utils.toOptional;
 
 /**
@@ -31,7 +33,27 @@ import static buckelieg.fn.db.Utils.toOptional;
  */
 @SuppressWarnings("unchecked")
 @ParametersAreNonnullByDefault
-public interface Script extends Query<Long> {
+public interface Script extends Query {
+
+    /**
+     * Executes a SQL script with provided statements delimiter
+     *
+     * @param delimiter statements delimiter (default is <code>;</code>)
+     * @return script execution time in milliseconds
+     */
+    @Nonnull
+    Long execute(String delimiter);
+
+    /**
+     * Executes a SQL script with default statements delimiter
+     *
+     * @return script execution time in milliseconds
+     * @see #execute(String)
+     */
+    @Nonnull
+    default Long execute() {
+        return execute(STATEMENT_DELIMITER);
+    }
 
     /**
      * {@inheritDoc}
@@ -40,14 +62,6 @@ public interface Script extends Query<Long> {
     @Override
     Script timeout(int timeout);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Nonnull
-    @Override
-    default Script poolable(boolean poolable) {
-        throw new UnsupportedOperationException("Not applicable");
-    }
 
     /**
      * {@inheritDoc}

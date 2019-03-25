@@ -16,6 +16,7 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.Connection;
@@ -42,14 +43,16 @@ final class ScriptQuery implements Script {
     private static final Consumer<SQLException> NOOP = e -> {
         // do nothing
     };
-    private final String script;
+    private final String query;
     private final TrySupplier<Connection, SQLException> connectionSupplier;
     private ExecutorService conveyor;
     private int timeout;
     private boolean escaped = true;
     private boolean skipErrors = true;
     private boolean skipWarnings = true;
+    private boolean poolable;
     private Consumer<SQLException> errorHandler = NOOP;
+    private String delimiter = STATEMENT_DELIMITER;
 
     /**
      * Creates script executor query
@@ -60,11 +63,7 @@ final class ScriptQuery implements Script {
      */
     ScriptQuery(TrySupplier<Connection, SQLException> connectionSupplier, String script) {
         this.connectionSupplier = connectionSupplier;
-        try {
-            this.script = cutComments(requireNonNull(script, "Script string must be provided"));
-        } catch (SQLException e) {
-            throw new IllegalArgumentException(e);
-        }
+        this.query = cutComments(requireNonNull(script, "Script string must be provided"));
     }
 
     /**
@@ -76,19 +75,18 @@ final class ScriptQuery implements Script {
      */
     @Nonnull
     @Override
-    public Long execute() {
-        switch (timeout) {
-            case 0: {
-                return doExecute();
-            }
-            default: {
-                try {
-                    conveyor = newSingleThreadExecutor(); // TODO implement executor that uses current thread
-                    return conveyor.submit(this::doExecute).get(timeout, SECONDS);
-                } catch (Exception e) {
-                    throw newSQLRuntimeException(e);
-                }
-            }
+    public Long execute(String delimiter) {
+        this.delimiter = requireNonNull(delimiter, "Statement delimiter must be provided");
+        if (timeout == 0) {
+            return doExecute();
+        }
+        try {
+            conveyor = newSingleThreadExecutor(); // TODO implement executor that uses current thread
+            return conveyor.submit(this::doExecute).get(timeout, SECONDS);
+        } catch (Exception e) {
+            throw newSQLRuntimeException(e);
+        } finally {
+            close();
         }
     }
 
@@ -97,9 +95,10 @@ final class ScriptQuery implements Script {
         long end;
         try {
             end = doInTransaction(connectionSupplier.get(), conn -> {
-                for (String query : stream(script.split(";")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new)) {
+                for (String query : this.query.split(delimiter)) {
                     try (Statement statement = conn.createStatement()) {
                         statement.setEscapeProcessing(escaped);
+                        statement.setPoolable(poolable);
                         if (skipErrors) {
                             try {
                                 statement.execute(query);
@@ -113,7 +112,7 @@ final class ScriptQuery implements Script {
                         if (!skipWarnings && warning.isPresent()) {
                             throw warning.get();
                         } else {
-                            warning.ifPresent(errorHandler::accept);
+                            warning.ifPresent(errorHandler);
                         }
                     }
                 }
@@ -137,7 +136,7 @@ final class ScriptQuery implements Script {
     @Nonnull
     @Override
     public Script print(Consumer<String> printer) {
-        requireNonNull(printer, "Printer must be provided").accept(script);
+        requireNonNull(printer, "Printer must be provided").accept(query);
         return this;
     }
 
@@ -171,7 +170,20 @@ final class ScriptQuery implements Script {
 
     @Override
     public String toString() {
-        return script;
+        return asSQL();
+    }
+
+    @Nonnull
+    @Override
+    public <Q extends Query> Q poolable(boolean poolable) {
+        this.poolable = poolable;
+        return (Q) this;
+    }
+
+    @Nonnull
+    @Override
+    public String asSQL() {
+        return query;
     }
 
     @Override

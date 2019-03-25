@@ -17,6 +17,14 @@ package buckelieg.fn.db;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Single argument function with returned result that might throw an exception
+ *
+ * @param <I> argument type
+ * @param <O> result type
+ * @param <E> an exception type thrown
+ */
+@SuppressWarnings("unchecked")
 @FunctionalInterface
 public interface TryFunction<I, O, E extends Throwable> {
 
@@ -40,6 +48,19 @@ public interface TryFunction<I, O, E extends Throwable> {
     }
 
     /**
+     * Returns reference of lambda expression.
+     * Typical usage is:
+     * TryFunction.of(x -> null).andThen(nil -> null);
+     *
+     * @param tryFunction a function
+     * @return lambda as {@link TryFunction} reference
+     * @throws NullPointerException if tryFunction is null
+     */
+    static <I, O, E extends Throwable> TryFunction<I, O, E> of(TryFunction<I, O, E> tryFunction) {
+        return requireNonNull(tryFunction);
+    }
+
+    /**
      * Returns a composed function that first applies the {@code before}
      * function to its input, and then applies this function to the result.
      *
@@ -53,7 +74,11 @@ public interface TryFunction<I, O, E extends Throwable> {
      * @see #andThen(TryFunction)
      */
     default <V> TryFunction<V, O, E> compose(TryFunction<? super V, ? extends I, ? extends E> before) throws E {
-        return (V v) -> apply(requireNonNull(before).apply(v));
+        try {
+            return (V v) -> apply(requireNonNull(before).apply(v));
+        } catch (Throwable t) {
+            throw (E) t;
+        }
     }
 
     /**
@@ -70,6 +95,10 @@ public interface TryFunction<I, O, E extends Throwable> {
      * @see #compose(TryFunction)
      */
     default <V> TryFunction<I, V, E> andThen(TryFunction<? super O, ? extends V, ? extends E> after) throws E {
-        return (I t) -> requireNonNull(after).apply(apply(t));
+        try {
+            return (I t) -> requireNonNull(after).apply(apply(t));
+        } catch (Throwable t) {
+            throw (E) t;
+        }
     }
 }
