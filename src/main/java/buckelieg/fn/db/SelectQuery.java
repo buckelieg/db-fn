@@ -27,6 +27,7 @@ import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.StreamSupport.stream;
@@ -79,9 +80,9 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
 
     @Nonnull
     @Override
-    public final <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper) {
+    public final <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper) {
         requireNonNull(mapper, "Mapper must be provided");
-        return stream(jdbcTry(() -> {
+        return StreamSupport.stream(jdbcTry(() -> {
             doExecute();
             if (rs != null) {
                 wrapper = new ImmutableResultSet(rs);

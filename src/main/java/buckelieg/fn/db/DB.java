@@ -88,7 +88,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes an arbitrary SQL statement(s) against provided connection.
      *
-     * @param script (a series of) SQL statement(s) to execute
+     * @param script (a series of) SQL statement(s) to stream
      * @return script query abstraction
      * @throws NullPointerException if script is null
      * @see Script
@@ -183,7 +183,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes SELECT statement
      *
-     * @param query SELECT query to execute. Can be recursive-WITH query
+     * @param query SELECT query to stream. Can be recursive-WITH query
      * @return select query
      * @throws IllegalArgumentException if provided query is not valid DML statement
      * @see Select
@@ -196,7 +196,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes SELECT statement
      *
-     * @param query  SELECT query to execute. Can be recursive-WITH query
+     * @param query  SELECT query to stream. Can be recursive-WITH query
      * @param params query parameters on the declared order of '?'
      * @return select query
      * @throws IllegalArgumentException if provided query is not valid DML statement
@@ -214,7 +214,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
-     * @param query INSERT/UPDATE/DELETE query to execute.
+     * @param query INSERT/UPDATE/DELETE query to stream.
      * @param batch an array of query parameters on the declared order of '?'
      * @return update query
      * @throws IllegalArgumentException if provided query is not valid DML statement
@@ -233,7 +233,7 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       SELECT query to execute. Can be recursive-WITH query
+     * @param query       SELECT query to stream. Can be recursive-WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return select query
      * @throws IllegalArgumentException if provided query is not valid DML statement
@@ -249,7 +249,7 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       SELECT query to execute. Can be recursive-WITH query
+     * @param query       SELECT query to stream. Can be recursive-WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return select query
      * @throws IllegalArgumentException if provided query is not valid DML statement
@@ -264,7 +264,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
-     * @param query INSERT/UPDATE/DELETE query to execute.
+     * @param query INSERT/UPDATE/DELETE query to stream.
      * @return update query
      * @throws IllegalArgumentException if provided query is not valid DML statement
      * @see Update
@@ -277,7 +277,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
-     * @param query  INSERT/UPDATE/DELETE query to execute.
+     * @param query  INSERT/UPDATE/DELETE query to stream.
      * @param params query parameters on the declared order of '?'
      * @return update query
      * @throws IllegalArgumentException if provided query is not valid DML statement
@@ -293,7 +293,7 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       INSERT/UPDATE/DELETE query to execute.
+     * @param query       INSERT/UPDATE/DELETE query to stream.
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return update query
      * @throws IllegalArgumentException if provided query is not valid DML statement
@@ -310,7 +310,7 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query INSERT/UPDATE/DELETE query to execute.
+     * @param query INSERT/UPDATE/DELETE query to stream.
      * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return update query
      * @throws IllegalArgumentException if provided query is not valid DML statement

@@ -21,6 +21,7 @@ import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -29,8 +30,8 @@ import java.util.stream.Stream;
 
 import static buckelieg.fn.db.Utils.defaultMapper;
 import static buckelieg.fn.db.Utils.toOptional;
-import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 
 /**
  * An abstraction for SELECT statement
@@ -45,13 +46,13 @@ public interface Select extends Query {
      *
      * @param mapper ResultSet mapper function
      * @throws NullPointerException if mapper is null
-     * @see #execute(TryFunction)
+     * @see #stream(TryFunction)
      */
     @Nonnull
     default <T> Optional<T> single(TryFunction<ResultSet, T, SQLException> mapper) {
         T result;
         try {
-            result = execute(mapper).iterator().next();
+            result = stream(mapper).iterator().next();
         } catch (Exception e) {
             result = null;
         } finally {
@@ -72,8 +73,8 @@ public interface Select extends Query {
     /**
      * Stream abstraction over ResultSet.
      * Note:
-     * Whenever we left execute without calling some 'reduction' (terminal) operation we left resource freeing to JDBC
-     * <code>execute().iterator().next().get(...)</code>
+     * Whenever we left stream without calling some 'reduction' (terminal) operation we left resource freeing to JDBC
+     * <code>stream().iterator().next().get(...)</code>
      * Thus there could be none or some rows more, but result set (and a statement) would not be closed forcibly.
      * In such cases we rely on JDBC resources auto closing mechanism.
      * And it is strongly recommended to use <code>single</code> method for the cases above.
@@ -82,8 +83,8 @@ public interface Select extends Query {
      * @see #single(TryFunction)
      */
     @Nonnull
-    default Stream<Map<String, Object>> execute() {
-        return execute(defaultMapper);
+    default Stream<Map<String, Object>> stream() {
+        return stream(defaultMapper);
     }
 
     /**
@@ -93,10 +94,31 @@ public interface Select extends Query {
      * @return a {@link Stream} over mapped {@link ResultSet}
      * @throws NullPointerException if mapper is null
      * @throws SQLRuntimeException  as a wrapper for {@link SQLException}
-     * @see #execute()
+     * @see #stream()
      */
     @Nonnull
-    <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper);
+    <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper);
+
+    /**
+     * Shorthand for stream mapping for list.
+     *
+     * @param mapper result set mapper which is not required to handle {@link SQLException}
+     * @return a {@link List} over mapped {@link ResultSet}
+     */
+    @Nonnull
+    default <T> List<T> list(TryFunction<ResultSet, T, SQLException> mapper) {
+        return stream(mapper).collect(toList());
+    }
+
+    /**
+     * Shorthand for stream mapping for list.
+     *
+     * @return a {@link Map} with key-value pairs
+     */
+    @Nonnull
+    default List<Map<String, Object>> list() {
+        return stream().collect(toList());
+    }
 
     /**
      * Configures {@link java.sql.Statement} fetch size parameter

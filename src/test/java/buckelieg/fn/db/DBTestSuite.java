@@ -99,24 +99,24 @@ public class DBTestSuite {
 
     @Test
     public void testFetchSize() throws Exception {
-        assertEquals(10, db.select("SELECT * FROM TEST").fetchSize(1).execute().count());
+        assertEquals(10, db.select("SELECT * FROM TEST").fetchSize(1).stream().count());
     }
 
     @Test
     public void testMaxRows() throws Exception {
-        assertEquals(1, db.select("select * from test").maxRows(1).execute().count());
-        assertEquals(1, db.select("select * from test").maxRows(1L).execute().count());
-        assertEquals(2, db.select("select * from test").maxRows(1).maxRows(2L).execute().count());
-        assertEquals(2, db.select("select * from test").maxRows(1L).maxRows(2).execute().count());
-        assertEquals(1, db.select("select * from test").maxRows(() -> 1).execute().count());
-        assertEquals(1, db.select("select * from test").maxRows(() -> 1L).execute().count());
-        assertEquals(1, db.select("select count(*) from test").maxRows(() -> Integer.MAX_VALUE).execute().count());
+        assertEquals(1, db.select("select * from test").maxRows(1).stream().count());
+        assertEquals(1, db.select("select * from test").maxRows(1L).stream().count());
+        assertEquals(2, db.select("select * from test").maxRows(1).maxRows(2L).stream().count());
+        assertEquals(2, db.select("select * from test").maxRows(1L).maxRows(2).stream().count());
+        assertEquals(1, db.select("select * from test").maxRows(() -> 1).stream().count());
+        assertEquals(1, db.select("select * from test").maxRows(() -> 1L).stream().count());
+        assertEquals(1, db.select("select count(*) from test").maxRows(() -> Integer.MAX_VALUE).stream().count());
     }
 
     @Test
     public void testSelect() throws Exception {
         Collection<?> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
-                .execute()
+                .stream()
                 .parallel()
                 .collect(
                         ArrayList<Map.Entry<Integer, String>>::new,
@@ -140,7 +140,7 @@ public class DBTestSuite {
         params.put("name", "name_5");
         params.put("NAME", "name_6");
         Collection<Map.Entry<Integer, String>> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name OR NAME=:NAME", params)
-                .execute()
+                .stream()
                 .parallel()
                 .collect(
                         LinkedList<Map.Entry<Integer, String>>::new,
@@ -163,8 +163,8 @@ public class DBTestSuite {
 
     @Test
     public void testSelectForEachSingle() throws Throwable {
-        assertEquals(1, db.select("SELECT * FROM TEST WHERE ID=1").execute().collect(Collectors.toList()).size());
-        db.select("SELECT COUNT(*) FROM TEST").execute().forEach(rs -> {
+        assertEquals(1, db.select("SELECT * FROM TEST WHERE ID=1").stream().collect(Collectors.toList()).size());
+        db.select("SELECT COUNT(*) FROM TEST").stream().forEach(rs -> {
             try {
                 System.out.println(rs.getInt(1));
             } catch (SQLException e) {
@@ -265,21 +265,21 @@ public class DBTestSuite {
 
     @Test
     public void testResultSetStoredProcedure() throws Throwable {
-/*        DB.procedure(conn, "{procedure CREATETESTROW1(?)}", "new_name").execute().forEach((rs) -> {
+/*        DB.procedure(conn, "{procedure CREATETESTROW1(?)}", "new_name").stream().forEach((rs) -> {
             try {
                 System.out.println(String.format("ID='%s', NAME='%s'", rs.getInt(1), rs.getString(2)));
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         });*/
-        assertEquals(13, db.procedure("{call CREATETESTROW1(?)}", "new_name").execute().count());
+        assertEquals(13, db.procedure("{call CREATETESTROW1(?)}", "new_name").stream().count());
     }
 
     @Test
     public void testResultSetWithResultsStoredProcedure() throws Throwable {
         List<String> name = new ArrayList<>(1);
         long count = db.procedure("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
-                .call((cs) -> cs.getString(2), name::add).execute().count();
+                .call((cs) -> cs.getString(2), name::add).stream().count();
         assertEquals(0, count);
         assertEquals("name_1", name.get(0));
     }
@@ -291,7 +291,7 @@ public class DBTestSuite {
 
     @Test
     public void testNoArgsProcedure() throws Throwable {
-        assertEquals(10L, db.procedure("{call GETALLNAMES()}").execute(rs -> rs.getString("name")).peek(System.out::println).count());
+        assertEquals(10L, db.procedure("{call GETALLNAMES()}").stream(rs -> rs.getString("name")).peek(System.out::println).count());
     }
 
     @Test
@@ -303,7 +303,7 @@ public class DBTestSuite {
     @Test
     public void testImmutable() throws Throwable {
         db.select("SELECT * FROM TEST WHERE 1=1 AND ID=?", 1)
-                .execute()
+                .stream()
                 .forEach(rs -> {
                     testImmutableAction(rs, ResultSet::next);
                     testImmutableAction(rs, ResultSet::afterLast);
@@ -326,7 +326,7 @@ public class DBTestSuite {
 
     private void printDb() {
         db.select("SELECT * FROM TEST")
-                .execute()
+                .stream()
                 .forEach(rs -> {
                     try {
                         System.out.println(String.format("ID=%s NAME=%s", rs.getInt(1), rs.getString(2)));
@@ -391,7 +391,7 @@ public class DBTestSuite {
         DB db = new DB(() -> conn);
         db.select("SELECT * FROM TEST WHERE name IN (:names)", new SimpleImmutableEntry<>("names", new Integer[]{1, 2}))
                 .print(s -> assertEquals("SELECT * FROM TEST WHERE name IN (1, 2)", s))
-                .execute().count()
+                .stream().count()
         ;
         db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2"))
                 .print(s -> assertEquals("UPDATE TEST SET NAME=new_name_2 WHERE NAME=name_2", s))
@@ -404,7 +404,7 @@ public class DBTestSuite {
                 .execute();
         db.procedure("{call CREATETESTROW2(?)}", "new_name")
                 .print(s -> assertEquals("{call CREATETESTROW2(IN:=new_name(JAVA_OBJECT))}", s))
-                .execute().count();
+                .stream().count();
     }
 
     @Test

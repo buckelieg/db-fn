@@ -58,7 +58,7 @@ final class ScriptQuery implements Script {
      * Creates script executor query
      *
      * @param connectionSupplier db connection provider
-     * @param script             an arbitrary SQL script to execute
+     * @param script             an arbitrary SQL script to stream
      * @throws IllegalArgumentException in case of cirrupted script (like illegal comment lines encountered)
      */
     ScriptQuery(TrySupplier<Connection, SQLException> connectionSupplier, String script) {

@@ -37,10 +37,10 @@ import static java.util.stream.Stream.of;
 @SuppressWarnings("unchecked")
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
+abstract class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
 
-    private final Object[][] batch;
-    private final TrySupplier<Connection, SQLException> connectionSupplier;
+    private Object[][] batch;
+    private TrySupplier<Connection, SQLException> connectionSupplier;
     private boolean isLarge;
     private boolean isBatch;
 
