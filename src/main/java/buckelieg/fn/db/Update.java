@@ -33,7 +33,7 @@ import static buckelieg.fn.db.Utils.toOptional;
  * Returns affected rows by this query.
  * If this is a batch query then affected rows are summarized.
  */
-//@SuppressWarnings("unchecked")
+@SuppressWarnings("unchecked")
 @ParametersAreNonnullByDefault
 public interface Update extends Query {
 
