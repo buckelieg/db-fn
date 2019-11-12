@@ -29,7 +29,7 @@ final class UpdateQueryDecorator extends UpdateQuery {
     @Nonnull
     @Override
     public Long execute() {
-        return setStatementParameters(new UpdateQuery(connectionSupplier, query, batch)).execute();
+        return setQueryParameters(new UpdateQuery(connectionSupplier, query, batch)).execute();
     }
 
     @Nonnull
@@ -41,13 +41,13 @@ final class UpdateQueryDecorator extends UpdateQuery {
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, int... colIndices) {
-        return setStatementParameters(new UpdateQuery(colIndices, connectionSupplier, query, batch)).execute(generatedValuesHandler, colIndices);
+        return setQueryParameters(new UpdateQuery(colIndices, connectionSupplier, query, batch)).execute(generatedValuesHandler, colIndices);
     }
 
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, String... colNames) {
-        return setStatementParameters(new UpdateQuery(colNames, connectionSupplier, query, batch)).execute(generatedValuesHandler, colNames);
+        return setQueryParameters(new UpdateQuery(colNames, connectionSupplier, query, batch)).execute(generatedValuesHandler, colNames);
     }
 
     @Nonnull
@@ -85,7 +85,7 @@ final class UpdateQueryDecorator extends UpdateQuery {
         return this;
     }
 
-    private Update setStatementParameters(Update query) {
+    private Update setQueryParameters(Update query) {
         return query.timeout(timeout).poolable(isPoolable).escaped(isEscaped).batched(isBatch).large(isLarge);
     }
 
