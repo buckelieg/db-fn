@@ -44,11 +44,8 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     private boolean isLarge;
     private boolean isBatch;
     private final String query;
-    private boolean poolable;
-    private boolean escapeProcessing;
-    private int timeout;
 
-    UpdateQuery(TrySupplier<PreparedStatement, SQLException> prepareStatement, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
+    private UpdateQuery(TrySupplier<PreparedStatement, SQLException> prepareStatement, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
         super(connectionSupplier, query, (Object) batch);
         this.batch = requireNonNull(batch, "Batch must be provided");
         this.connectionSupplier = connectionSupplier;
@@ -87,22 +84,19 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     @Nonnull
     @Override
     public Update poolable(boolean poolable) {
-        this.poolable = poolable;
-        return this;
+        return setPoolable(poolable);
     }
 
     @Nonnull
     @Override
     public Update timeout(int timeout) {
-        this.timeout = timeout;
-        return this;
+        return setTimeout(timeout);
     }
 
     @Nonnull
     @Override
     public Update escaped(boolean escapeProcessing) {
-        this.escapeProcessing = escapeProcessing;
-        return this;
+        return setEscapeProcessing(escapeProcessing);
     }
 
     @Nonnull
@@ -123,21 +117,13 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, String... colNames) {
-        UpdateQuery update = new UpdateQuery(colNames, connectionSupplier, query, batch);
-        update.setTimeout(timeout);
-        update.setPoolable(poolable);
-        update.setEscapeProcessing(escapeProcessing);
-        return update.execute(generatedValuesHandler);
+        return new UpdateQuery(colNames, connectionSupplier, query, batch).execute(generatedValuesHandler);
     }
 
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, int... colIndices) {
-        UpdateQuery update = new UpdateQuery(colIndices, connectionSupplier, query, batch);
-        update.setTimeout(timeout);
-        update.setPoolable(poolable);
-        update.setEscapeProcessing(escapeProcessing);
-        return update.execute(generatedValuesHandler);
+        return new UpdateQuery(colIndices, connectionSupplier, query, batch).execute(generatedValuesHandler);
     }
 
     /**
