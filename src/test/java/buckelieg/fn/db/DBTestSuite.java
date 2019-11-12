@@ -26,7 +26,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.sql.*;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static buckelieg.fn.db.Utils.cutComments;
@@ -99,24 +98,24 @@ public class DBTestSuite {
 
     @Test
     public void testFetchSize() throws Exception {
-        assertEquals(10, db.select("SELECT * FROM TEST").fetchSize(1).stream().count());
+        assertEquals(10, db.select("SELECT * FROM TEST").fetchSize(1).execute().count());
     }
 
     @Test
     public void testMaxRows() throws Exception {
-        assertEquals(1, db.select("select * from test").maxRows(1).stream().count());
-        assertEquals(1, db.select("select * from test").maxRows(1L).stream().count());
-        assertEquals(2, db.select("select * from test").maxRows(1).maxRows(2L).stream().count());
-        assertEquals(2, db.select("select * from test").maxRows(1L).maxRows(2).stream().count());
-        assertEquals(1, db.select("select * from test").maxRows(() -> 1).stream().count());
-        assertEquals(1, db.select("select * from test").maxRows(() -> 1L).stream().count());
-        assertEquals(1, db.select("select count(*) from test").maxRows(() -> Integer.MAX_VALUE).stream().count());
+        assertEquals(1, db.select("select * from test").maxRows(1).execute().count());
+        assertEquals(1, db.select("select * from test").maxRows(1L).execute().count());
+        assertEquals(2, db.select("select * from test").maxRows(1).maxRows(2L).execute().count());
+        assertEquals(2, db.select("select * from test").maxRows(1L).maxRows(2).execute().count());
+        assertEquals(1, db.select("select * from test").maxRows(() -> 1).execute().count());
+        assertEquals(1, db.select("select * from test").maxRows(() -> 1L).execute().count());
+        assertEquals(1, db.select("select count(*) from test").maxRows(() -> Integer.MAX_VALUE).execute().count());
     }
 
     @Test
     public void testSelect() throws Exception {
         Collection<?> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
-                .stream(rs -> rs)
+                .execute(rs -> rs)
                 .parallel()
                 .collect(
                         ArrayList<Map.Entry<Integer, String>>::new,
@@ -140,7 +139,7 @@ public class DBTestSuite {
         params.put("name", "name_5");
         params.put("NAME", "name_6");
         Collection<Map.Entry<Integer, String>> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name OR NAME=:NAME", params)
-                .stream(rs -> rs)
+                .execute(rs -> rs)
                 .parallel()
                 .collect(
                         LinkedList<Map.Entry<Integer, String>>::new,
@@ -164,7 +163,7 @@ public class DBTestSuite {
     @Test
     public void testSelectForEachSingle() throws Throwable {
         assertEquals(1, db.select("SELECT * FROM TEST WHERE ID=1").list().size());
-        db.select("SELECT COUNT(*) FROM TEST").stream(rs -> rs).forEach(rs -> {
+        db.select("SELECT COUNT(*) FROM TEST").execute(rs -> rs).forEach(rs -> {
             try {
                 System.out.println(rs.getInt(1));
             } catch (SQLException e) {
@@ -272,14 +271,14 @@ public class DBTestSuite {
                 e.printStackTrace();
             }
         });*/
-        assertEquals(13, db.procedure("{call CREATETESTROW1(?)}", "new_name").stream().peek(System.out::println).count());
+        assertEquals(13, db.procedure("{call CREATETESTROW1(?)}", "new_name").execute().peek(System.out::println).count());
     }
 
     @Test
     public void testResultSetWithResultsStoredProcedure() throws Throwable {
         List<String> name = new ArrayList<>(1);
         long count = db.procedure("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
-                .call((cs) -> cs.getString(2), name::add).stream().count();
+                .call((cs) -> cs.getString(2), name::add).execute().count();
         assertEquals(0, count);
         assertEquals("name_1", name.get(0));
     }
@@ -291,7 +290,7 @@ public class DBTestSuite {
 
     @Test
     public void testNoArgsProcedure() throws Throwable {
-        assertEquals(10L, db.procedure("{call GETALLNAMES()}").stream(rs -> rs.getString("name")).peek(System.out::println).count());
+        assertEquals(10L, db.procedure("{call GETALLNAMES()}").execute(rs -> rs.getString("name")).peek(System.out::println).count());
     }
 
     @Test
@@ -303,7 +302,7 @@ public class DBTestSuite {
     @Test
     public void testImmutable() throws Throwable {
         db.select("SELECT * FROM TEST WHERE 1=1 AND ID=?", 1)
-                .stream(rs -> rs)
+                .execute(rs -> rs)
                 .forEach(rs -> {
                     testImmutableAction(rs, ResultSet::next);
                     testImmutableAction(rs, ResultSet::afterLast);
@@ -326,7 +325,7 @@ public class DBTestSuite {
 
     private void printDb() {
         db.select("SELECT * FROM TEST")
-                .stream(rs -> rs)
+                .execute(rs -> rs)
                 .forEach(rs -> {
                     try {
                         System.out.println(String.format("ID=%s NAME=%s", rs.getInt(1), rs.getString(2)));
@@ -391,7 +390,7 @@ public class DBTestSuite {
         DB db = new DB(() -> conn);
         db.select("SELECT * FROM TEST WHERE name IN (:names)", new SimpleImmutableEntry<>("names", new Integer[]{1, 2}))
                 .print(s -> assertEquals("SELECT * FROM TEST WHERE name IN (1, 2)", s))
-                .stream().count()
+                .execute().count()
         ;
         db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2"))
                 .print(s -> assertEquals("UPDATE TEST SET NAME=new_name_2 WHERE NAME=name_2", s))
@@ -404,7 +403,7 @@ public class DBTestSuite {
                 .execute();
         db.procedure("{call CREATETESTROW2(?)}", "new_name")
                 .print(s -> assertEquals("{call CREATETESTROW2(IN:=new_name(JAVA_OBJECT))}", s))
-                .stream().count();
+                .execute().count();
     }
 
     @Test

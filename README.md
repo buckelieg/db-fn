@@ -7,7 +7,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-fn</artifactId>
-  <version>0.3.2</version>
+  <version>0.3.3</version>
 </dependency>
 ```
 Operate on result set in a functional way.
@@ -47,7 +47,7 @@ Collection<T> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) 
             put("ID", new Object[]{1, 2});
             put("name", "name_5"); // for example only. Do not use this IRL.
           }
-}).execute().reduce(
+}).execute(rs -> rs).reduce(
                 new LinkedList<T>(),
                 (list, rs) -> {
                     try {

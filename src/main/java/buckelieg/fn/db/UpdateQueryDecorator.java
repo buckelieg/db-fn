@@ -41,13 +41,13 @@ final class UpdateQueryDecorator extends UpdateQuery {
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, int... colIndices) {
-        return setQueryParameters(new UpdateQuery(colIndices, connectionSupplier, query, batch)).execute(generatedValuesHandler, colIndices);
+        return setQueryParameters(new UpdateQuery(colIndices, connectionSupplier, query, batch)).execute(generatedValuesHandler);
     }
 
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, String... colNames) {
-        return setQueryParameters(new UpdateQuery(colNames, connectionSupplier, query, batch)).execute(generatedValuesHandler, colNames);
+        return setQueryParameters(new UpdateQuery(colNames, connectionSupplier, query, batch)).execute(generatedValuesHandler);
     }
 
     @Nonnull

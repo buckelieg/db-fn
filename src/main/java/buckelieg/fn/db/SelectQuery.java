@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.StreamSupport.stream;
 
@@ -80,7 +81,7 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
 
     @Nonnull
     @Override
-    public final <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper) {
+    public final <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper) {
         requireNonNull(mapper, "Mapper must be provided");
         return StreamSupport.stream(jdbcTry(() -> {
             doExecute();
@@ -98,19 +99,19 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     @Nonnull
     @Override
     public final Select fetchSize(int size) {
-        return setStatementParameter(s -> s.setFetchSize(size > 0 ? size : 0)); // 0 value is ignored by ResultSet.setFetchSize;
+        return setStatementParameter(s -> s.setFetchSize(max(size, 0))); // 0 value is ignored by ResultSet.setFetchSize;
     }
 
     @Nonnull
     @Override
     public final Select maxRows(int max) {
-        return setStatementParameter(s -> s.setMaxRows(max > 0 ? max : 0));
+        return setStatementParameter(s -> s.setMaxRows(max(max, 0)));
     }
 
     @Nonnull
     @Override
     public final Select maxRows(long max) {
-        return setStatementParameter(s -> s.setLargeMaxRows(max > 0 ? max : 0));
+        return setStatementParameter(s -> s.setLargeMaxRows(max(max, 0)));
     }
 
     @Nonnull

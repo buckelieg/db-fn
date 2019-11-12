@@ -46,13 +46,13 @@ public interface Select extends Query {
      *
      * @param mapper ResultSet mapper function
      * @throws NullPointerException if mapper is null
-     * @see #stream(TryFunction)
+     * @see #execute(TryFunction)
      */
     @Nonnull
     default <T> Optional<T> single(TryFunction<ResultSet, T, SQLException> mapper) {
         T result;
         try {
-            result = stream(mapper).iterator().next();
+            result = execute(mapper).iterator().next();
         } catch (Exception e) {
             result = null;
         } finally {
@@ -83,8 +83,8 @@ public interface Select extends Query {
      * @see #single(TryFunction)
      */
     @Nonnull
-    default Stream<Map<String, Object>> stream() {
-        return stream(defaultMapper);
+    default Stream<Map<String, Object>> execute() {
+        return execute(defaultMapper);
     }
 
     /**
@@ -94,10 +94,10 @@ public interface Select extends Query {
      * @return a {@link Stream} over mapped {@link ResultSet}
      * @throws NullPointerException if mapper is null
      * @throws SQLRuntimeException  as a wrapper for {@link SQLException}
-     * @see #stream()
+     * @see #execute()
      */
     @Nonnull
-    <T> Stream<T> stream(TryFunction<ResultSet, T, SQLException> mapper);
+    <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper);
 
     /**
      * Shorthand for stream mapping for list.
@@ -107,7 +107,7 @@ public interface Select extends Query {
      */
     @Nonnull
     default <T> List<T> list(TryFunction<ResultSet, T, SQLException> mapper) {
-        return stream(mapper).collect(toList());
+        return execute(mapper).collect(toList());
     }
 
     /**
@@ -117,7 +117,7 @@ public interface Select extends Query {
      */
     @Nonnull
     default List<Map<String, Object>> list() {
-        return stream().collect(toList());
+        return execute().collect(toList());
     }
 
     /**

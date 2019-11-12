@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static buckelieg.fn.db.Utils.newSQLRuntimeException;
+import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
@@ -48,7 +49,7 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
     }
 
     final <Q extends Query> Q setTimeout(int timeout) {
-        return setStatementParameter(statement -> statement.setQueryTimeout(timeout > 0 ? timeout : 0));
+        return setStatementParameter(statement -> statement.setQueryTimeout(max(timeout, 0)));
     }
 
     final <Q extends Query> Q setPoolable(boolean poolable) {

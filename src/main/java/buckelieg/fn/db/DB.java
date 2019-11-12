@@ -19,6 +19,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.File;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -99,17 +100,31 @@ public final class DB implements AutoCloseable {
     }
 
     /**
-     * Executes an arbitrary SQL statement(s) against provided connection.
+     * Executes an arbitrary SQL statement(s) against provided connection with default encoding (<code>Charset.UTF_8</code>)
      *
      * @param source file with a SQL script contained
      * @return script query abstraction
      * @throws RuntimeException in case of any errors (like {@link java.io.FileNotFoundException} or source file is null)
-     * @see #script(String)
+     * @see #script(File, Charset)
      */
     @Nonnull
     public Script script(File source) {
+        return script(source, UTF_8);
+    }
+    /**
+     * Executes an arbitrary SQL statement(s) against provided connection.
+     *
+     * @param source file with a SQL script contained
+     * @param encoding source file encoding to be used
+     * @return script query abstraction
+     * @throws RuntimeException in case of any errors (like {@link java.io.FileNotFoundException} or source file is null)
+     * @see #script(String)
+     * @see Charset
+     */
+    @Nonnull
+    public Script script(File source, Charset encoding) {
         try {
-            return script(new String(readAllBytes(requireNonNull(source, "Source file must be provided").toPath()), UTF_8));
+            return script(new String(readAllBytes(requireNonNull(source, "Source file must be provided").toPath()), requireNonNull(encoding, "File encoding must be provided")));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -159,7 +174,7 @@ public final class DB implements AutoCloseable {
             throw new IllegalArgumentException(format("Query '%s' is not valid procedure call statement", query));
         }
         P<?>[] preparedParams = params;
-        int namedParams = of(params).filter(p -> !p.getName().isEmpty()).collect(toList()).size();
+        int namedParams = (int) of(params).filter(p -> !p.getName().isEmpty()).count();
         if (namedParams == params.length && params.length > 0) {
             Map.Entry<String, Object[]> preparedQuery = prepareQuery(
                     query,

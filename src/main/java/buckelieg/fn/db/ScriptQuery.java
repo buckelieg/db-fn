@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import static buckelieg.fn.db.Utils.*;
+import static java.lang.Math.max;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
@@ -157,7 +158,7 @@ final class ScriptQuery implements Script {
     @Nonnull
     @Override
     public Script timeout(int timeout) {
-        this.timeout = timeout < 0 ? 0 : timeout;
+        this.timeout = max(timeout, 0);
         return this;
     }
 
