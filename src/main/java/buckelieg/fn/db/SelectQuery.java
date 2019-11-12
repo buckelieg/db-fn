@@ -38,9 +38,9 @@ import static java.util.stream.StreamSupport.stream;
 class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<ResultSet>, Iterator<ResultSet>, Spliterator<ResultSet>, Select {
 
     ResultSet rs;
+    ResultSet wrapper;
     private boolean hasNext;
     private boolean hasMoved;
-    private ResultSet wrapper;
 
     SelectQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
         super(connectionSupplier, query, params);
@@ -88,14 +88,7 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
                 wrapper = new ImmutableResultSet(rs);
             }
             return this;
-        }), false).map(rs -> {
-            try {
-                return mapper.apply(rs);
-            } catch (SQLException e) {
-                close();
-                throw new SQLRuntimeException(e);
-            }
-        }).onClose(this::close);
+        }), false).map(rs -> jdbcTry(() -> mapper.apply(rs))).onClose(this::close);
     }
 
     protected void doExecute() {
@@ -175,7 +168,9 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
 
     @Override
     public void forEachRemaining(Consumer<? super ResultSet> action) {
-        while (tryAdvance(action)) {
+        requireNonNull(action);
+        while (hasNext()) {
+            action.accept(next());
         }
     }
 

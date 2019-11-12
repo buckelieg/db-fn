@@ -37,17 +37,22 @@ import static java.util.stream.Stream.of;
 @SuppressWarnings("unchecked")
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-abstract class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
+class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
 
     private Object[][] batch;
     private TrySupplier<Connection, SQLException> connectionSupplier;
     private boolean isLarge;
     private boolean isBatch;
+    private final String query;
+    private boolean poolable;
+    private boolean escapeProcessing;
+    private int timeout;
 
-    UpdateQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
+    UpdateQuery(TrySupplier<PreparedStatement, SQLException> prepareStatement, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
         super(connectionSupplier, query, (Object) batch);
         this.batch = requireNonNull(batch, "Batch must be provided");
         this.connectionSupplier = connectionSupplier;
+        this.query = query;
     }
 
     UpdateQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
@@ -82,19 +87,22 @@ abstract class UpdateQuery extends AbstractQuery<PreparedStatement> implements U
     @Nonnull
     @Override
     public Update poolable(boolean poolable) {
-        return setPoolable(poolable);
+        this.poolable = poolable;
+        return this;
     }
 
     @Nonnull
     @Override
     public Update timeout(int timeout) {
-        return setTimeout(timeout);
+        this.timeout = timeout;
+        return this;
     }
 
     @Nonnull
     @Override
     public Update escaped(boolean escapeProcessing) {
-        return setEscapeProcessing(escapeProcessing);
+        this.escapeProcessing = escapeProcessing;
+        return this;
     }
 
     @Nonnull
@@ -112,11 +120,31 @@ abstract class UpdateQuery extends AbstractQuery<PreparedStatement> implements U
         })));
     }
 
+    @Nonnull
+    @Override
+    public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, String... colNames) {
+        UpdateQuery update = new UpdateQuery(colNames, connectionSupplier, query, batch);
+        update.setTimeout(timeout);
+        update.setPoolable(poolable);
+        update.setEscapeProcessing(escapeProcessing);
+        return update.execute(generatedValuesHandler);
+    }
+
+    @Nonnull
+    @Override
+    public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, int... colIndices) {
+        UpdateQuery update = new UpdateQuery(colIndices, connectionSupplier, query, batch);
+        update.setTimeout(timeout);
+        update.setPoolable(poolable);
+        update.setEscapeProcessing(escapeProcessing);
+        return update.execute(generatedValuesHandler);
+    }
+
     /**
      * Executes this DML query returning affected row count.
      * If this query represents a batch then affected rows are summarized for all batches.
      *
-     * @return an affected rows count
+     * @return affected rows count
      */
     @Nonnull
     public Long execute() {

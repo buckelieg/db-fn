@@ -34,16 +34,11 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
     private static final Pattern PARAM = Pattern.compile("\\?");
 
     private S statement;
-
     private final String query;
 
-    AbstractQuery(TrySupplier<S, SQLException> prepareStatement, String query, Object... params) {
+    AbstractQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
         requireNonNull(query, "SQL query must be provided");
-        try {
-            this.statement = prepareStatement.get();
-        } catch (SQLException e) {
-            throw newSQLRuntimeException(e);
-        }
+        this.statement = prepareStatement(connectionSupplier, query, params);
         this.query = asSQL(query, params);
     }
 

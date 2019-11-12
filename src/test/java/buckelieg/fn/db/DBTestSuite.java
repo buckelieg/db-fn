@@ -116,7 +116,7 @@ public class DBTestSuite {
     @Test
     public void testSelect() throws Exception {
         Collection<?> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
-                .stream()
+                .stream(rs -> rs)
                 .parallel()
                 .collect(
                         ArrayList<Map.Entry<Integer, String>>::new,
@@ -140,7 +140,7 @@ public class DBTestSuite {
         params.put("name", "name_5");
         params.put("NAME", "name_6");
         Collection<Map.Entry<Integer, String>> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name OR NAME=:NAME", params)
-                .stream()
+                .stream(rs -> rs)
                 .parallel()
                 .collect(
                         LinkedList<Map.Entry<Integer, String>>::new,
@@ -163,8 +163,8 @@ public class DBTestSuite {
 
     @Test
     public void testSelectForEachSingle() throws Throwable {
-        assertEquals(1, db.select("SELECT * FROM TEST WHERE ID=1").stream().collect(Collectors.toList()).size());
-        db.select("SELECT COUNT(*) FROM TEST").stream().forEach(rs -> {
+        assertEquals(1, db.select("SELECT * FROM TEST WHERE ID=1").list().size());
+        db.select("SELECT COUNT(*) FROM TEST").stream(rs -> rs).forEach(rs -> {
             try {
                 System.out.println(rs.getInt(1));
             } catch (SQLException e) {
@@ -224,7 +224,7 @@ public class DBTestSuite {
 
     @Test
     public void testUpdateBatchBatch() throws Exception {
-        assertEquals(2L, (long) db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).batched().execute());
+        assertEquals(2L, (long) db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).batched(true).execute());
     }
 
     @Test
@@ -272,7 +272,7 @@ public class DBTestSuite {
                 e.printStackTrace();
             }
         });*/
-        assertEquals(13, db.procedure("{call CREATETESTROW1(?)}", "new_name").stream().count());
+        assertEquals(13, db.procedure("{call CREATETESTROW1(?)}", "new_name").stream().peek(System.out::println).count());
     }
 
     @Test
@@ -303,7 +303,7 @@ public class DBTestSuite {
     @Test
     public void testImmutable() throws Throwable {
         db.select("SELECT * FROM TEST WHERE 1=1 AND ID=?", 1)
-                .stream()
+                .stream(rs -> rs)
                 .forEach(rs -> {
                     testImmutableAction(rs, ResultSet::next);
                     testImmutableAction(rs, ResultSet::afterLast);
@@ -326,7 +326,7 @@ public class DBTestSuite {
 
     private void printDb() {
         db.select("SELECT * FROM TEST")
-                .stream()
+                .stream(rs -> rs)
                 .forEach(rs -> {
                     try {
                         System.out.println(String.format("ID=%s NAME=%s", rs.getInt(1), rs.getString(2)));

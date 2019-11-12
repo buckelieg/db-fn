@@ -54,9 +54,7 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
 
     @Override
     protected void doExecute() {
-        setStatementParameter(s -> {
-            if (s.execute()) rs = s.getResultSet();
-        });
+        withStatement(s -> s.execute() ? rs = s.getResultSet() : null);
     }
 
     @SuppressWarnings("unchecked")
@@ -69,6 +67,7 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
                         rs.close();
                     }
                     rs = withStatement(Statement::getResultSet);
+                    wrapper = new ImmutableResultSet(rs);
                     return super.doHasNext();
                 }
                 try {
