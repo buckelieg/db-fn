@@ -27,8 +27,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static buckelieg.fn.db.Utils.STATEMENT_DELIMITER;
-import static buckelieg.fn.db.Utils.doInTransaction;
+import static buckelieg.fn.db.Utils.*;
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
@@ -145,7 +144,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     private long executeSimple() {
         return of(batch).reduce(
                 0L,
-                (rowsAffected, params) -> rowsAffected += jdbcTry(() -> isLarge ? withStatement(s -> setQueryParameters(s, params).executeLargeUpdate()) : (long) withStatement(s -> setQueryParameters(s, params).executeUpdate())),
+                (rowsAffected, params) -> rowsAffected += jdbcTry(() -> isLarge ? withStatement(s -> setStatementParameters(s, params).executeLargeUpdate()) : (long) withStatement(s -> setStatementParameters(s, params).executeUpdate())),
                 Long::sum
         );
     }
@@ -153,7 +152,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     private long executeBatch() {
         return of(batch)
                 .map(params -> withStatement(statement -> {
-                    setQueryParameters(statement, params).addBatch();
+                    setStatementParameters(statement, params).addBatch();
                     return statement;
                 }))
                 .reduce(

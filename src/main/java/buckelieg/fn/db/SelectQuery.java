@@ -29,9 +29,9 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static buckelieg.fn.db.Utils.setStatementParameters;
 import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.StreamSupport.stream;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -177,6 +177,6 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
 
     @Override
     PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        return jdbcTry(() -> setQueryParameters(requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query), params));
+        return jdbcTry(() -> setStatementParameters(requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query), params));
     }
 }

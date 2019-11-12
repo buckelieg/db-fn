@@ -234,7 +234,7 @@ final class Utils {
         return replaced.replaceAll("(\\s){2,}", " ");
     }
 
-    static <S extends PreparedStatement> S setQueryParameters(S statement, Object... params) throws SQLException {
+    static <S extends PreparedStatement> S setStatementParameters(S statement, Object... params) throws SQLException {
         requireNonNull(params, "Parameters must be provided");
         int pNum = 0;
         for (Object p : params) {

@@ -16,6 +16,7 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -88,16 +89,7 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
         }
     }
 
-    final S setQueryParameters(S statement, Object... params) throws SQLException {
-        requireNonNull(params, "Parameters must be provided");
-        int pNum = 0;
-        for (Object p : params) {
-            statement.setObject(++pNum, p); // introduce type conversion here?
-        }
-        return statement;
-    }
-
-    @Nonnull
+    @Nullable
     final <O> O withStatement(TryFunction<S, O, SQLException> action) {
         try {
             return action.apply(statement);
