@@ -7,27 +7,25 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-fn</artifactId>
-  <version>0.3.3</version>
+  <version>0.3.4</version>
 </dependency>
 ```
 Operate on result set in a functional way.
 #### Setup database
-There are 2 options to set up the things:
+There are several options to set up the things:
 ```java
-// 1. Provide connection itself
+// 1. Provide connection URL
+DB db = new DB("vendor-specific-string");
+// 2. Provide connection itself
 DB db = new DB(DriverManager.getConnection("vendor-specific-string"));
-...
-// 2. Provide connection supplier
+// 3. Provide connection supplier
 DataSource ds = // obtain ds (e.g. via JNDI or other way) 
 DB db = new DB(ds::getConnection);
-...
 // or
 DB db = new DB(() -> {/*sophisticated connection supplier function*/});
-...
-// do things...
+... // do things...
 db.close();
-...
-// DB can be used with try-with-resources
+// DB can be used in try-with-resources statements
 try (DB db = new DB(/*init*/)) {
     ...
 } finally {
@@ -120,11 +118,11 @@ If stored procedure is considered to return result sets it is handled similar to
 ### Scripts
 There are two options to run an arbitrary SQL scripts:
 
-1) Provide a srcipt itself
+1) Provide a script itself
 ```java
-db.script("CREATE TABLE TEST ( id INTEGER NOT NULL, name VARCHAR(255));INSERT INTO TEST(id, name) VALUES(1, 'whatever');UPDATE TEST SET name = 'whatever_new' WHERE name = 'whatever';DROP TABLE TEST;").execute();
+db.script("CREATE TABLE TEST (id INTEGER NOT NULL, name VARCHAR(255));INSERT INTO TEST(id, name) VALUES(1, 'whatever');UPDATE TEST SET name = 'whatever_new' WHERE name = 'whatever';DROP TABLE TEST;").execute();
 ```
-2) Provide a file with a SQL script in it
+2) Provide a file with an SQL script
 ```java
   db.script(new File("path/to/script.sql")).timeout(60).execute();
 ```
