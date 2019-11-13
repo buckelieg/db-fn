@@ -15,6 +15,8 @@
 */
 package buckelieg.fn.db;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Represents a supplier of results.
  * <p>
@@ -37,5 +39,16 @@ public interface TrySupplier<O, E extends Throwable> {
      * @throws E an exception if something went wrong
      */
     O get() throws E;
+
+    /**
+     * Returns reference of lambda expression.
+     *
+     * @param trySupplier a function
+     * @return lambda as {@link TrySupplier} reference
+     * @throws NullPointerException if trySupplier is null
+     */
+    static <O, E extends Throwable> TrySupplier<O, E> of(TrySupplier<O, E> trySupplier) {
+        return requireNonNull(trySupplier);
+    }
 
 }

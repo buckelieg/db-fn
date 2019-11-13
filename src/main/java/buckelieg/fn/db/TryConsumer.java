@@ -37,6 +37,8 @@ public interface TryConsumer<T, E extends Throwable> {
     void accept(T t) throws E;
 
     /**
+     * Returns reference of lambda expression.
+     *
      * @param tryConsumer a consumer
      * @return {@link TryConsumer} reference
      * @throws NullPointerException if tryConsumer is null

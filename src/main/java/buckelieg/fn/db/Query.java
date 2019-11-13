@@ -60,7 +60,7 @@ interface Query extends AutoCloseable {
 
     /**
      * Represents this <code>query</code> AS <code>SQL</code> string.
-     * All parameters are substituted by calling its' <code>toString()</code> methods.
+     * All parameters are substituted by calling theirs' <code>toString()</code> methods.
      *
      * @return this query as a SQL string
      */

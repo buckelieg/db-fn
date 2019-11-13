@@ -29,7 +29,7 @@ import static java.util.Objects.requireNonNull;
 public interface TryFunction<I, O, E extends Throwable> {
 
     /**
-     * Represents some function which might throw an Exception
+     * Represents some one-argument function which might throw an Exception
      *
      * @param input function input.
      * @return mapped value

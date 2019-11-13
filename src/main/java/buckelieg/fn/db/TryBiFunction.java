@@ -10,13 +10,12 @@ import static java.util.Objects.requireNonNull;
  * @param <O>  result type
  * @param <E>  an exception type thrown
  */
+@SuppressWarnings("unchecked")
 @FunctionalInterface
 public interface TryBiFunction<I1, I2, O, E extends Throwable> {
 
     /**
      * Returns reference of lambda expression.
-     * Typical usage is:
-     * TryBiFunction.of(x1, x2 -> null).andThen(nil -> null);
      *
      * @param tryBiFunction a function
      * @return lambda as {@link TryBiFunction} reference
@@ -27,6 +26,8 @@ public interface TryBiFunction<I1, I2, O, E extends Throwable> {
     }
 
     /**
+     * Represents some two-argument function which might throw an Exception
+     *
      * @param input1 first argument
      * @param input2 second argument
      * @return output
