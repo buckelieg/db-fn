@@ -37,6 +37,8 @@ Use question marks:
 ```java
 Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
                 .execute(rs ->{/*map rs here*/}).collect(Collectors.toList());
+// or use shorthands
+Collection<T> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2).list(rs ->{/*map rs here*/});
 ```
 or use named parameters:
 ```java

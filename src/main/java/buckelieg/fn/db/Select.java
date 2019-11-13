@@ -117,7 +117,7 @@ public interface Select extends Query {
      */
     @Nonnull
     default List<Map<String, Object>> list() {
-        return execute().collect(toList());
+        return list(defaultMapper);
     }
 
     /**
