@@ -60,10 +60,54 @@ final class Utils {
 
     private static final Map<SQLType, TryBiFunction<ResultSet, Integer, Object, SQLException>> defaultReaders = new HashMap<>();
 
+    static {
+        // standard "recommended" readers
+        defaultReaders.put(BINARY, ResultSet::getBytes);
+        defaultReaders.put(VARBINARY, ResultSet::getBytes);
+        defaultReaders.put(LONGVARBINARY, (input, index) -> {
+            try (InputStream is = input.getBinaryStream(index); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = is.read(buffer)) != -1) {
+                    bos.write(buffer, 0, length);
+                }
+                return bos.toByteArray();
+            } catch (Throwable t) {
+                throw newSQLRuntimeException(t);
+            }
+        });
+        defaultReaders.put(VARCHAR, ResultSet::getString);
+        defaultReaders.put(CHAR, ResultSet::getString);
+        defaultReaders.put(LONGVARCHAR, (input, index) -> {
+            try (BufferedReader r = new BufferedReader(input.getCharacterStream(index))) {
+                return r.lines().collect(Collectors.joining());
+            } catch (Throwable t) {
+                throw newSQLRuntimeException(t);
+            }
+        });
+        defaultReaders.put(DATE, ResultSet::getDate);
+        defaultReaders.put(TIMESTAMP, ResultSet::getTimestamp);
+        defaultReaders.put(TIMESTAMP_WITH_TIMEZONE, ResultSet::getTimestamp);
+        defaultReaders.put(TIME, ResultSet::getTime);
+        defaultReaders.put(TIME_WITH_TIMEZONE, ResultSet::getTime);
+        defaultReaders.put(BIT, ResultSet::getBoolean);
+        defaultReaders.put(TINYINT, ResultSet::getByte);
+        defaultReaders.put(SMALLINT, ResultSet::getShort);
+        defaultReaders.put(INTEGER, ResultSet::getInt);
+        defaultReaders.put(BIGINT, ResultSet::getLong);
+        defaultReaders.put(DECIMAL, ResultSet::getBigDecimal);
+        defaultReaders.put(NUMERIC, ResultSet::getBigDecimal);
+        defaultReaders.put(FLOAT, ResultSet::getDouble);
+        defaultReaders.put(DOUBLE, ResultSet::getDouble);
+        defaultReaders.put(REAL, ResultSet::getFloat);
+        defaultReaders.put(JAVA_OBJECT, ResultSet::getObject);
+        defaultReaders.put(OTHER, ResultSet::getObject);
+    }
+
     @Nonnull
     static TryFunction<ResultSet, Map<String, Object>, SQLException> defaultMapper = rs -> {
-        Map<String, Object> result = new IdentityHashMap<>();
         ResultSetMetaData meta = rs.getMetaData();
+        Map<String, Object> result = new IdentityHashMap<>(meta.getColumnCount());
         for (int col = 1; col <= meta.getColumnCount(); col++) {
             result.put(meta.getColumnLabel(col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject).apply(rs, col));
         }
@@ -140,50 +184,6 @@ final class Utils {
 
     static <T> Optional<T> toOptional(Supplier<T> supplier) {
         return ofNullable(requireNonNull(supplier, "Value supplier must be provided").get());
-    }
-
-    static {
-        // standard "recommended" readers
-        defaultReaders.put(BINARY, ResultSet::getBytes);
-        defaultReaders.put(VARBINARY, ResultSet::getBytes);
-        defaultReaders.put(LONGVARBINARY, (input, index) -> {
-            try (InputStream is = input.getBinaryStream(index); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = is.read(buffer)) != -1) {
-                    bos.write(buffer, 0, length);
-                }
-                return bos.toByteArray();
-            } catch (Throwable t) {
-                throw newSQLRuntimeException(t);
-            }
-        });
-        defaultReaders.put(VARCHAR, ResultSet::getString);
-        defaultReaders.put(CHAR, ResultSet::getString);
-        defaultReaders.put(LONGVARCHAR, (input, index) -> {
-            try (BufferedReader r = new BufferedReader(input.getCharacterStream(index))) {
-                return r.lines().collect(Collectors.joining());
-            } catch (Throwable t) {
-                throw newSQLRuntimeException(t);
-            }
-        });
-        defaultReaders.put(DATE, ResultSet::getDate);
-        defaultReaders.put(TIMESTAMP, ResultSet::getTimestamp);
-        defaultReaders.put(TIMESTAMP_WITH_TIMEZONE, ResultSet::getTimestamp);
-        defaultReaders.put(TIME, ResultSet::getTime);
-        defaultReaders.put(TIME_WITH_TIMEZONE, ResultSet::getTime);
-        defaultReaders.put(BIT, ResultSet::getBoolean);
-        defaultReaders.put(TINYINT, ResultSet::getByte);
-        defaultReaders.put(SMALLINT, ResultSet::getShort);
-        defaultReaders.put(INTEGER, ResultSet::getInt);
-        defaultReaders.put(BIGINT, ResultSet::getLong);
-        defaultReaders.put(DECIMAL, ResultSet::getBigDecimal);
-        defaultReaders.put(NUMERIC, ResultSet::getBigDecimal);
-        defaultReaders.put(FLOAT, ResultSet::getDouble);
-        defaultReaders.put(DOUBLE, ResultSet::getDouble);
-        defaultReaders.put(REAL, ResultSet::getFloat);
-        defaultReaders.put(JAVA_OBJECT, ResultSet::getObject);
-        defaultReaders.put(OTHER, ResultSet::getObject);
     }
 
     static <T> T doInTransaction(Connection conn, TryFunction<Connection, T, SQLException> action) throws SQLException {
