@@ -148,7 +148,7 @@ public class DBTestSuite {
                 .execute(rs -> rs)
                 .parallel()
                 .collect(
-                        LinkedList<Map.Entry<Integer, String>>::new,
+                        LinkedList::new,
                         (pList, rs) -> {
                             try {
                                 pList.add(new SimpleImmutableEntry<>(rs.getInt(1), rs.getString(2)));
@@ -193,21 +193,21 @@ public class DBTestSuite {
     public void testInsertNamed() throws Throwable {
         long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute();
         assertEquals(1L, res);
-        assertEquals(Long.valueOf(11L), db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get());
+        assertEquals(Long.valueOf(11L), db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L));
     }
 
     @Test
     public void testUpdate() throws Throwable {
         long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute();
         assertEquals(1L, res);
-        assertEquals(Long.valueOf(1L), db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get());
+        assertEquals(Long.valueOf(1L), db.select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).orElse(-1L));
     }
 
     @Test
     public void testUpdateNamed() throws Throwable {
         long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute();
         assertEquals(1L, res);
-        assertEquals(Long.valueOf(1L), db.<Long>select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).get());
+        assertEquals(Long.valueOf(1L), db.select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).orElse(-1L));
     }
 
     @Test
@@ -242,14 +242,14 @@ public class DBTestSuite {
     public void testDelete() throws Throwable {
         long res = db.update("DELETE FROM TEST WHERE name=?", "name_2").execute();
         assertEquals(1L, res);
-        assertEquals(Long.valueOf(9L), db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get());
+        assertEquals(Long.valueOf(9L), db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L));
     }
 
     @Test
     public void testDeleteNamed() throws Throwable {
         long res = db.update("DELETE FROM TEST WHERE name=:name", new SimpleImmutableEntry<>("name", "name_2")).execute();
         assertEquals(1L, res);
-        assertEquals(Long.valueOf(9L), db.<Long>select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get());
+        assertEquals(Long.valueOf(9L), db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -260,7 +260,7 @@ public class DBTestSuite {
     @Test
     public void testVoidStoredProcedure() throws Throwable {
         db.procedure("{call CREATETESTROW2(?)}", "new_name").call();
-        assertEquals(Long.valueOf(11L), db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).get());
+        assertEquals(Long.valueOf(11L), db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L));
     }
 
     @Test(expected = SQLRuntimeException.class)
@@ -270,21 +270,13 @@ public class DBTestSuite {
 
     @Test
     public void testResultSetStoredProcedure() throws Throwable {
-/*        DB.procedure(conn, "{procedure CREATETESTROW1(?)}", "new_name").stream().forEach((rs) -> {
-            try {
-                System.out.println(String.format("ID='%s', NAME='%s'", rs.getInt(1), rs.getString(2)));
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });*/
         assertEquals(13, db.procedure("{call CREATETESTROW1(?)}", "new_name").execute().peek(System.out::println).count());
     }
 
     @Test
     public void testResultSetWithResultsStoredProcedure() throws Throwable {
         List<String> name = new ArrayList<>(1);
-        long count = db.procedure("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR))
-                .call((cs) -> cs.getString(2), name::add).execute().count();
+        long count = db.procedure("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2), name::add).execute().count();
         assertEquals(0, count);
         assertEquals("name_1", name.get(0));
     }
@@ -301,7 +293,7 @@ public class DBTestSuite {
 
     @Test
     public void testGetResult() throws Throwable {
-        String name = db.procedure("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2)).get();
+        String name = db.procedure("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2)).orElse(null);
         assertEquals("name_1", name);
     }
 
@@ -330,15 +322,13 @@ public class DBTestSuite {
     }
 
     private void printDb() {
-        db.select("SELECT * FROM TEST")
-                .execute(rs -> rs)
-                .forEach(rs -> {
-                    try {
-                        System.out.println(String.format("ID=%s NAME=%s", rs.getInt(1), rs.getString(2)));
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                });
+        db.select("SELECT * FROM TEST").execute(rs -> rs).forEach(rs -> {
+            try {
+                System.out.println(String.format("ID=%s NAME=%s", rs.getInt(1), rs.getString(2)));
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Test(expected = Exception.class)
