@@ -134,6 +134,7 @@ public interface Update extends Query {
     /**
      * {@inheritDoc}
      */
+    @Override
     @Nonnull
     Update timeout(int timeout);
 
@@ -154,6 +155,7 @@ public interface Update extends Query {
     /**
      * {@inheritDoc}
      */
+    @Override
     @Nonnull
     Update poolable(boolean poolable);
 
@@ -173,6 +175,7 @@ public interface Update extends Query {
     /**
      * {@inheritDoc}
      */
+    @Override
     @Nonnull
     Update escaped(boolean escapeProcessing);
 
