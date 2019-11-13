@@ -131,6 +131,9 @@ public interface Update extends Query {
      */
     Update batched(boolean isBatch);
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Nonnull
     Update timeout(int timeout);
@@ -149,6 +152,9 @@ public interface Update extends Query {
     }
 
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Nonnull
     Update poolable(boolean poolable);
@@ -166,6 +172,9 @@ public interface Update extends Query {
         return poolable(toOptional(supplier).orElse(false));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Nonnull
     Update escaped(boolean escapeProcessing);
