@@ -190,7 +190,6 @@ public interface Select extends Query {
     /**
      * {@inheritDoc}
      */
-    @Override
     @Nonnull
     Select timeout(int timeout);
 
@@ -210,7 +209,6 @@ public interface Select extends Query {
     /**
      * {@inheritDoc}
      */
-    @Override
     @Nonnull
     Select poolable(boolean poolable);
 
@@ -230,7 +228,6 @@ public interface Select extends Query {
     /**
      * {@inheritDoc}
      */
-    @Override
     @Nonnull
     Select escaped(boolean escapeProcessing);
 

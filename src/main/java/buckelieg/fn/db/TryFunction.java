@@ -50,7 +50,7 @@ public interface TryFunction<I, O, E extends Throwable> {
     /**
      * Returns reference of lambda expression.
      * Typical usage is:
-     * TryFunction.of(x -> null).andThen(nil -> null);
+     * {@code TryFunction.of(x -> null).andThen(nil -> null);}
      *
      * @param tryFunction a function
      * @return lambda as {@link TryFunction} reference

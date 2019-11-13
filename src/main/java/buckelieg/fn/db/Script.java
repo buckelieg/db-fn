@@ -59,7 +59,6 @@ public interface Script extends Query {
      * {@inheritDoc}
      */
     @Nonnull
-    @Override
     Script timeout(int timeout);
 
 
@@ -67,7 +66,6 @@ public interface Script extends Query {
      * {@inheritDoc}
      */
     @Nonnull
-    @Override
     Script escaped(boolean escapeProcessing);
 
     /**
