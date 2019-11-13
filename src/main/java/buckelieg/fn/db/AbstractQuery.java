@@ -89,7 +89,6 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
         }
     }
 
-    @Nullable
     final <O> O withStatement(TryFunction<S, O, SQLException> action) {
         try {
             return action.apply(statement);

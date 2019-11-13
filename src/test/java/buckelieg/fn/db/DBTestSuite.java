@@ -33,6 +33,7 @@ import static java.lang.Thread.currentThread;
 import static java.util.AbstractMap.SimpleImmutableEntry;
 import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 // TODO more test suites for other RDBMS
@@ -129,6 +130,11 @@ public class DBTestSuite {
                         Collection::addAll
                 );
         assertEquals(2, results.size());
+    }
+
+    @Test
+    public void testSelectNoResults() throws Exception {
+        assertEquals(0, db.select("SELECT * FROM TEST WHERE ID = 1238").list().size());
     }
 
     @Test
