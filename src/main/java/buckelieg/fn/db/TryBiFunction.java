@@ -10,7 +10,6 @@ import static java.util.Objects.requireNonNull;
  * @param <O>  result type
  * @param <E>  an exception type thrown
  */
-@SuppressWarnings("unchecked")
 @FunctionalInterface
 public interface TryBiFunction<I1, I2, O, E extends Throwable> {
 

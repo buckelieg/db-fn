@@ -65,8 +65,13 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
         );
     }
 
-    UpdateQuery(String[] colNames, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
-        this(() -> connectionSupplier.get().prepareStatement(query, requireNonNull(colNames, "Column names must be provided")), connectionSupplier, query, batch);
+    UpdateQuery(@Nullable String[] colNames, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
+        this(
+                () -> colNames == null || colNames.length == 0 ?
+                        connectionSupplier.get().prepareStatement(query, RETURN_GENERATED_KEYS) :
+                        connectionSupplier.get().prepareStatement(query, colNames),
+                connectionSupplier, query, batch
+        );
     }
 
     @Override
