@@ -55,17 +55,11 @@ public interface Script extends Query {
         return execute(STATEMENT_DELIMITER);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     Script timeout(int timeout);
 
 
-    /**
-     * {@inheritDoc}
-     */
     @Nonnull
     @Override
     Script escaped(boolean escapeProcessing);
