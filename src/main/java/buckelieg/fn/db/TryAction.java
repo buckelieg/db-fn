@@ -46,7 +46,7 @@ public interface TryAction<E extends Throwable> {
 
     /**
      * Returns a composed {@code TryAction} that performs, in sequence, this
-     * operation followed by the {@code after} operation. If performing either
+     * operation is followed by the {@code after} operation. If performing either
      * operation throws an exception, then corresponding exception is thrown.
      * If performing this operation throws an exception,
      * the {@code after} operation will not be performed.
@@ -63,6 +63,30 @@ public interface TryAction<E extends Throwable> {
             return () -> {
                 doTry();
                 after.doTry();
+            };
+        } catch (Throwable t) {
+            throw (E) t;
+        }
+    }
+    /**
+     * Returns a composed {@code TryAction} that performs, in sequence, this
+     * operation is preceded by the {@code before} operation. If performing either
+     * operation throws an exception, then corresponding exception is thrown.
+     * If performing this operation throws an exception,
+     * the {@code before} operation will not be performed.
+     *
+     * @param before the operation to perform before this operation
+     * @return a composed {@code TryAction} that performs in sequence this
+     * operation followed by the {@code before} operation
+     * @throws E                    an exception
+     * @throws NullPointerException if {@code before} is null
+     */
+    default TryAction<E> compose(TryAction<E> before) throws E {
+        requireNonNull(before);
+        try {
+            return () -> {
+                before.doTry();
+                doTry();
             };
         } catch (Throwable t) {
             throw (E) t;
