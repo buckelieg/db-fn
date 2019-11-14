@@ -113,7 +113,7 @@ final class Utils {
         <code>
             DB.select(...).execute().collect(Collectors.toSet())
         </cdoe>
-        would not eliminate duplicates from tuple. To do it just use UNION on the SQL query side or do this:
+        will not eliminate duplicates from tuple. To do it just use UNION on the SQL query side or do this:
         <code>DB.select(...).execute().map(HashMap::new).collect(Collectors.toSet())</code>
      */
     @Nonnull

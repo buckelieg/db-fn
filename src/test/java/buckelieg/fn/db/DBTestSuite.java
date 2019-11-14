@@ -206,7 +206,7 @@ public class DBTestSuite {
 
     @Test
     public void testLargeUpdate() throws Exception {
-        assertEquals(1L, db.update("INSERT INTO TEST(name) VALUES(?)", "largeupdatenametest").execute().longValue());
+        assertEquals(1L, db.update("INSERT INTO TEST(name) VALUES(?)", "largeupdatenametest").large(true).execute().longValue());
     }
 
     @Test
