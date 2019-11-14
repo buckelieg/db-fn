@@ -55,13 +55,7 @@ public final class DB implements AutoCloseable {
      * @throws SQLRuntimeException if connection string is invalid
      */
     public DB(String connectionUrl) {
-        this(() -> {
-            try {
-                return DriverManager.getConnection(requireNonNull(connectionUrl, "Connection string must be provided"));
-            } catch (SQLException e) {
-                throw newSQLRuntimeException(e);
-            }
-        });
+        this(() -> DriverManager.getConnection(requireNonNull(connectionUrl, "Connection string must be provided")));
     }
 
     /**
