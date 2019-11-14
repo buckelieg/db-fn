@@ -25,7 +25,6 @@
         <url>http://buckelieg.github.io/db-fn/</url>
         <connection>scm:git:git@github.com:buckelieg/db-fn.git</connection>
         <developerConnection>scm:git:git@github.com:buckelieg/db-fn.git</developerConnection>
-        <tag>HEAD</tag>
     </scm>
 
     <developers>
