@@ -171,8 +171,8 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     }
 
     @Override
-    PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        return jdbcTry(() -> requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query));
+    PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) throws SQLException {
+        return requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query);
     }
 
     @Override

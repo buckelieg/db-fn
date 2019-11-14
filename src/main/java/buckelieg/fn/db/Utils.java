@@ -104,6 +104,12 @@ final class Utils {
         defaultReaders.put(OTHER, ResultSet::getObject);
     }
 
+    /*
+        <code>IdentityHashMap</code> is used to process cases like:
+        <code>
+            SELECT * FROM SOME_TABLE t1 JOIN SOME_TABLE t2 ON t1.key = t2.key
+        </code>
+     */
     @Nonnull
     static TryFunction<ResultSet, Map<String, Object>, SQLException> defaultMapper = rs -> {
         ResultSetMetaData meta = rs.getMetaData();

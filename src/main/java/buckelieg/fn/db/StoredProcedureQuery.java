@@ -83,19 +83,17 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
     }
 
     @Override
-    CallableStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        return jdbcTry(() -> {
-            CallableStatement cs = requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareCall(query);
-            for (int i = 1; i <= params.length; i++) {
-                P<?> p = (P<?>) params[i - 1];
-                if (p.isOut() || p.isInOut()) {
-                    cs.registerOutParameter(i, requireNonNull(p.getType(), format("Parameter '%s' must have SQLType set", p)));
-                }
-                if (p.isIn() || p.isInOut()) {
-                    cs.setObject(i, p.getValue());
-                }
+    CallableStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) throws SQLException {
+        CallableStatement cs = requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareCall(query);
+        for (int i = 1; i <= params.length; i++) {
+            P<?> p = (P<?>) params[i - 1];
+            if (p.isOut() || p.isInOut()) {
+                cs.registerOutParameter(i, requireNonNull(p.getType(), format("Parameter '%s' must have SQLType set", p)));
             }
-            return cs;
-        });
+            if (p.isIn() || p.isInOut()) {
+                cs.setObject(i, p.getValue());
+            }
+        }
+        return cs;
     }
 }

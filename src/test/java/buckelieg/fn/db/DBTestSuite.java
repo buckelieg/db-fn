@@ -86,6 +86,11 @@ public class DBTestSuite {
         }
     }
 
+    @Test(expected = SQLRuntimeException.class)
+    public void testInvalidConnectionURL() throws Exception {
+        new DB("wrong-connection-url").select("SELECT 1").list();
+    }
+
     @Test
     public void testResultSet() throws Exception {
         try (ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM TEST")) {
@@ -176,6 +181,11 @@ public class DBTestSuite {
                 e.printStackTrace();
             }
         });
+    }
+
+    @Test
+    public void testSelectAllFieldsWithDefaultMapper() throws Exception {
+        assertEquals(2, db.select("SELECT * FROM TEST t1 JOIN TEST t2 ON t1.ID = t2.ID WHERE t1.ID = ?", 1).list().get(0).size());
     }
 
     @Test

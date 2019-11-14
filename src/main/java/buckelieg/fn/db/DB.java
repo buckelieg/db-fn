@@ -52,9 +52,16 @@ public final class DB implements AutoCloseable {
      * Creates DB from connection string
      *
      * @param connectionUrl rdbms-specific connection URL
+     * @throws SQLRuntimeException if connection string is invalid
      */
     public DB(String connectionUrl) {
-        this(() -> DriverManager.getConnection(requireNonNull(connectionUrl, "Connection string must be provided")));
+        this(() -> {
+            try {
+                return DriverManager.getConnection(requireNonNull(connectionUrl, "Connection string must be provided"));
+            } catch (SQLException e) {
+                throw newSQLRuntimeException(e);
+            }
+        });
     }
 
     /**
@@ -72,8 +79,7 @@ public final class DB implements AutoCloseable {
      * @param connection the connection to operate on
      */
     public DB(Connection connection) {
-        requireNonNull(connection, "Connection must be provided");
-        this.connectionSupplier = () -> connection;
+        this(() -> requireNonNull(connection, "Connection must be provided"));
     }
 
     /**

@@ -176,7 +176,7 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     }
 
     @Override
-    PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        return jdbcTry(() -> setStatementParameters(requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query), params));
+    PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) throws SQLException {
+        return setStatementParameters(requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query), params);
     }
 }
