@@ -25,7 +25,10 @@ import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static buckelieg.fn.db.Utils.cutComments;
@@ -119,21 +122,7 @@ public class DBTestSuite {
 
     @Test
     public void testSelect() throws Exception {
-        Collection<?> results = db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2)
-                .execute(rs -> rs)
-                .parallel()
-                .collect(
-                        ArrayList<Map.Entry<Integer, String>>::new,
-                        (pList, rs) -> {
-                            try {
-                                pList.add(new SimpleImmutableEntry<>(rs.getInt(1), rs.getString(2)));
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                            }
-                        },
-                        Collection::addAll
-                );
-        assertEquals(2, results.size());
+        assertEquals(2, db.select("SELECT * FROM TEST WHERE ID IN (?, ?)", 1, 2).list().size());
     }
 
     @Test
@@ -143,43 +132,22 @@ public class DBTestSuite {
 
     @Test
     public void testSelectNamed() throws Exception {
-        Map<String, Object> params = new HashMap<>();
-        params.put("ID", new Object[]{1, 2});
-//        params.put("id", Arrays.asList(1, 2));
-        params.put("name", "name_5");
-        params.put("NAME", "name_6");
-        Collection<Map.Entry<Integer, String>> results = db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name OR NAME=:NAME", params)
-                .execute(rs -> rs)
-                .parallel()
-                .collect(
-                        LinkedList::new,
-                        (pList, rs) -> {
-                            try {
-                                pList.add(new SimpleImmutableEntry<>(rs.getInt(1), rs.getString(2)));
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                            }
-                        },
-                        Collection::addAll
-                );
-        assertEquals(4, results.size());
+        assertEquals(4, db.select("SELECT * FROM TEST WHERE 1=1 AND ID IN (:ID) OR NAME=:name OR NAME=:NAME", new HashMap<String, Object>() {{
+            put("ID", new Object[]{1, 2});
+            put("name", "name_5");
+            put("NAME", "name_6");
+        }}).list(rs -> new SimpleImmutableEntry<>(rs.getInt(1), rs.getString(2))).size());
     }
 
     @Test
     public void testSelectNoParams() throws Throwable {
-        assertEquals(10, (int) db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)).orElse(0));
+        assertEquals(10, db.select("SELECT COUNT(*) FROM TEST").single(rs -> rs.getInt(1)).orElse(0).intValue());
     }
 
     @Test
     public void testSelectForEachSingle() throws Throwable {
         assertEquals(1, db.select("SELECT * FROM TEST WHERE ID=1").list().size());
-        db.select("SELECT COUNT(*) FROM TEST").execute(rs -> rs).forEach(rs -> {
-            try {
-                System.out.println(rs.getInt(1));
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
+        db.select("SELECT COUNT(*) FROM TEST").execute(rs -> rs.getInt(1)).forEach(System.out::println);
     }
 
     @Test
@@ -189,39 +157,35 @@ public class DBTestSuite {
 
     @Test
     public void testUpdateNoParams() throws Throwable {
-        assertEquals(10L, (long) db.update("DELETE FROM TEST").execute());
+        assertEquals(10L, db.update("DELETE FROM TEST").execute().longValue());
     }
 
     @Test
     public void testInsert() throws Throwable {
-        long res = db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute();
-        assertEquals(1L, res);
+        assertEquals(1L, db.update("INSERT INTO TEST(name) VALUES(?)", "New_Name").execute().longValue());
     }
 
     @Test
     public void testInsertNamed() throws Throwable {
-        long res = db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute();
-        assertEquals(1L, res);
-        assertEquals(Long.valueOf(11L), db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L));
+        assertEquals(1L, db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", "New_Name")).execute().longValue());
+        assertEquals(11L, db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L).longValue());
     }
 
     @Test
     public void testUpdate() throws Throwable {
-        long res = db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute();
-        assertEquals(1L, res);
-        assertEquals(Long.valueOf(1L), db.select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).orElse(-1L));
+        assertEquals(1L, db.update("UPDATE TEST SET NAME=? WHERE NAME=?", "new_name_2", "name_2").execute().longValue());
+        assertEquals(1L, db.select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).orElse(-1L).longValue());
     }
 
     @Test
     public void testUpdateNamed() throws Throwable {
-        long res = db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute();
-        assertEquals(1L, res);
-        assertEquals(Long.valueOf(1L), db.select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).orElse(-1L));
+        assertEquals(1L, db.update("UPDATE TEST SET NAME=:name WHERE NAME=:new_name", new SimpleImmutableEntry<>("name", "new_name_2"), new SimpleImmutableEntry<>("new_name", "name_2")).execute().longValue());
+        assertEquals(1L, db.select("SELECT COUNT(*) FROM TEST WHERE name=?", "new_name_2").single((rs) -> rs.getLong(1)).orElse(-1L).longValue());
     }
 
     @Test
     public void testUpdateBatch() throws Exception {
-        assertEquals(2L, (long) db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute());
+        assertEquals(2L, db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).execute().longValue());
     }
 
     @Test
@@ -232,33 +196,29 @@ public class DBTestSuite {
         Map<String, String> params2 = new HashMap<String, String>() {{
             put("names", "name2");
         }};
-        long res = db.update("INSERT INTO TEST(name) VALUES(:names)", params1, params2).execute();
-        assertEquals(2L, res);
+        assertEquals(2L, db.update("INSERT INTO TEST(name) VALUES(:names)", params1, params2).execute().longValue());
     }
 
     @Test
     public void testUpdateBatchBatch() throws Exception {
-        assertEquals(2L, (long) db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).batched(true).execute());
+        assertEquals(2L, db.update("INSERT INTO TEST(name) VALUES(?)", new Object[][]{{"name1"}, {"name2"}}).batched(true).execute().longValue());
     }
 
     @Test
     public void testLargeUpdate() throws Exception {
-        long res = db.update("INSERT INTO TEST(name) VALUES(?)", "largeupdatenametest").execute();
-        assertEquals(1L, res);
+        assertEquals(1L, db.update("INSERT INTO TEST(name) VALUES(?)", "largeupdatenametest").execute().longValue());
     }
 
     @Test
     public void testDelete() throws Throwable {
-        long res = db.update("DELETE FROM TEST WHERE name=?", "name_2").execute();
-        assertEquals(1L, res);
-        assertEquals(Long.valueOf(9L), db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L));
+        assertEquals(1L, db.update("DELETE FROM TEST WHERE name=?", "name_2").execute().longValue());
+        assertEquals(9L, db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L).longValue());
     }
 
     @Test
     public void testDeleteNamed() throws Throwable {
-        long res = db.update("DELETE FROM TEST WHERE name=:name", new SimpleImmutableEntry<>("name", "name_2")).execute();
-        assertEquals(1L, res);
-        assertEquals(Long.valueOf(9L), db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L));
+        assertEquals(1L, db.update("DELETE FROM TEST WHERE name=:name", new SimpleImmutableEntry<>("name", "name_2")).execute().longValue());
+        assertEquals(9L, db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L).longValue());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -269,7 +229,7 @@ public class DBTestSuite {
     @Test
     public void testVoidStoredProcedure() throws Throwable {
         db.procedure("{call CREATETESTROW2(?)}", "new_name").call();
-        assertEquals(Long.valueOf(11L), db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L));
+        assertEquals(11L, db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L).longValue());
     }
 
     @Test(expected = SQLRuntimeException.class)
@@ -285,8 +245,7 @@ public class DBTestSuite {
     @Test
     public void testResultSetWithResultsStoredProcedure() throws Throwable {
         List<String> name = new ArrayList<>(1);
-        long count = db.procedure("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2), name::add).execute().count();
-        assertEquals(0, count);
+        assertEquals(0, db.procedure("call GETNAMEBYID(?, ?)", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2), name::add).execute().count());
         assertEquals("name_1", name.get(0));
     }
 
@@ -302,8 +261,7 @@ public class DBTestSuite {
 
     @Test
     public void testGetResult() throws Throwable {
-        String name = db.procedure("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2)).orElse(null);
-        assertEquals("name_1", name);
+        assertEquals("name_1", db.procedure("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2)).orElse(null));
     }
 
     @Test
@@ -331,13 +289,7 @@ public class DBTestSuite {
     }
 
     private void printDb() {
-        db.select("SELECT * FROM TEST").execute(rs -> rs).forEach(rs -> {
-            try {
-                System.out.println(String.format("ID=%s NAME=%s", rs.getInt(1), rs.getString(2)));
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
+        db.select("SELECT * FROM TEST").execute(rs -> String.format("ID=%s NAME=%s", rs.getInt(1), rs.getString(2))).forEach(System.out::println);
     }
 
     @Test(expected = Exception.class)
@@ -350,10 +302,10 @@ public class DBTestSuite {
 
     @Test
     public void testPrimitives() throws Throwable {
-        assertEquals(2, (int) db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new long[]{1, 2})).single(rs -> rs.getInt(1)).get());
-        assertEquals(2, (int) db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new int[]{1, 2})).single(rs -> rs.getInt(1)).get());
-        assertEquals(2, (int) db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new byte[]{1, 2})).single(rs -> rs.getInt(1)).get());
-        assertEquals(2, (int) db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new short[]{1, 2})).single(rs -> rs.getInt(1)).get());
+        assertEquals(2, db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new long[]{1, 2})).single(rs -> rs.getInt(1)).orElse(-1).intValue());
+        assertEquals(2, db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new int[]{1, 2})).single(rs -> rs.getInt(1)).orElse(-1).intValue());
+        assertEquals(2, db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new byte[]{1, 2})).single(rs -> rs.getInt(1)).orElse(-1).intValue());
+        assertEquals(2, db.select("SELECT COUNT(*) FROM TEST WHERE id IN (:id)", new SimpleImmutableEntry<>("id", new short[]{1, 2})).single(rs -> rs.getInt(1)).orElse(-1).intValue());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -368,7 +320,7 @@ public class DBTestSuite {
                         "ALTER TABLE TEST1 ADD COLUMN surname VARCHAR(255);" +
                         "INSERT INTO TEST1(name, surname) VALUES ('test1', 'test2');" +
                         "DROP TABLE TEST1;"
-        ).print().timeout(1).errorHandler(System.out::println).execute());
+        ).print().timeout(1).errorHandler(System.err::println).execute());
     }
 
     @Test
@@ -387,7 +339,7 @@ public class DBTestSuite {
 
     @Test(expected = SQLRuntimeException.class)
     public void testInsertNull() throws Exception {
-        assertEquals(1L, (long) db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", null)).execute());
+        assertEquals(1L, db.update("INSERT INTO TEST(name) VALUES(:name)", new SimpleImmutableEntry<>("name", null)).execute().longValue());
     }
 
     @Test
