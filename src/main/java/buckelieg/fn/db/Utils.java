@@ -107,8 +107,14 @@ final class Utils {
     /*
         <code>IdentityHashMap</code> is used to process cases like:
         <code>
-            SELECT * FROM SOME_TABLE t1 JOIN SOME_TABLE t2 ON t1.key = t2.key
+            SELECT * FROM SOME_TABLE UNION ALL SELECT * FROM SOME_TABLE
         </code>
+        therefore such Java stream construction
+        <code>
+            DB.select(...).execute().collect(Collectors.toSet())
+        </cdoe>
+        would not eliminate duplicates from tuple. To do it just use UNION on the SQL query side or do this:
+        <code>DB.select(...).execute().map(HashMap::new).collect(Collectors.toSet())</code>
      */
     @Nonnull
     static TryFunction<ResultSet, Map<String, Object>, SQLException> defaultMapper = rs -> {

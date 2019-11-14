@@ -33,7 +33,6 @@ import static java.lang.Thread.currentThread;
 import static java.util.AbstractMap.SimpleImmutableEntry;
 import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 
 // TODO more test suites for other RDBMS
@@ -185,7 +184,7 @@ public class DBTestSuite {
 
     @Test
     public void testSelectAllFieldsWithDefaultMapper() throws Exception {
-        assertEquals(2, db.select("SELECT * FROM TEST t1 JOIN TEST t2 ON t1.ID = t2.ID WHERE t1.ID = ?", 1).list().get(0).size());
+        assertEquals(2, db.select("SELECT * FROM TEST WHERE ID=?", 1).list().get(0).size());
     }
 
     @Test
