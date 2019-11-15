@@ -73,10 +73,10 @@ final class ScriptQuery implements Script {
     @Override
     public Long execute(String delimiter) {
         this.delimiter = requireNonNull(delimiter, "Statement delimiter must be provided");
-        if (timeout == 0) {
-            return doExecute();
-        }
         try {
+            if (timeout == 0) {
+                return doExecute();
+            }
             conveyor = newSingleThreadExecutor(); // TODO implement executor that uses current thread
             return conveyor.submit(this::doExecute).get(timeout, SECONDS);
         } catch (Exception e) {
@@ -86,39 +86,32 @@ final class ScriptQuery implements Script {
         }
     }
 
-    private long doExecute() {
-        long start = currentTimeMillis();
-        long end;
-        try {
-            end = doInTransaction(connectionSupplier.get(), conn -> {
-                for (String query : this.query.split(delimiter)) {
-                    try (Statement statement = conn.createStatement()) {
-                        statement.setEscapeProcessing(escaped);
-                        statement.setPoolable(poolable);
-                        if (skipErrors) {
-                            try {
-                                statement.execute(query);
-                            } catch (SQLException e) {
-                                errorHandler.accept(e);
-                            }
-                        } else {
+    private long doExecute() throws SQLException {
+        long end, start = currentTimeMillis();
+        end = doInTransaction(connectionSupplier.get(), conn -> {
+            for (String query : this.query.split(delimiter)) {
+                try (Statement statement = conn.createStatement()) {
+                    statement.setEscapeProcessing(escaped);
+                    statement.setPoolable(poolable);
+                    if (skipErrors) {
+                        try {
                             statement.execute(query);
+                        } catch (SQLException e) {
+                            errorHandler.accept(e);
                         }
-                        Optional<SQLWarning> warning = ofNullable(statement.getWarnings());
-                        if (!skipWarnings && warning.isPresent()) {
-                            throw warning.get();
-                        } else {
-                            warning.ifPresent(errorHandler);
-                        }
+                    } else {
+                        statement.execute(query);
+                    }
+                    Optional<SQLWarning> warning = ofNullable(statement.getWarnings());
+                    if (!skipWarnings && warning.isPresent()) {
+                        throw warning.get();
+                    } else {
+                        warning.ifPresent(errorHandler);
                     }
                 }
-                return currentTimeMillis();
-            });
-        } catch (Exception e) {
-            throw newSQLRuntimeException(e);
-        } finally {
-            close();
-        }
+            }
+            return currentTimeMillis();
+        });
         return end - start;
     }
 
