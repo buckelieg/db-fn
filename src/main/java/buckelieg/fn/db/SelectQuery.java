@@ -27,11 +27,11 @@ import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static buckelieg.fn.db.Utils.setStatementParameters;
 import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.StreamSupport.stream;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -83,7 +83,7 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     @Override
     public final <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper) {
         requireNonNull(mapper, "Mapper must be provided");
-        return StreamSupport.stream(jdbcTry(() -> {
+        return stream(jdbcTry(() -> {
             doExecute();
             if (rs != null) {
                 wrapper = new ImmutableResultSet(rs);
