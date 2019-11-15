@@ -16,7 +16,6 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.Connection;
@@ -30,7 +29,6 @@ import java.util.function.Consumer;
 import static buckelieg.fn.db.Utils.*;
 import static java.lang.Math.max;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -41,9 +39,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @ParametersAreNonnullByDefault
 final class ScriptQuery implements Script {
 
-    private static final Consumer<SQLException> NOOP = e -> {
-        // do nothing
-    };
     private final String query;
     private final TrySupplier<Connection, SQLException> connectionSupplier;
     private ExecutorService conveyor;
@@ -59,8 +54,8 @@ final class ScriptQuery implements Script {
      * Creates script executor query
      *
      * @param connectionSupplier db connection provider
-     * @param script             an arbitrary SQL script to stream
-     * @throws IllegalArgumentException in case of cirrupted script (like illegal comment lines encountered)
+     * @param script             an arbitrary SQL script to execute
+     * @throws IllegalArgumentException in case of corrupted script (like illegal comment lines encountered)
      */
     ScriptQuery(TrySupplier<Connection, SQLException> connectionSupplier, String script) {
         this.connectionSupplier = connectionSupplier;
