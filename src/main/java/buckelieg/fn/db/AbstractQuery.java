@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static buckelieg.fn.db.Utils.cutComments;
 import static buckelieg.fn.db.Utils.newSQLRuntimeException;
 import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
@@ -40,9 +41,9 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
 
     AbstractQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
         try {
-            requireNonNull(query, "SQL query must be provided");
-            this.statement = prepareStatement(connectionSupplier, query, params);
-            this.query = asSQL(query, params);
+            String q = cutComments(requireNonNull(query, "SQL query must be provided"));
+            this.statement = prepareStatement(connectionSupplier, q, params);
+            this.query = asSQL(q, params);
         } catch (SQLException e) {
             throw newSQLRuntimeException(e);
         }
