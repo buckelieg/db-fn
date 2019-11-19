@@ -70,7 +70,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
         this.connectionSupplier = connectionSupplier;
         this.script = cutComments(requireNonNull(script, "Script string must be provided"));
         this.params = namedParams;
-        Map.Entry<String, Object[]> preparedScript = prepareQuery(this.script, asList(namedParams));
+        Map.Entry<String, Object[]> preparedScript = prepareQuery(this.script, namedParams == null ? emptyList() : asList(namedParams));
         this.query = Utils.asSQL(preparedScript.getKey(), preparedScript.getValue());
     }
 
