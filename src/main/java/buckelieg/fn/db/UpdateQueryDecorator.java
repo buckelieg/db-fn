@@ -10,20 +10,8 @@ import java.util.stream.Stream;
 @ParametersAreNonnullByDefault
 final class UpdateQueryDecorator extends UpdateQuery {
 
-    private TrySupplier<Connection, SQLException> connectionSupplier;
-    private String query;
-    private Object[][] batch;
-    private boolean isLarge = false;
-    private boolean isBatch = false;
-    private boolean isPoolable = false;
-    private boolean isEscaped = true;
-    private int timeout = 0;
-
     UpdateQueryDecorator(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
         super(connectionSupplier, query, batch);
-        this.connectionSupplier = connectionSupplier;
-        this.query = query;
-        this.batch = batch;
     }
 
     @Nonnull
