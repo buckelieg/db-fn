@@ -16,7 +16,6 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.SQLException;
@@ -164,5 +163,36 @@ public interface Script extends Query {
      */
     @Nonnull
     Script errorHandler(Consumer<SQLException> handler);
+
+    /**
+     * Sets the transaction isolation level for this query.
+     * These are:
+     * {@code
+     * TransactionIsolation.READ_UNCOMMITTED
+     * TransactionIsolation.READ_COMMITTED
+     * TransactionIsolation.REPEATABLE_READ
+     * TransactionIsolation.SERIALIZABLE
+     * }
+     *
+     * @param isolationLevel desired transaction isolation level
+     * @return a script query abstraction
+     * @throws NullPointerException if level is null
+     * @see TransactionIsolation
+     */
+    @Nonnull
+    Script transacted(TransactionIsolation isolationLevel);
+
+    /**
+     * Sets the transaction isolation level for this query.
+     *
+     * @param supplier transaction isolation level value supplier
+     * @return a script query abstraction
+     * @throws NullPointerException if supplier is null
+     * @see #transacted(TransactionIsolation)
+     */
+    @Nonnull
+    default Script transacted(Supplier<TransactionIsolation> supplier) {
+        return transacted(toOptional(supplier).orElse(TransactionIsolation.SERIALIZABLE));
+    }
 
 }

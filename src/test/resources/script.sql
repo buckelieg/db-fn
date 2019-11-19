@@ -12,3 +12,5 @@ SELECT * FROM DUAL*/
 
 
 INSERT INTO TEST(name) VALUES('whatever');
+
+SELECT 1 AS "TEST     TEST" FROM TEST; -- TODO preserve whitespaces inside double-quoted elements

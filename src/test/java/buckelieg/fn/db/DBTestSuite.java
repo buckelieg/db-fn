@@ -221,6 +221,12 @@ public class DBTestSuite {
         assertEquals(9L, db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L).longValue());
     }
 
+    @Test
+    public void testSetRansactionIsolationLevel() throws Exception {
+        assertEquals(2L, db.update("DELETE FROM TEST WHERE id=?", new Object[][]{{1}, {2}}).transacted(TransactionIsolation.READ_UNCOMMITTED).execute().longValue());
+        assertEquals(8L, db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L).longValue());
+    }
+
     @Test(expected = IllegalStateException.class)
     public void testDuplicatedNamedParameters() throws Throwable {
         db.select("SELECT * FROM TEST WHERE 1=1 AND (NAME IN (:names) OR NAME=:names)", new SimpleImmutableEntry<>("names", "name_1"), new SimpleImmutableEntry<>("names", "name_2"));
@@ -361,6 +367,8 @@ public class DBTestSuite {
         db.procedure("{call CREATETESTROW2(?)}", "new_name")
                 .print(s -> assertEquals("{call CREATETESTROW2(IN:=new_name(JAVA_OBJECT))}", s))
                 .execute().count();
+        db.script("SELECT * FROM TEST WHERE name=:name", new SimpleImmutableEntry<>("name", "name_2"))
+                .print(s -> assertEquals("SELECT * FROM TEST WHERE name=name_2", s));
     }
 
     @Test

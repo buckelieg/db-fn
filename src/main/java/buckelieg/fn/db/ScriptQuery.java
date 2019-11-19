@@ -16,19 +16,22 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import static buckelieg.fn.db.Utils.*;
 import static java.lang.Math.max;
+import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -37,9 +40,13 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @SuppressWarnings("unchecked")
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-final class ScriptQuery implements Script {
+final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
 
-    private final String query;
+    private static final Consumer<SQLException> NOOP = e -> {
+        // do nothing
+    };
+
+    private final String script;
     private final TrySupplier<Connection, SQLException> connectionSupplier;
     private ExecutorService conveyor;
     private int timeout;
@@ -49,7 +56,9 @@ final class ScriptQuery implements Script {
     private boolean poolable;
     private Consumer<SQLException> errorHandler = NOOP;
     private String delimiter = STATEMENT_DELIMITER;
-
+    private T[] params;
+    private TransactionIsolation isolationLevel = TransactionIsolation.SERIALIZABLE;
+    private String query;
     /**
      * Creates script executor query
      *
@@ -57,14 +66,17 @@ final class ScriptQuery implements Script {
      * @param script             an arbitrary SQL script to execute
      * @throws IllegalArgumentException in case of corrupted script (like illegal comment lines encountered)
      */
-    ScriptQuery(TrySupplier<Connection, SQLException> connectionSupplier, String script) {
+    ScriptQuery(TrySupplier<Connection, SQLException> connectionSupplier, String script, @Nullable T... namedParams) {
         this.connectionSupplier = connectionSupplier;
-        this.query = cutComments(requireNonNull(script, "Script string must be provided"));
+        this.script = cutComments(requireNonNull(script, "Script string must be provided"));
+        this.params = namedParams;
+        Map.Entry<String, Object[]> preparedScript = prepareQuery(this.script, asList(namedParams));
+        this.query = Utils.asSQL(preparedScript.getKey(), preparedScript.getValue());
     }
 
     /**
      * Executes script. All comments are cut out.
-     * Therefore all RDBMS-scpecific hints are ignored (like Oracle <code>APPEND</code>) etc.
+     * Therefore all RDBMS-scpecific hints are ignored (like Oracle's <code>APPEND</code>) etc.
      *
      * @return a time, taken by this script to complete in milliseconds
      * @throws SQLRuntimeException in case of any errors including {@link SQLWarning} (if corresponding option is set) OR (if timeout is set) - in case of execution run out of time.
@@ -88,31 +100,42 @@ final class ScriptQuery implements Script {
 
     private long doExecute() throws SQLException {
         long end, start = currentTimeMillis();
-        end = doInTransaction(connectionSupplier.get(), conn -> {
-            for (String query : this.query.split(delimiter)) {
-                try (Statement statement = conn.createStatement()) {
-                    statement.setEscapeProcessing(escaped);
-                    statement.setPoolable(poolable);
-                    if (skipErrors) {
-                        try {
-                            statement.execute(query);
-                        } catch (SQLException e) {
-                            errorHandler.accept(e);
-                        }
-                    } else {
-                        statement.execute(query);
+        List<T> paramList = params == null ? emptyList(): asList(params);
+        end = doInTransaction(connectionSupplier.get(), isolationLevel, conn -> {
+            for (String query : script.split(delimiter)) {
+                if (isAnonymous(query)) {
+                    executeStatement(conn.createStatement(), s -> s.execute(query));
+                } else {
+                    if (params == null || params.length == 0) {
+                        throw new IllegalArgumentException(format("Query has named parameters but none of them are provided: '%s'", query));
                     }
-                    Optional<SQLWarning> warning = ofNullable(statement.getWarnings());
-                    if (!skipWarnings && warning.isPresent()) {
-                        throw warning.get();
-                    } else {
-                        warning.ifPresent(errorHandler);
-                    }
+                    Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, paramList);
+                    executeStatement(setStatementParameters(conn.prepareStatement(checkAnonymous(preparedQuery.getKey())), preparedQuery.getValue()), PreparedStatement::execute);
                 }
             }
             return currentTimeMillis();
         });
         return end - start;
+    }
+
+    private <S extends Statement> void executeStatement(S statement, TryConsumer<S, SQLException> consumer) throws SQLException {
+        statement.setEscapeProcessing(escaped);
+        statement.setPoolable(poolable);
+        if (skipErrors) {
+            try {
+                consumer.accept(statement);
+            } catch (SQLException e) {
+                errorHandler.accept(e);
+            }
+        } else {
+            consumer.accept(statement);
+        }
+        Optional<SQLWarning> warning = ofNullable(statement.getWarnings());
+        if (!skipWarnings && warning.isPresent()) {
+            throw warning.get();
+        } else {
+            warning.ifPresent(errorHandler);
+        }
     }
 
     @Nonnull
@@ -125,7 +148,7 @@ final class ScriptQuery implements Script {
     @Nonnull
     @Override
     public Script print(Consumer<String> printer) {
-        requireNonNull(printer, "Printer must be provided").accept(query);
+        requireNonNull(printer, "Printer must be provided").accept(asSQL());
         return this;
     }
 
@@ -164,9 +187,16 @@ final class ScriptQuery implements Script {
 
     @Nonnull
     @Override
-    public <Q extends Query> Q poolable(boolean poolable) {
+    public Script poolable(boolean poolable) {
         this.poolable = poolable;
-        return (Q) this;
+        return this;
+    }
+
+    @Nonnull
+    @Override
+    public Script transacted(TransactionIsolation isolationLevel) {
+        this.isolationLevel = requireNonNull(isolationLevel, "Transaction isolation level must be provided");
+        return this;
     }
 
     @Nonnull

@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.sql.*;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,16 +35,13 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Stream.of;
 import static java.util.stream.StreamSupport.stream;
 
 final class Utils {
 
-    static final Consumer<SQLException> NOOP = e -> {
-        // do nothing
-    };
-
     static final String STATEMENT_DELIMITER = ";";
-
+    static final Pattern PARAMETER = Pattern.compile("\\?");
     static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
 
     // Java regexp does not support conditional regexps. We will enumerate all possible variants.
@@ -180,10 +176,14 @@ final class Utils {
     }
 
     static String checkAnonymous(String query) {
-        if (NAMED_PARAMETER.matcher(query).find()) {
-            throw new IllegalArgumentException(format("Query '%s' has named placeholders for parameters whereas parameters themselves are unnamed", query));
+        if (!isAnonymous(query)) {
+            throw new IllegalArgumentException(format("Named parameters mismatch for query: '%s'", query));
         }
         return query;
+    }
+
+    static boolean isAnonymous(String query) {
+        return !NAMED_PARAMETER.matcher(query).find();
     }
 
     static SQLRuntimeException newSQLRuntimeException(Throwable t) {
@@ -198,15 +198,19 @@ final class Utils {
         return ofNullable(requireNonNull(supplier, "Value supplier must be provided").get());
     }
 
-    static <T> T doInTransaction(Connection conn, TryFunction<Connection, T, SQLException> action) throws SQLException {
+    static <T> T doInTransaction(Connection conn, TransactionIsolation isolationLevel, TryFunction<Connection, T, SQLException> action) throws SQLException {
         requireNonNull(conn, "Connection must be provided");
         boolean autoCommit = true;
         Savepoint savepoint = null;
+        int isolation = conn.getTransactionIsolation();
         T result;
         try {
             autoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
             savepoint = conn.setSavepoint();
+            if(isolation != isolationLevel.level && conn.getMetaData().supportsTransactionIsolationLevel(isolationLevel.level)) {
+                conn.setTransactionIsolation(isolationLevel.level);
+            }
             result = requireNonNull(action, "Action must be provided").apply(conn);
             conn.commit();
             return result;
@@ -216,6 +220,7 @@ final class Utils {
             throw e;
         } finally {
             conn.setAutoCommit(autoCommit);
+            conn.setTransactionIsolation(isolation);
         }
     }
 
@@ -253,6 +258,23 @@ final class Utils {
             statement.setObject(++pNum, p); // introduce type conversion here?
         }
         return statement;
+    }
+
+    static String asSQL(String query, Object... params) {
+        String replaced = query;
+        int idx = 0;
+        Matcher matcher = PARAMETER.matcher(query);
+        while (matcher.find()) {
+            Object p = params[idx];
+            replaced = replaced.replaceFirst(
+                    "\\?",
+                    (p != null && p.getClass().isArray() ? of((Object[]) p) : of(ofNullable(p).orElse("null")))
+                            .map(Object::toString)
+                            .collect(joining(","))
+            );
+            idx++;
+        }
+        return replaced;
     }
 
 }

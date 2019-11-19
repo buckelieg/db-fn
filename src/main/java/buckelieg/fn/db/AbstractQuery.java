@@ -16,25 +16,17 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static buckelieg.fn.db.Utils.cutComments;
 import static buckelieg.fn.db.Utils.newSQLRuntimeException;
 import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Stream.of;
 
 abstract class AbstractQuery<S extends PreparedStatement> implements Query {
-
-    private static final Pattern PARAM = Pattern.compile("\\?");
 
     private S statement;
     private final String query;
@@ -112,20 +104,7 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
     abstract S prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) throws SQLException;
 
     String asSQL(String query, Object... params) {
-        String replaced = query;
-        int idx = 0;
-        Matcher matcher = PARAM.matcher(query);
-        while (matcher.find()) {
-            Object p = params[idx];
-            replaced = replaced.replaceFirst(
-                    "\\?",
-                    (p != null && p.getClass().isArray() ? of((Object[]) p) : of(ofNullable(p).orElse("null")))
-                            .map(Object::toString)
-                            .collect(joining(","))
-            );
-            idx++;
-        }
-        return replaced;
+        return Utils.asSQL(query, params);
     }
 
     @Nonnull

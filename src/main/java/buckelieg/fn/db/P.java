@@ -17,7 +17,7 @@ package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNullableByDefault;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.JDBCType;
 import java.sql.ParameterMetaData;
 import java.sql.SQLType;
@@ -31,7 +31,7 @@ import static java.util.Objects.requireNonNull;
  * @param <T> parameter value type
  * @see StoredProcedure
  */
-@ParametersAreNullableByDefault
+@ParametersAreNonnullByDefault
 public final class P<T> {
     /**
      * @see java.sql.ParameterMetaData
@@ -41,23 +41,15 @@ public final class P<T> {
     private final T value;
     private final SQLType type;
 
-    private P(int mode, SQLType type, @Nonnull String name, T value) {
+    private P(int mode, SQLType type, String name, @Nullable T value) {
         this.mode = mode;
-        this.type = type;
-        this.name = requireNonNull(name, "Name must be provided");
+        this.type = requireNonNull(type, "Parameter type must be provided");
+        this.name = requireNonNull(name, "Parameter name must be provided");
         this.value = value;
     }
 
-    public static <T> P<T> in(SQLType type, @Nonnull String name, T value) {
+    public static <T> P<T> in(SQLType type, String name, T value) {
         return new P<>(ParameterMetaData.parameterModeIn, type, name, value);
-    }
-
-    public static <T> P<T> out(SQLType type, @Nonnull String name) {
-        return new P<>(ParameterMetaData.parameterModeOut, type, name, null);
-    }
-
-    public static <T> P<T> inOut(SQLType type, @Nonnull String name, T value) {
-        return new P<>(ParameterMetaData.parameterModeInOut, type, name, value);
     }
 
     public static <T> P<T> in(T value) {
@@ -68,12 +60,36 @@ public final class P<T> {
         return in(type, "", value);
     }
 
+    public static <T> P<T> in(String name, T value) {
+        return in(JDBCType.JAVA_OBJECT, name, value);
+    }
+
+    public static <T> P<T> out(SQLType type, String name) {
+        return new P<>(ParameterMetaData.parameterModeOut, type, name, null);
+    }
+
     public static <T> P<T> out(SQLType type) {
         return out(type, "");
     }
 
+    public static <T> P<T> out(String name) {
+        return out(JDBCType.JAVA_OBJECT, name);
+    }
+
+    public static <T> P<T> inOut(SQLType type, String name, T value) {
+        return new P<>(ParameterMetaData.parameterModeInOut, type, name, value);
+    }
+
     public static <T> P<T> inOut(SQLType type, T value) {
         return inOut(type, "", value);
+    }
+
+    public static <T> P<T> inOut(String name, T value) {
+        return inOut(JDBCType.JAVA_OBJECT, name, value);
+    }
+
+    public static <T> P<T> inOut(T value) {
+        return inOut(JDBCType.JAVA_OBJECT, "", value);
     }
 
     public boolean isIn() {

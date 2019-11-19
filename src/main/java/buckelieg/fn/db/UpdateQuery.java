@@ -44,6 +44,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     private boolean isLarge;
     private boolean isBatch;
     private final String query;
+    protected TransactionIsolation isolationLevel = TransactionIsolation.SERIALIZABLE;
 
     private UpdateQuery(TrySupplier<PreparedStatement, SQLException> prepareStatement, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
         super(connectionSupplier, query, (Object) batch);
@@ -106,6 +107,13 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
 
     @Nonnull
     @Override
+    public Update transacted(TransactionIsolation isolationLevel) {
+        this.isolationLevel = requireNonNull(isolationLevel, "Transaction isolation level must be provided");
+        return this;
+    }
+
+    @Nonnull
+    @Override
     public Update print(Consumer<String> printer) {
         return log(printer);
     }
@@ -113,7 +121,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler) {
-        return jdbcTry(() -> doInTransaction(connectionSupplier.get(), TryFunction.of(this::doExecute).andThen(count -> {
+        return jdbcTry(() -> doInTransaction(connectionSupplier.get(), isolationLevel, TryFunction.of(this::doExecute).andThen(count -> {
             setStatementParameter(s -> requireNonNull(generatedValuesHandler, "Generated values handler must be provided").accept(StreamSupport.stream(new ResultSetSpliterator(s::getGeneratedKeys), false).onClose(this::close)));
             return count;
         })));
@@ -139,7 +147,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
      */
     @Nonnull
     public Long execute() {
-        return jdbcTry(() -> batch.length > 1 ? doInTransaction(connectionSupplier.get(), this::doExecute) : doExecute(connectionSupplier.get()));
+        return jdbcTry(() -> batch.length > 1 ? doInTransaction(connectionSupplier.get(), isolationLevel, this::doExecute) : doExecute(connectionSupplier.get()));
     }
 
     private long doExecute(Connection conn) throws SQLException {

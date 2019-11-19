@@ -52,11 +52,11 @@ public interface Update extends Query {
      * Example:
      * {@code
      * stream(
-     *      stream -> stream.map(rs -> new Object[] {
-     *          rs.getLong(1),
-     *          rs.getString(2),
-     *          rs.getObject(3)
-     *      }).collect(Collectors.toList()),
+     * stream -> stream.map(rs -> new Object[] {
+     * rs.getLong(1),
+     * rs.getString(2),
+     * rs.getObject(3)
+     * }).collect(Collectors.toList()),
      * )}
      *
      * @param generatedValuesHandler handler which operates on {@link ResultSet} with generated values
@@ -73,18 +73,18 @@ public interface Update extends Query {
      * Example:
      * {@code
      * stream(
-     *      stream -> stream.map(rs -> new Object[] {
-     *          rs.getLong("id"),
-     *          rs.getString("hash"),
-     *          rs.getObject("myGeneratedValueColumn")
-     *      }).collect(Collectors.toList()),
-     *      "id", "hash", "myGeneratedValueColumn"
+     * stream -> stream.map(rs -> new Object[] {
+     * rs.getLong("id"),
+     * rs.getString("hash"),
+     * rs.getObject("myGeneratedValueColumn")
+     * }).collect(Collectors.toList()),
+     * "id", "hash", "myGeneratedValueColumn"
      * )}
      *
      * @param generatedValuesHandler handler which operates on {@link ResultSet} with generated values
      * @param colNames               column names with generated keys
      * @return affected rows count
-     * @throws NullPointerException if colNames or generatedValuesHandler is null
+     * @throws NullPointerException     if colNames or generatedValuesHandler is null
      * @throws IllegalArgumentException if colNames is empty
      * @see java.sql.Connection#prepareStatement(String, String[])
      */
@@ -97,12 +97,12 @@ public interface Update extends Query {
      * Example:
      * {@code
      * stream(
-     *      stream -> stream.map(rs -> new Object[] {
-     *          rs.getLong(1),
-     *          rs.getString(2),
-     *          rs.getObject(5)
-     *      }).collect(Collectors.toList()),
-     *      1, 2, 5
+     * stream -> stream.map(rs -> new Object[] {
+     * rs.getLong(1),
+     * rs.getString(2),
+     * rs.getObject(5)
+     * }).collect(Collectors.toList()),
+     * 1, 2, 5
      * )}
      *
      * @param generatedValuesHandler handler which operates on {@link ResultSet} with generated values
@@ -190,6 +190,37 @@ public interface Update extends Query {
     @Nonnull
     default Update escaped(Supplier<Boolean> supplier) {
         return escaped(toOptional(supplier).orElse(true));
+    }
+
+    /**
+     * Sets the transaction isolation level for this query.
+     * These are:
+     * {@code
+     * TransactionIsolation.READ_UNCOMMITTED
+     * TransactionIsolation.READ_COMMITTED
+     * TransactionIsolation.REPEATABLE_READ
+     * TransactionIsolation.SERIALIZABLE
+     * }
+     *
+     * @param isolationLevel desired transaction isolation level
+     * @return an update query abstraction
+     * @throws NullPointerException if level is null
+     * @see TransactionIsolation
+     */
+    @Nonnull
+    Update transacted(TransactionIsolation isolationLevel);
+
+    /**
+     * Sets the transaction isolation level for this query.
+     *
+     * @param supplier transaction isolation level value supplier
+     * @return an update query abstraction
+     * @throws NullPointerException if supplier is null
+     * @see #transacted(TransactionIsolation)
+     */
+    @Nonnull
+    default Update transacted(Supplier<TransactionIsolation> supplier) {
+        return transacted(toOptional(supplier).orElse(TransactionIsolation.SERIALIZABLE));
     }
 
     /**

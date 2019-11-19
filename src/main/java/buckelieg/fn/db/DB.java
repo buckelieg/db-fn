@@ -49,7 +49,7 @@ public final class DB implements AutoCloseable {
     private final TrySupplier<Connection, SQLException> connectionSupplier;
 
     /**
-     * Creates DB from connection string
+     * Creates DB from connection string using {@code DriverManager#getConnection} method
      *
      * @param connectionUrl rdbms-specific connection URL
      * @throws SQLRuntimeException if connection string is invalid
@@ -89,42 +89,50 @@ public final class DB implements AutoCloseable {
     /**
      * Executes an arbitrary SQL statement(s) against provided connection.
      *
-     * @param script (a series of) SQL statement(s) to stream
+     * @param script      (a series of) SQL statement(s) to stream
+     * @param namedParams named parameters to be used in the script
      * @return script query abstraction
      * @throws NullPointerException if script is null
      * @see Script
      */
+    @SuppressWarnings("unchecked")
+    @SafeVarargs
     @Nonnull
-    public Script script(String script) {
-        return new ScriptQuery(connectionSupplier, script);
+    public final <T extends Map.Entry<String, ?>> Script script(String script, T... namedParams) {
+        return new ScriptQuery(connectionSupplier, script, namedParams);
     }
 
     /**
      * Executes an arbitrary SQL statement(s) against provided connection with default encoding (<code>Charset.UTF_8</code>)
      *
-     * @param source file with a SQL script contained
+     * @param source      file with a SQL script contained
+     * @param namedParams named parameters to be used in the script
      * @return script query abstraction
      * @throws RuntimeException in case of any errors (like {@link java.io.FileNotFoundException} or source file is null)
-     * @see #script(File, Charset)
+     * @see #script(File, Charset, Map.Entry[])
      */
+    @SafeVarargs
     @Nonnull
-    public Script script(File source) {
-        return script(source, UTF_8);
+    public final <T extends Map.Entry<String, ?>> Script script(File source, T... namedParams) {
+        return script(source, UTF_8, namedParams);
     }
+
     /**
      * Executes an arbitrary SQL statement(s) against provided connection.
      *
-     * @param source file with a SQL script contained
-     * @param encoding source file encoding to be used
+     * @param source      file with a SQL script contained
+     * @param encoding    source file encoding to be used
+     * @param namedParams named parameters to be used in the script
      * @return script query abstraction
      * @throws RuntimeException in case of any errors (like {@link java.io.FileNotFoundException} or source file is null)
-     * @see #script(String)
+     * @see #script(String, Map.Entry[])
      * @see Charset
      */
+    @SafeVarargs
     @Nonnull
-    public Script script(File source, Charset encoding) {
+    public final <T extends Map.Entry<String, ?>> Script script(File source, Charset encoding, T... namedParams) {
         try {
-            return script(new String(readAllBytes(requireNonNull(source, "Source file must be provided").toPath()), requireNonNull(encoding, "File encoding must be provided")));
+            return script(new String(readAllBytes(requireNonNull(source, "Source file must be provided").toPath()), requireNonNull(encoding, "File encoding must be provided")), namedParams);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
