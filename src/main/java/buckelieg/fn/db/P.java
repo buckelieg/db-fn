@@ -21,6 +21,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.sql.JDBCType;
 import java.sql.ParameterMetaData;
 import java.sql.SQLType;
+import java.util.Objects;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -123,15 +124,20 @@ public final class P<T> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         P<?> p = (P<?>) o;
-        return mode == p.mode && name.equals(p.name) && value.equals(p.value) && type.equals(p.type);
+
+        if (mode != p.mode) return false;
+        if (!name.equals(p.name)) return false;
+        if (!Objects.equals(value, p.value)) return false;
+        return type.equals(p.type);
     }
 
     @Override
     public int hashCode() {
         int result = mode;
         result = 31 * result + name.hashCode();
-        result = 31 * result + value.hashCode();
+        result = 31 * result + (value != null ? value.hashCode() : 0);
         result = 31 * result + type.hashCode();
         return result;
     }
