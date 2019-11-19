@@ -20,16 +20,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static buckelieg.fn.db.Utils.defaultMapper;
-import static buckelieg.fn.db.Utils.toOptional;
+import static buckelieg.fn.db.Utils.*;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 
@@ -53,8 +49,10 @@ public interface Select extends Query {
         T result;
         try {
             result = execute(mapper).iterator().next();
-        } catch (Exception e) {
+        } catch (NoSuchElementException e) {
             result = null;
+        } catch (Exception e) {
+            throw newSQLRuntimeException(e);
         } finally {
             close();
         }
@@ -63,6 +61,7 @@ public interface Select extends Query {
 
     /**
      * Executes SELECT statement for SINGLE result with default mapper applied
+     *
      * @return a {@link Map} with key-value pairs
      */
     @Nonnull
