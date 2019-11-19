@@ -38,41 +38,6 @@ final class UpdateQueryDecorator extends UpdateQuery {
         return setQueryParameters(new UpdateQuery(colNames, connectionSupplier, query, batch)).execute(generatedValuesHandler);
     }
 
-    @Nonnull
-    @Override
-    public Update large(boolean isLarge) {
-        this.isLarge = isLarge;
-        return this;
-    }
-
-    @Nonnull
-    @Override
-    public Update batched(boolean isBatch) {
-        this.isBatch = isBatch;
-        return this;
-    }
-
-    @Nonnull
-    @Override
-    public Update timeout(int timeout) {
-        this.timeout = timeout;
-        return this;
-    }
-
-    @Nonnull
-    @Override
-    public Update poolable(boolean poolable) {
-        this.isPoolable = poolable;
-        return this;
-    }
-
-    @Nonnull
-    @Override
-    public Update escaped(boolean escapeProcessing) {
-        this.isEscaped = escapeProcessing;
-        return this;
-    }
-
     private Update setQueryParameters(Update query) {
         return query.timeout(timeout).poolable(isPoolable).escaped(isEscaped).batched(isBatch).large(isLarge).transacted(isolationLevel);
     }
