@@ -69,7 +69,7 @@ public final class DB implements AutoCloseable {
      */
     public DB(TrySupplier<Connection, SQLException> connectionSupplier) {
         try {
-            this.connection = requireNonNull(connectionSupplier, "Connection supplier must be provided").get();
+            this.connection = requireNonNull(requireNonNull(connectionSupplier, "Connection supplier must be provided").get(), "Connection supplier must provide non-null connection");
         } catch (SQLException e) {
             throw newSQLRuntimeException(e);
         }
