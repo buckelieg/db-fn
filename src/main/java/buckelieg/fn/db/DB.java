@@ -169,6 +169,7 @@ public final class DB implements AutoCloseable {
      * Calls stored procedure.
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
+     * Named parameters order must match parameters type of the procedure called.
      *
      * @param query  procedure call string
      * @param params procedure parameters as declared (IN/OUT/INOUT)
@@ -178,29 +179,28 @@ public final class DB implements AutoCloseable {
      */
     @Nonnull
     public StoredProcedure procedure(String query, P<?>... params) {
-        if (!isProcedure(query)) {
+        if (isAnonymous(query) && !isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid procedure call statement", query));
+        } else {
+            int namedParams = (int) of(params).filter(p -> !p.getName().isEmpty()).count();
+            if (namedParams == params.length && params.length > 0) {
+                Map.Entry<String, Object[]> preparedQuery = prepareQuery(
+                        query,
+                        of(params)
+                                .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
+                                .collect(toList())
+                );
+                query = preparedQuery.getKey();
+            } else if (0 < namedParams && namedParams < params.length) {
+                throw new IllegalArgumentException(
+                        format(
+                                "Cannot combine named parameters(count=%s) with unnamed ones(count=%s).",
+                                namedParams, params.length - namedParams
+                        )
+                );
+            }
         }
-        P<?>[] preparedParams = params;
-        int namedParams = (int) of(params).filter(p -> !p.getName().isEmpty()).count();
-        if (namedParams == params.length && params.length > 0) {
-            Map.Entry<String, Object[]> preparedQuery = prepareQuery(
-                    query,
-                    of(params)
-                            .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
-                            .collect(toList())
-            );
-            query = preparedQuery.getKey();
-            preparedParams = (P<?>[]) preparedQuery.getValue();
-        } else if (0 < namedParams && namedParams < params.length) {
-            throw new IllegalArgumentException(
-                    format(
-                            "Cannot combine named parameters(count=%s) with unnamed ones(count=%s).",
-                            namedParams, params.length - namedParams
-                    )
-            );
-        }
-        return new StoredProcedureQuery(connectionSupplier, query, preparedParams);
+        return new StoredProcedureQuery(connectionSupplier, query, params);
     }
 
     /**

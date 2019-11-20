@@ -266,8 +266,13 @@ public class DBTestSuite {
     }
 
     @Test
-    public void testGetResult() throws Throwable {
+    public void testProcedureGetResult() throws Throwable {
         assertEquals("name_1", db.procedure("{call GETNAMEBYID(?,?)}", P.in(1), P.out(JDBCType.VARCHAR)).call((cs) -> cs.getString(2)).orElse(null));
+    }
+
+    @Test
+    public void testProcedureGetResultNamed() throws Exception {
+        assertEquals("name_1", db.procedure("{call GETNAMEBYID(:in,:out)}", P.in("in", 1), P.out(JDBCType.VARCHAR, "out")).call(cs -> cs.getString(2)).orElse(null));
     }
 
     @Test

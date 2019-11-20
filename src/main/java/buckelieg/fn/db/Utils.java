@@ -187,7 +187,7 @@ final class Utils {
     }
 
     static SQLRuntimeException newSQLRuntimeException(Throwable t) {
-        StringBuilder message = new StringBuilder(format("[%s] ", t.getMessage()));
+        StringBuilder message = new StringBuilder(format("%s ", t.getMessage()));
         while ((t = t.getCause()) != null) {
             ofNullable(t.getMessage()).map(msg -> format("%s ", msg.trim())).ifPresent(message::append);
         }
