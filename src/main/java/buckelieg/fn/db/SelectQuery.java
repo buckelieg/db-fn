@@ -43,8 +43,8 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     private boolean hasNext;
     private boolean hasMoved;
 
-    SelectQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        super(connectionSupplier, query, params);
+    SelectQuery(Connection connection, String query, Object... params) {
+        super(connection, query, params);
     }
 
     @Override
@@ -176,7 +176,7 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     }
 
     @Override
-    PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) throws SQLException {
-        return setStatementParameters(requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query), params);
+    PreparedStatement prepareStatement(Connection connection, String query, Object... params) throws SQLException {
+        return setStatementParameters(connection.prepareStatement(query), params);
     }
 }

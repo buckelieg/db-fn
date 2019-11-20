@@ -34,8 +34,8 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
     private TryFunction<CallableStatement, ?, SQLException> mapper;
     private Consumer consumer;
 
-    StoredProcedureQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, P<?>... params) {
-        super(connectionSupplier, query, (Object[]) params);
+    StoredProcedureQuery(Connection connection, String query, P<?>... params) {
+        super(connection, query, (Object[]) params);
     }
 
     @Nonnull
@@ -83,8 +83,8 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
     }
 
     @Override
-    CallableStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) throws SQLException {
-        CallableStatement cs = requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareCall(query);
+    CallableStatement prepareStatement(Connection connection, String query, Object... params) throws SQLException {
+        CallableStatement cs = connection.prepareCall(query);
         for (int i = 1; i <= params.length; i++) {
             P<?> p = (P<?>) params[i - 1];
             if (p.isOut() || p.isInOut()) {
