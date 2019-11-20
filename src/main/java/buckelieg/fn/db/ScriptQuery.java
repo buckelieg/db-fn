@@ -47,7 +47,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     };
 
     private final String script;
-    private final Connection connection;
+    private final TrySupplier<Connection, SQLException> connectionSupplier;
     private ExecutorService conveyor;
     private int timeout;
     private boolean escaped = true;
@@ -62,12 +62,12 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     /**
      * Creates script executor query
      *
-     * @param connection db connection
+     * @param connectionSupplier db connection provider
      * @param script             an arbitrary SQL script to execute
      * @throws IllegalArgumentException in case of corrupted script (like illegal comment lines encountered)
      */
-    ScriptQuery(Connection connection, String script, @Nullable T... namedParams) {
-        this.connection = connection;
+    ScriptQuery(TrySupplier<Connection, SQLException> connectionSupplier, String script, @Nullable T... namedParams) {
+        this.connectionSupplier = connectionSupplier;
         this.script = cutComments(requireNonNull(script, "Script string must be provided"));
         this.params = namedParams;
         Map.Entry<String, Object[]> preparedScript = prepareQuery(this.script, namedParams == null ? emptyList() : asList(namedParams));
@@ -101,7 +101,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     private long doExecute() throws SQLException {
         long end, start = currentTimeMillis();
         List<T> paramList = params == null ? emptyList(): asList(params);
-        end = doInTransaction(connection, isolationLevel, conn -> {
+        end = doInTransaction(connectionSupplier.get(), isolationLevel, conn -> {
             for (String query : script.split(delimiter)) {
                 if (isAnonymous(query)) {
                     executeStatement(conn.createStatement(), s -> s.execute(query));

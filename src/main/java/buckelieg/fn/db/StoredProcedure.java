@@ -41,7 +41,6 @@ public interface StoredProcedure extends Select {
      * If the result set is not iterated exhaustively - mapper and (then) consumer will NOT be invoked.
      * <p>
      * The logic of this is to call mapper for creating result and the call consumer to process it.
-     * </p>
      *
      * @param mapper   function for procedure call results processing
      * @param consumer mapper result consumer - will be called after mapper is finished
@@ -52,7 +51,7 @@ public interface StoredProcedure extends Select {
     <T> Select call(TryFunction<CallableStatement, T, SQLException> mapper, Consumer<T> consumer);
 
     /**
-     * Whenever the stored procedure returns no result set but the own results only - this convenient shorthand may be called.
+     * Whenever the stored procedure returns no result set but the own results only - this convenience shorthand may be called.
      *
      * @param mapper function that constructs from {@link CallableStatement}
      * @return mapped result as {@link Optional}

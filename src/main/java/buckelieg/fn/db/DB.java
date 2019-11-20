@@ -47,7 +47,7 @@ import static java.util.stream.Stream.of;
 public final class DB implements AutoCloseable {
 
     private Connection connection;
-    private TrySupplier<Connection, SQLException> connectionSupplier;
+    private final TrySupplier<Connection, SQLException> connectionSupplier;
 
     /**
      * Creates DB from connection string using {@code DriverManager#getConnection} method
@@ -56,11 +56,7 @@ public final class DB implements AutoCloseable {
      * @throws SQLRuntimeException if connection string is invalid
      */
     public DB(String connectionUrl) {
-        try {
-            this.connection = DriverManager.getConnection(requireNonNull(connectionUrl, "Connection string must be provided"));
-        } catch (SQLException e) {
-            throw newSQLRuntimeException(e);
-        }
+            this(() -> DriverManager.getConnection(requireNonNull(connectionUrl, "Connection string must be provided")));
     }
 
     /**
@@ -72,7 +68,7 @@ public final class DB implements AutoCloseable {
     public DB(TrySupplier<Connection, SQLException> connectionSupplier) {
         requireNonNull(connectionSupplier, "Connection supplier must be provided");
         this.connectionSupplier = () -> {
-            if(connection == null || connection.isClosed()) {
+            if (connection == null || connection.isClosed()) {
                 connection = requireNonNull(connectionSupplier.get(), "Connection supplier must provide non-null connection");
             }
             return connection;
@@ -85,7 +81,7 @@ public final class DB implements AutoCloseable {
      * @param connection the connection to operate on
      */
     public DB(Connection connection) {
-        this.connection = requireNonNull(connection, "Connection must be provided");
+        this(() -> requireNonNull(connection, "Connection must be provided"));
     }
 
     /**
@@ -95,7 +91,7 @@ public final class DB implements AutoCloseable {
      */
     @Override
     public void close() throws Exception {
-        if(connection != null) {
+        if (connection != null) {
             connection.close();
         }
     }
@@ -113,7 +109,7 @@ public final class DB implements AutoCloseable {
     @SafeVarargs
     @Nonnull
     public final <T extends Map.Entry<String, ?>> Script script(String script, T... namedParams) {
-        return new ScriptQuery(getConnection(), script, namedParams);
+        return new ScriptQuery(connectionSupplier, script, namedParams);
     }
 
     /**
@@ -214,7 +210,7 @@ public final class DB implements AutoCloseable {
                 );
             }
         }
-        return new StoredProcedureQuery(getConnection(), query, params);
+        return new StoredProcedureQuery(connectionSupplier, query, params);
     }
 
     /**
@@ -244,7 +240,7 @@ public final class DB implements AutoCloseable {
         if (isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid select statement", query));
         }
-        return new SelectQuery(getConnection(), checkAnonymous(query), params);
+        return new SelectQuery(connectionSupplier, checkAnonymous(query), params);
     }
 
 
@@ -262,7 +258,7 @@ public final class DB implements AutoCloseable {
         if (isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid DML statement", query));
         }
-        return new UpdateQueryDecorator(getConnection(), checkAnonymous(query), batch);
+        return new UpdateQueryDecorator(connectionSupplier, checkAnonymous(query), batch);
     }
 
     /**
@@ -368,14 +364,6 @@ public final class DB implements AutoCloseable {
     private Update update(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return update(preparedQuery.getKey(), preparedQuery.getValue());
-    }
-
-    private Connection getConnection() {
-        try {
-            return connection != null ? connection : connectionSupplier.get();
-        } catch (SQLException e) {
-            throw newSQLRuntimeException(e);
-        }
     }
 
 }

@@ -40,6 +40,7 @@ import static java.util.stream.Stream.of;
 class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
 
     protected Object[][] batch;
+    protected TrySupplier<Connection, SQLException> connectionSupplier;
     protected boolean isLarge;
     protected boolean isBatch;
     protected boolean isPoolable = false;
@@ -48,31 +49,32 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     protected final String query;
     protected TransactionIsolation isolationLevel = TransactionIsolation.SERIALIZABLE;
 
-    private UpdateQuery(TrySupplier<PreparedStatement, SQLException> prepareStatement, Connection connection, String query, Object[]... batch) {
-        super(connection, query, (Object) batch);
+    private UpdateQuery(TrySupplier<PreparedStatement, SQLException> prepareStatement, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
+        super(connectionSupplier, query, (Object) batch);
         this.batch = requireNonNull(batch, "Batch must be provided");
+        this.connectionSupplier = connectionSupplier;
         this.query = query;
     }
 
-    UpdateQuery(Connection connection, String query, Object[]... batch) {
-        this(() -> connection.prepareStatement(query), connection, query, batch);
+    UpdateQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
+        this(() -> connectionSupplier.get().prepareStatement(query), connectionSupplier, query, batch);
     }
 
-    UpdateQuery(@Nullable int[] colIndices, Connection connection, String query, Object[]... batch) {
+    UpdateQuery(@Nullable int[] colIndices, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
         this(
                 () -> colIndices == null || colIndices.length == 0 ?
-                        connection.prepareStatement(query, RETURN_GENERATED_KEYS) :
-                        connection.prepareStatement(query, colIndices),
-                connection, query, batch
+                        connectionSupplier.get().prepareStatement(query, RETURN_GENERATED_KEYS) :
+                        connectionSupplier.get().prepareStatement(query, colIndices),
+                connectionSupplier, query, batch
         );
     }
 
-    UpdateQuery(@Nullable String[] colNames, Connection connection, String query, Object[]... batch) {
+    UpdateQuery(@Nullable String[] colNames, TrySupplier<Connection, SQLException> connectionSupplier, String query, Object[]... batch) {
         this(
                 () -> colNames == null || colNames.length == 0 ?
-                        connection.prepareStatement(query, RETURN_GENERATED_KEYS) :
-                        connection.prepareStatement(query, colNames),
-                connection, query, batch
+                        connectionSupplier.get().prepareStatement(query, RETURN_GENERATED_KEYS) :
+                        connectionSupplier.get().prepareStatement(query, colNames),
+                connectionSupplier, query, batch
         );
     }
 
@@ -122,7 +124,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler) {
-        return jdbcTry(() -> doInTransaction(connection, isolationLevel, TryFunction.of(this::doExecute).andThen(count -> {
+        return jdbcTry(() -> doInTransaction(connectionSupplier.get(), isolationLevel, TryFunction.of(this::doExecute).andThen(count -> {
             setStatementParameter(s -> requireNonNull(generatedValuesHandler, "Generated values handler must be provided").accept(StreamSupport.stream(new ResultSetSpliterator(s::getGeneratedKeys), false).onClose(this::close)));
             return count;
         })));
@@ -131,13 +133,13 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, String... colNames) {
-        return new UpdateQuery(colNames, connection, query, batch).execute(generatedValuesHandler);
+        return new UpdateQuery(colNames, connectionSupplier, query, batch).execute(generatedValuesHandler);
     }
 
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, int... colIndices) {
-        return new UpdateQuery(colIndices, connection, query, batch).execute(generatedValuesHandler);
+        return new UpdateQuery(colIndices, connectionSupplier, query, batch).execute(generatedValuesHandler);
     }
 
     /**
@@ -148,7 +150,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
      */
     @Nonnull
     public Long execute() {
-        return jdbcTry(() -> batch.length > 1 ? doInTransaction(connection, isolationLevel, this::doExecute) : doExecute(connection));
+        return jdbcTry(() -> batch.length > 1 ? doInTransaction(connectionSupplier.get(), isolationLevel, this::doExecute) : doExecute(connectionSupplier.get()));
     }
 
     private long doExecute(Connection conn) throws SQLException {
@@ -180,8 +182,8 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     }
 
     @Override
-    PreparedStatement prepareStatement(Connection connection, String query, Object... params) throws SQLException {
-        return connection.prepareStatement(query);
+    PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) throws SQLException {
+        return requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query);
     }
 
     @Override

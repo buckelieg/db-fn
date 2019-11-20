@@ -30,14 +30,12 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
 
     private S statement;
     private final String query;
-    protected final Connection connection;
 
-    AbstractQuery(Connection connection, String query, Object... params) {
+    AbstractQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
         try {
             String q = cutComments(requireNonNull(query, "SQL query must be provided"));
-            this.statement = prepareStatement(requireNonNull(connection, "Connection must be provided"), q, params);
+            this.statement = prepareStatement(connectionSupplier, q, params);
             this.query = asSQL(q, params);
-            this.connection = connection;
         } catch (SQLException e) {
             throw newSQLRuntimeException(e);
         }
@@ -103,7 +101,7 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
         return (Q) this;
     }
 
-    abstract S prepareStatement(Connection connection, String query, Object... params) throws SQLException;
+    abstract S prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) throws SQLException;
 
     String asSQL(String query, Object... params) {
         return Utils.asSQL(query, params);
