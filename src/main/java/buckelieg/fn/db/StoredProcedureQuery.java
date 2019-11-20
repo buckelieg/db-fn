@@ -72,7 +72,7 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
                 }
                 try {
                     if (mapper != null && consumer != null) {
-                        consumer.accept(withStatement(statement -> mapper.apply((CallableStatement) statement)));
+                        consumer.accept(withStatement(statement -> mapper.apply(new ImmutableCallableStatement((CallableStatement) statement))));
                     }
                 } finally {
                     close();

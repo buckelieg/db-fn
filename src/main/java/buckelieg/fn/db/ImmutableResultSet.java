@@ -24,13 +24,12 @@ import java.sql.*;
 import java.util.Calendar;
 import java.util.Map;
 
+import static buckelieg.fn.db.Utils.EXCEPTION_MESSAGE;
 import static java.util.Objects.requireNonNull;
 
 final class ImmutableResultSet implements ResultSet {
 
-    private static final String EXCEPTION_MESSAGE = "Unsupported operation";
-
-    private ResultSet delegate;
+    private final ResultSet delegate;
 
     ImmutableResultSet(@Nonnull ResultSet delegate) {
         this.delegate = requireNonNull(delegate, "ResultSet must be provided");

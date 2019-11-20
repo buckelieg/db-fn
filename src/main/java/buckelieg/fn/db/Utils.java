@@ -40,6 +40,7 @@ import static java.util.stream.StreamSupport.stream;
 
 final class Utils {
 
+    static final String EXCEPTION_MESSAGE = "Unsupported operation";
     static final String STATEMENT_DELIMITER = ";";
     static final Pattern PARAMETER = Pattern.compile("\\?");
     static final Pattern NAMED_PARAMETER = Pattern.compile(":\\w*\\B?");
