@@ -46,7 +46,8 @@ import static java.util.stream.Stream.of;
 @ParametersAreNonnullByDefault
 public final class DB implements AutoCloseable {
 
-    private final Connection connection;
+    private Connection connection;
+    private TrySupplier<Connection, SQLException> connectionSupplier;
 
     /**
      * Creates DB from connection string using {@code DriverManager#getConnection} method
@@ -64,15 +65,18 @@ public final class DB implements AutoCloseable {
 
     /**
      * Creates DB with connection supplier.
+     * This caches provided connection and tries to create new if previous one is closed.
      *
      * @param connectionSupplier the connection supplier.
      */
     public DB(TrySupplier<Connection, SQLException> connectionSupplier) {
-        try {
-            this.connection = requireNonNull(requireNonNull(connectionSupplier, "Connection supplier must be provided").get(), "Connection supplier must provide non-null connection");
-        } catch (SQLException e) {
-            throw newSQLRuntimeException(e);
-        }
+        requireNonNull(connectionSupplier, "Connection supplier must be provided");
+        this.connectionSupplier = () -> {
+            if(connection == null || connection.isClosed()) {
+                connection = requireNonNull(connectionSupplier.get(), "Connection supplier must provide non-null connection");
+            }
+            return connection;
+        };
     }
 
     /**
@@ -91,7 +95,9 @@ public final class DB implements AutoCloseable {
      */
     @Override
     public void close() throws Exception {
-        connection.close();
+        if(connection != null) {
+            connection.close();
+        }
     }
 
     /**
@@ -107,7 +113,7 @@ public final class DB implements AutoCloseable {
     @SafeVarargs
     @Nonnull
     public final <T extends Map.Entry<String, ?>> Script script(String script, T... namedParams) {
-        return new ScriptQuery(connection, script, namedParams);
+        return new ScriptQuery(getConnection(), script, namedParams);
     }
 
     /**
@@ -208,7 +214,7 @@ public final class DB implements AutoCloseable {
                 );
             }
         }
-        return new StoredProcedureQuery(connection, query, params);
+        return new StoredProcedureQuery(getConnection(), query, params);
     }
 
     /**
@@ -238,7 +244,7 @@ public final class DB implements AutoCloseable {
         if (isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid select statement", query));
         }
-        return new SelectQuery(connection, checkAnonymous(query), params);
+        return new SelectQuery(getConnection(), checkAnonymous(query), params);
     }
 
 
@@ -256,7 +262,7 @@ public final class DB implements AutoCloseable {
         if (isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid DML statement", query));
         }
-        return new UpdateQueryDecorator(connection, checkAnonymous(query), batch);
+        return new UpdateQueryDecorator(getConnection(), checkAnonymous(query), batch);
     }
 
     /**
@@ -362,6 +368,14 @@ public final class DB implements AutoCloseable {
     private Update update(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return update(preparedQuery.getKey(), preparedQuery.getValue());
+    }
+
+    private Connection getConnection() {
+        try {
+            return connection != null ? connection : connectionSupplier.get();
+        } catch (SQLException e) {
+            throw newSQLRuntimeException(e);
+        }
     }
 
 }
