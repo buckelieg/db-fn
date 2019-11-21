@@ -19,6 +19,7 @@ import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
@@ -190,9 +191,9 @@ final class Utils {
     static SQLRuntimeException newSQLRuntimeException(Throwable t) {
         StringBuilder message = new StringBuilder(format("%s ", t.getMessage()));
         while ((t = t.getCause()) != null) {
-            ofNullable(t.getMessage()).map(msg -> format("%s ", msg.trim())).ifPresent(message::append);
+            ofNullable(t.getMessage()).map(msg -> format("%s ", msg.trim())).filter(msg -> !message.toString().equals(msg)).ifPresent(message::append);
         }
-        return new SQLRuntimeException(message.toString(), false);
+        return new SQLRuntimeException(message.toString().trim(), false);
     }
 
     static <T> Optional<T> toOptional(Supplier<T> supplier) {
