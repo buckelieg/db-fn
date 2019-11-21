@@ -18,10 +18,7 @@ package buckelieg.fn.db;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.function.Consumer;
 
 import static java.lang.String.format;
@@ -88,7 +85,12 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
         for (int i = 1; i <= params.length; i++) {
             P<?> p = (P<?>) params[i - 1];
             if (p.isOut() || p.isInOut()) {
-                cs.registerOutParameter(i, requireNonNull(p.getType(), format("Parameter '%s' must have SQLType set", p)).getVendorTypeNumber());
+                try {
+                    cs.registerOutParameter(i, requireNonNull(p.getType(), format("Parameter '%s' must have SQLType set", p)));
+                } catch (SQLFeatureNotSupportedException e) {
+                    // fallback to previous version of JDBC
+                    cs.registerOutParameter(i, requireNonNull(p.getType(), format("Parameter '%s' must have SQLType set", p)).getVendorTypeNumber());
+                }
             }
             if (p.isIn() || p.isInOut()) {
                 cs.setObject(i, p.getValue());
