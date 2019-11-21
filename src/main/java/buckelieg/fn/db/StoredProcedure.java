@@ -41,6 +41,7 @@ public interface StoredProcedure extends Select {
      * If the result set is not iterated exhaustively - mapper and (then) consumer will NOT be invoked.
      * <p>
      * The logic of this is to call mapper for creating result and the call consumer to process it.
+     * </p>
      *
      * @param mapper   function for procedure call results processing
      * @param consumer mapper result consumer - will be called after mapper is finished
