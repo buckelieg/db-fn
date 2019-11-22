@@ -25,6 +25,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static buckelieg.fn.db.Utils.*;
 import static java.lang.String.format;
@@ -46,7 +47,7 @@ import static java.util.stream.Stream.of;
 @ParametersAreNonnullByDefault
 public final class DB implements AutoCloseable {
 
-    private Connection connection;
+    private AtomicReference<Connection> connection = new AtomicReference<>();
     private final TrySupplier<Connection, SQLException> connectionSupplier;
 
     /**
@@ -67,12 +68,16 @@ public final class DB implements AutoCloseable {
      */
     public DB(TrySupplier<Connection, SQLException> connectionSupplier) {
         requireNonNull(connectionSupplier, "Connection supplier must be provided");
-        this.connectionSupplier = () -> {
-            if (connection == null || connection.isClosed()) {
-                connection = requireNonNull(connectionSupplier.get(), "Connection supplier must provide non-null connection");
+        this.connectionSupplier = () -> connection.updateAndGet(c -> {
+            try {
+                if (c == null || c.isClosed()) {
+                    c = requireNonNull(connectionSupplier.get(), "Connection supplier must provide non-null connection");
+                }
+            } catch (SQLException e) {
+                throw newSQLRuntimeException(e);
             }
-            return connection;
-        };
+            return c;
+        });
     }
 
     /**
@@ -91,8 +96,8 @@ public final class DB implements AutoCloseable {
      */
     @Override
     public void close() throws Exception {
-        if (connection != null) {
-            connection.close();
+        if (connection.get() != null) {
+            connection.get().close();
         }
     }
 
