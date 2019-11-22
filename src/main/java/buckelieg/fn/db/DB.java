@@ -47,7 +47,7 @@ import static java.util.stream.Stream.of;
 @ParametersAreNonnullByDefault
 public final class DB implements AutoCloseable {
 
-    private AtomicReference<Connection> connection = new AtomicReference<>();
+    private final AtomicReference<Connection> connection = new AtomicReference<>();
     private final TrySupplier<Connection, SQLException> connectionSupplier;
 
     /**
@@ -57,7 +57,7 @@ public final class DB implements AutoCloseable {
      * @throws SQLRuntimeException if connection string is invalid
      */
     public DB(String connectionUrl) {
-            this(() -> DriverManager.getConnection(requireNonNull(connectionUrl, "Connection string must be provided")));
+        this(() -> DriverManager.getConnection(requireNonNull(connectionUrl, "Connection string must be provided")));
     }
 
     /**
@@ -96,9 +96,8 @@ public final class DB implements AutoCloseable {
      */
     @Override
     public void close() throws Exception {
-        if (connection.get() != null) {
-            connection.get().close();
-        }
+        Connection c = connection.get();
+        if (c != null) c.close();
     }
 
     /**
