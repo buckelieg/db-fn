@@ -1,18 +1,18 @@
 /*
  * Copyright 2016- Anatoly Kutyakov
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package buckelieg.fn.db;
 
 import static java.util.Objects.requireNonNull;
@@ -61,11 +61,34 @@ public interface TryConsumer<T, E extends Throwable> {
      * @throws NullPointerException if {@code after} is null
      */
     default TryConsumer<T, E> andThen(TryConsumer<? super T, E> after) throws E {
-        requireNonNull(after);
         try {
             return (T t) -> {
                 accept(t);
-                after.accept(t);
+                requireNonNull(after).accept(t);
+            };
+        } catch (Throwable t) {
+            throw (E) t;
+        }
+    }
+
+    /**
+     * Returns a composed {@code TryConsumer} that performs, in sequence, this
+     * operation is preceded by the {@code before} operation. If performing either
+     * operation throws an exception, then corresponding exception is thrown.
+     * If performing this operation throws an exception,
+     * the {@code before} operation will not be performed.
+     *
+     * @param before the operation to perform before this operation
+     * @return a composed {@code TryConsumer} that performs in sequence this
+     * operation followed by the {@code before} operation
+     * @throws E                    an exception
+     * @throws NullPointerException if {@code before} is null
+     */
+    default TryConsumer<T, E> compose(TryConsumer<? super T, E> before) throws E {
+        try {
+            return (T t) -> {
+                requireNonNull(before).accept(t);
+                accept(t);
             };
         } catch (Throwable t) {
             throw (E) t;

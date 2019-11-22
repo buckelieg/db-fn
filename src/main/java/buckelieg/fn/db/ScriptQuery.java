@@ -38,7 +38,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -166,9 +165,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     }
 
     private void log(String query) {
-        if (logger != null) {
-            logger.accept(query);
-        }
+        if (logger != null) logger.accept(query);
     }
 
     @Nonnull

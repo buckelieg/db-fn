@@ -58,11 +58,10 @@ public interface TryAction<E extends Throwable> {
      * @throws NullPointerException if {@code after} is null
      */
     default TryAction<E> andThen(TryAction<E> after) throws E {
-        requireNonNull(after);
         try {
             return () -> {
                 doTry();
-                after.doTry();
+                requireNonNull(after).doTry();
             };
         } catch (Throwable t) {
             throw (E) t;
@@ -82,10 +81,9 @@ public interface TryAction<E extends Throwable> {
      * @throws NullPointerException if {@code before} is null
      */
     default TryAction<E> compose(TryAction<E> before) throws E {
-        requireNonNull(before);
         try {
             return () -> {
-                before.doTry();
+                requireNonNull(before).doTry();
                 doTry();
             };
         } catch (Throwable t) {
