@@ -28,6 +28,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static buckelieg.fn.db.Utils.doInTransaction;
 import static buckelieg.fn.db.Utils.setStatementParameters;
 import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
@@ -43,8 +44,8 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     private boolean hasNext;
     private boolean hasMoved;
 
-    SelectQuery(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) {
-        super(connectionSupplier, query, params);
+    SelectQuery(Connection connection, String query, Object... params) {
+        super(connection, query, params);
     }
 
     @Override
@@ -83,6 +84,10 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     @Override
     public final <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper) {
         requireNonNull(mapper, "Mapper must be provided");
+        return withStatement(s -> s.getFetchSize() > 0 ? doInTransaction(connection, TransactionIsolation.valueOf(connection.getTransactionIsolation()), conn -> getStream(mapper)) : getStream(mapper));
+    }
+
+    private <T> Stream<T> getStream(TryFunction<ResultSet, T, SQLException> mapper) {
         return stream(jdbcTry(() -> {
             doExecute();
             if (rs != null) {
@@ -176,7 +181,7 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     }
 
     @Override
-    PreparedStatement prepareStatement(TrySupplier<Connection, SQLException> connectionSupplier, String query, Object... params) throws SQLException {
-        return setStatementParameters(requireNonNull(connectionSupplier.get(), "Connection must be provided").prepareStatement(query), params);
+    PreparedStatement prepareStatement(Connection connection, String query, Object... params) throws SQLException {
+        return setStatementParameters(requireNonNull(connection, "Connection must be provided").prepareStatement(query, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY), params);
     }
 }

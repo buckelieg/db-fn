@@ -49,7 +49,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     };
 
     private final String script;
-    private final TrySupplier<Connection, SQLException> connectionSupplier;
+    private final Connection connection;
     private ExecutorService conveyor;
     private int timeout;
     private Consumer<String> logger;
@@ -66,12 +66,12 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     /**
      * Creates script executor query
      *
-     * @param connectionSupplier db connection provider
+     * @param connection db connection
      * @param script             an arbitrary SQL script to execute
      * @throws IllegalArgumentException in case of corrupted script (like illegal comment lines encountered)
      */
-    ScriptQuery(TrySupplier<Connection, SQLException> connectionSupplier, String script, @Nullable T... namedParams) {
-        this.connectionSupplier = connectionSupplier;
+    ScriptQuery(Connection connection, String script, @Nullable T... namedParams) {
+        this.connection = connection;
         this.script = cutComments(requireNonNull(script, "Script string must be provided"));
         this.params = namedParams;
         Map.Entry<String, Object[]> preparedScript = prepareQuery(this.script, namedParams == null ? emptyList() : asList(namedParams));
@@ -105,12 +105,12 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     private long doExecute() throws SQLException {
         long end, start = currentTimeMillis();
         List<T> paramList = params == null ? emptyList() : asList(params);
-        end = doInTransaction(connectionSupplier.get(), isolationLevel, conn -> {
+        end = doInTransaction(connection, isolationLevel, conn -> {
             for (String query : script.split(delimiter)) {
                 if (isAnonymous(query)) {
                     log(query);
                     if (isProcedure(query)) {
-                        executeProcedure(() -> new StoredProcedureQuery(connectionSupplier, query));
+                        executeProcedure(() -> new StoredProcedureQuery(connection, query));
                     } else {
                         executeStatement(conn.createStatement(), s -> s.execute(query));
                     }
@@ -121,7 +121,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
                     Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, paramList);
                     log(Utils.asSQL(preparedQuery.getKey(), preparedQuery.getValue()));
                     if (isProcedure(preparedQuery.getKey())) {
-                        executeProcedure(() -> new StoredProcedureQuery(connectionSupplier, preparedQuery.getKey(), stream(preparedQuery.getValue()).map(p -> p instanceof P ? (P<?>) p : P.in(p)).toArray(P[]::new)));
+                        executeProcedure(() -> new StoredProcedureQuery(connection, preparedQuery.getKey(), stream(preparedQuery.getValue()).map(p -> p instanceof P ? (P<?>) p : P.in(p)).toArray(P[]::new)));
                     } else {
                         executeStatement(setStatementParameters(conn.prepareStatement(checkAnonymous(preparedQuery.getKey())), preparedQuery.getValue()), PreparedStatement::execute);
                     }

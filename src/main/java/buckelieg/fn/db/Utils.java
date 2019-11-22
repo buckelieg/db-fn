@@ -19,7 +19,6 @@ import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.sql.*;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
@@ -227,7 +226,7 @@ final class Utils {
     }
 
     static String cutComments(String query) {
-        String replaced = query.replaceAll("(--).*\\s", ""); // single line comments cut
+        String replaced = query.concat("\r\n").replaceAll("(--).*\\s", ""); // single line comments cut
         // multiline comments cut
         List<Integer> startIndices = new ArrayList<>();
         List<Integer> endIndices = new ArrayList<>();
@@ -250,7 +249,7 @@ final class Utils {
         for (int i = 0; i < startIndices.size(); i++) {
             replaced = replaced.replace(replaced.substring(startIndices.get(i), endIndices.get(i)), format("%" + (endIndices.get(i) - startIndices.get(i)) + "s", " "));
         }
-        return replaced.replaceAll("(\\s){2,}", " ");
+        return replaced.replaceAll("(\\s){2,}", " ").trim();
     }
 
     static <S extends PreparedStatement> S setStatementParameters(S statement, Object... params) throws SQLException {

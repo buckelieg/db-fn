@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import static buckelieg.fn.db.Utils.*;
 import static java.lang.String.format;
@@ -48,7 +49,7 @@ import static java.util.stream.Stream.of;
 public final class DB implements AutoCloseable {
 
     private final AtomicReference<Connection> connection = new AtomicReference<>();
-    private final TrySupplier<Connection, SQLException> connectionSupplier;
+    private final Supplier<Connection> connectionSupplier;
 
     /**
      * Creates DB from connection string using {@code DriverManager#getConnection} method
@@ -121,7 +122,7 @@ public final class DB implements AutoCloseable {
     @SafeVarargs
     @Nonnull
     public final <T extends Map.Entry<String, ?>> Script script(String script, T... namedParams) {
-        return new ScriptQuery(connectionSupplier, script, namedParams);
+        return new ScriptQuery(connectionSupplier.get(), script, namedParams);
     }
 
     /**
@@ -223,7 +224,7 @@ public final class DB implements AutoCloseable {
                 );
             }
         }
-        return new StoredProcedureQuery(connectionSupplier, query, params);
+        return new StoredProcedureQuery(connectionSupplier.get(), query, params);
     }
 
     /**
@@ -253,7 +254,7 @@ public final class DB implements AutoCloseable {
         if (isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid select statement", query));
         }
-        return new SelectQuery(connectionSupplier, checkAnonymous(query), params);
+        return new SelectQuery(connectionSupplier.get(), checkAnonymous(query), params);
     }
 
 
@@ -271,7 +272,7 @@ public final class DB implements AutoCloseable {
         if (isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid DML statement", query));
         }
-        return new UpdateQueryDecorator(connectionSupplier, checkAnonymous(query), batch);
+        return new UpdateQueryDecorator(connectionSupplier.get(), checkAnonymous(query), batch);
     }
 
     /**

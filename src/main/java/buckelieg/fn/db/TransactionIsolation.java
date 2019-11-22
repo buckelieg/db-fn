@@ -37,4 +37,19 @@ public enum TransactionIsolation {
     TransactionIsolation(int level) {
         this.level = level;
     }
+
+    public static TransactionIsolation valueOf(int level) {
+        switch (level) {
+            case Connection.TRANSACTION_READ_COMMITTED:
+                return READ_COMMITTED;
+            case Connection.TRANSACTION_REPEATABLE_READ:
+                return REPEATABLE_READ;
+            case Connection.TRANSACTION_READ_UNCOMMITTED:
+                return READ_UNCOMMITTED;
+            case Connection.TRANSACTION_SERIALIZABLE:
+                return SERIALIZABLE;
+            default:
+                throw new SQLRuntimeException("Unsupported transaction level: " + level);
+        }
+    }
 }
