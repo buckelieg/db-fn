@@ -42,9 +42,9 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     protected Object[][] batch;
     protected boolean isLarge;
     protected boolean isBatch;
-    protected boolean isPoolable = false;
+    protected boolean isPoolable;
     protected boolean isEscaped = true;
-    protected int timeout = 0;
+    protected int timeout;
     protected final String query;
     protected TransactionIsolation isolationLevel = TransactionIsolation.SERIALIZABLE;
 
@@ -52,6 +52,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
         super(connection, query, (Object) batch);
         this.batch = requireNonNull(batch, "Batch must be provided");
         this.query = query;
+        this.statement = jdbcTry(prepareStatement);
     }
 
     UpdateQuery(Connection connection, String query, Object[]... batch) {
@@ -91,19 +92,22 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     @Nonnull
     @Override
     public Update poolable(boolean poolable) {
-        return setPoolable(poolable);
+        this.isPoolable = poolable;
+        return this;
     }
 
     @Nonnull
     @Override
     public Update timeout(int timeout) {
-        return setTimeout(timeout);
+        this.timeout = timeout;
+        return this;
     }
 
     @Nonnull
     @Override
     public Update escaped(boolean escapeProcessing) {
-        return setEscapeProcessing(escapeProcessing);
+        this.isEscaped = escapeProcessing;
+        return this;
     }
 
     @Nonnull
@@ -152,6 +156,9 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     }
 
     private long doExecute(Connection conn) throws SQLException {
+        setPoolable(isPoolable);
+        setTimeout(timeout);
+        setEscapeProcessing(isEscaped);
         return isBatch && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
     }
 
@@ -181,7 +188,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
 
     @Override
     PreparedStatement prepareStatement(Connection connection, String query, Object... params) throws SQLException {
-        return requireNonNull(connection, "Connection must be provided").prepareStatement(query);
+        return null;
     }
 
     @Override

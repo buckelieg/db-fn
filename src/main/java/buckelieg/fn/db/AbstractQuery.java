@@ -28,14 +28,16 @@ import static java.util.Objects.requireNonNull;
 
 abstract class AbstractQuery<S extends PreparedStatement> implements Query {
 
-    private S statement;
+    S statement;
     private final String query;
-    final Connection connection;
+    protected final Connection connection;
+    protected boolean autoCommit;
 
     AbstractQuery(Connection connection, String query, Object... params) {
         try {
             String q = cutComments(requireNonNull(query, "SQL query must be provided"));
             this.connection = connection;
+            this.autoCommit = connection.getAutoCommit();
             this.statement = prepareStatement(connection, q, params);
             this.query = asSQL(q, params);
         } catch (SQLException e) {
@@ -44,7 +46,7 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
     }
 
     @Override
-    public final void close() {
+    public void close() {
         jdbcTry(statement::close); // by JDBC spec: subsequently closes all result sets opened by this statement
     }
 
@@ -79,7 +81,7 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
         return result;
     }
 
-    private void jdbcTry(TryAction<SQLException> action) {
+    final void jdbcTry(TryAction<SQLException> action) {
         try {
             requireNonNull(action, "Action must be provided").doTry();
         } catch (SQLException e) {

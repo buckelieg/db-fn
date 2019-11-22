@@ -28,7 +28,6 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static buckelieg.fn.db.Utils.doInTransaction;
 import static buckelieg.fn.db.Utils.setStatementParameters;
 import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
@@ -84,11 +83,10 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     @Override
     public final <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper) {
         requireNonNull(mapper, "Mapper must be provided");
-        return withStatement(s -> s.getFetchSize() > 0 ? doInTransaction(connection, TransactionIsolation.valueOf(connection.getTransactionIsolation()), conn -> getStream(mapper)) : getStream(mapper));
-    }
-
-    private <T> Stream<T> getStream(TryFunction<ResultSet, T, SQLException> mapper) {
-        return stream(jdbcTry(() -> {
+        return stream(withStatement(s -> {
+            if(s.getFetchSize() > 0) {
+                connection.setAutoCommit(false);
+            }
             doExecute();
             if (rs != null) {
                 wrapper = new ImmutableResultSet(rs);
@@ -178,6 +176,12 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
         while (hasNext()) {
             action.accept(next());
         }
+    }
+
+    @Override
+    public void close() {
+        jdbcTry(() -> connection.setAutoCommit(autoCommit));
+        super.close();
     }
 
     @Override

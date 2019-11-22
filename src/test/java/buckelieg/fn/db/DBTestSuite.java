@@ -293,7 +293,9 @@ public class DBTestSuite {
     @Test
     public void testImmutable() throws Throwable {
         db.select("SELECT * FROM TEST WHERE 1=1 AND ID=?", 1)
-                .execute(rs -> {
+                .fetchSize(10)
+                .execute(rs -> rs)
+                .forEach(rs -> {
                     testImmutableAction(rs, ResultSet::next);
                     testImmutableAction(rs, ResultSet::afterLast);
                     testImmutableAction(rs, ResultSet::beforeFirst);
@@ -302,7 +304,6 @@ public class DBTestSuite {
                     testImmutableAction(rs, (r) -> r.relative(1));
                     testImmutableAction(rs, (r) -> r.updateObject(1, "Updated_val"));
                     // TODO test all unsupported actions
-                    return rs;
                 });
     }
 

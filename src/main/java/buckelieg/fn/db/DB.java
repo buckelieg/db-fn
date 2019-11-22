@@ -97,7 +97,7 @@ public final class DB implements AutoCloseable {
     /**
      * Closes underlying connection.
      *
-     * @throws Exception if something went wrong
+     * @throws SQLRuntimeException if something went wrong
      */
     @Override
     public void close() {
