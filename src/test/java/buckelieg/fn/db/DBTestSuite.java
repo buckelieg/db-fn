@@ -60,6 +60,8 @@ public class DBTestSuite {
         conn.createStatement().execute("CREATE PROCEDURE CREATETESTROW2(name_to_add VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testProcedure' PARAMETER STYLE JAVA");
         conn.createStatement().execute("CREATE PROCEDURE GETNAMEBYID(name_id INTEGER, OUT name_name VARCHAR(255)) LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testProcedureWithResults' PARAMETER STYLE JAVA");
         conn.createStatement().execute("CREATE PROCEDURE GETALLNAMES() DYNAMIC RESULT SETS 1 LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testNoArgProcedure' PARAMETER STYLE JAVA");
+        conn.createStatement().execute("CREATE FUNCTION GETALLROWS() RETURNS TABLE (id INTEGER, name VARCHAR(255)) PARAMETER STYLE DERBY_JDBC_RESULT_SET READS SQL DATA LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testProcedureGetAllRows'");
+        conn.createStatement().execute("CREATE FUNCTION GETROWBYID(id INTEGER) RETURNS TABLE (id INTEGER, name VARCHAR(255)) PARAMETER STYLE DERBY_JDBC_RESULT_SET READS SQL DATA LANGUAGE JAVA EXTERNAL NAME 'buckelieg.fn.db.DerbyStoredProcedures.testProcedureGetRowById'");
 //        db = new DB(() -> conn);
 //        db = new DB(conn);
         db = new DB(ds::getConnection);
@@ -73,6 +75,8 @@ public class DBTestSuite {
         conn.createStatement().execute("DROP PROCEDURE CREATETESTROW2");
         conn.createStatement().execute("DROP PROCEDURE GETNAMEBYID");
         conn.createStatement().execute("DROP PROCEDURE GETALLNAMES");
+        conn.createStatement().execute("DROP FUNCTION GETALLROWS");
+        conn.createStatement().execute("DROP FUNCTION GETROWBYID");
         conn.close();
         db.close();
     }
@@ -241,6 +245,16 @@ public class DBTestSuite {
     @Test(expected = SQLRuntimeException.class)
     public void testStoredProcedureNonEmptyResult() throws Throwable {
         db.procedure("{call CREATETESTROW1(?)}", "new_name").call();
+    }
+
+    @Test
+    public void testTableStoredFunction() throws Exception {
+        assertEquals(10, db.select("SELECT s.* FROM TABLE(GETALLROWS()) s").execute().peek(System.out::println).count());
+    }
+
+    @Test
+    public void testTableStoredFunctionWithInParameter() throws Exception {
+        assertEquals(1, db.select("SELECT s.* FROM TABLE(GETROWBYID(?)) s", 1).execute().peek(System.out::println).count());
     }
 
     @Test

@@ -75,4 +75,16 @@ public class DerbyStoredProcedures {
         }
     }
 
+    public static ResultSet testProcedureGetAllRows() throws SQLException {
+        LOG.debug("Calling testProcedureGetAllRows...");
+        return getConnection("jdbc:default:connection").prepareStatement("SELECT * FROM TEST").executeQuery();
+    }
+    public static ResultSet testProcedureGetRowById(int id) throws SQLException {
+        LOG.debug("Calling testProcedureGetRowById...");
+        Connection conn = getConnection("jdbc:default:connection");
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM TEST WHERE id=?");
+        stmt.setInt(1, id);
+        return stmt.executeQuery();
+    }
+
 }
