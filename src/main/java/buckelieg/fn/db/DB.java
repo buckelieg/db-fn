@@ -54,7 +54,9 @@ public final class DB implements AutoCloseable {
      * Creates DB from connection string using {@code DriverManager#getConnection} method
      *
      * @param connectionUrl rdbms-specific connection URL
-     * @throws SQLRuntimeException if connection string is invalid
+     * @throws SQLRuntimeException  if connection string is invalid
+     * @throws NullPointerException if provided connection URL is null
+     * @see DriverManager#getConnection(String)
      */
     public DB(String connectionUrl) {
         this(() -> DriverManager.getConnection(requireNonNull(connectionUrl, "Connection string must be provided")));
@@ -65,6 +67,7 @@ public final class DB implements AutoCloseable {
      * This caches provided connection and tries to create new if previous one is closed.
      *
      * @param connectionSupplier the connection supplier.
+     * @throws NullPointerException if connection provider is null
      */
     public DB(TrySupplier<Connection, SQLException> connectionSupplier) {
         requireNonNull(connectionSupplier, "Connection supplier must be provided");
@@ -84,6 +87,7 @@ public final class DB implements AutoCloseable {
      * Creates DB with provided connection
      *
      * @param connection the connection to operate on
+     * @throws NullPointerException if connection is null
      */
     public DB(Connection connection) {
         this(() -> requireNonNull(connection, "Connection must be provided"));
@@ -95,9 +99,13 @@ public final class DB implements AutoCloseable {
      * @throws Exception if something went wrong
      */
     @Override
-    public void close() throws Exception {
-        Connection c = connection.get();
-        if (c != null) c.close();
+    public void close() {
+        try {
+            Connection c = connection.get();
+            if (c != null) c.close();
+        } catch (SQLException e) {
+            throw newSQLRuntimeException(e);
+        }
     }
 
     /**
@@ -205,6 +213,7 @@ public final class DB implements AutoCloseable {
                                 .collect(toList())
                 );
                 query = preparedQuery.getKey();
+                params = stream(preparedQuery.getValue()).map(p -> (P<?>) p).toArray(P[]::new);
             } else if (0 < namedParams && namedParams < params.length) {
                 throw new IllegalArgumentException(
                         format(
@@ -222,7 +231,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query SELECT query to stream. Can be recursive-WITH query
      * @return select query
-     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Select
      */
     @Nonnull
@@ -236,7 +245,7 @@ public final class DB implements AutoCloseable {
      * @param query  SELECT query to stream. Can be recursive-WITH query
      * @param params query parameters on the declared order of '?'
      * @return select query
-     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Select
      */
     @Nonnull
@@ -254,7 +263,7 @@ public final class DB implements AutoCloseable {
      * @param query INSERT/UPDATE/DELETE query to stream.
      * @param batch an array of query parameters on the declared order of '?'
      * @return update query
-     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Update
      */
     @Nonnull
@@ -273,7 +282,7 @@ public final class DB implements AutoCloseable {
      * @param query       SELECT query to stream. Can be recursive-WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return select query
-     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Select
      */
     @Nonnull
@@ -289,7 +298,7 @@ public final class DB implements AutoCloseable {
      * @param query       SELECT query to stream. Can be recursive-WITH query
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return select query
-     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Select
      */
     @SafeVarargs
@@ -303,7 +312,7 @@ public final class DB implements AutoCloseable {
      *
      * @param query INSERT/UPDATE/DELETE query to stream.
      * @return update query
-     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Update
      */
     @Nonnull
@@ -317,7 +326,7 @@ public final class DB implements AutoCloseable {
      * @param query  INSERT/UPDATE/DELETE query to stream.
      * @param params query parameters on the declared order of '?'
      * @return update query
-     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Update
      */
     @Nonnull
@@ -333,7 +342,7 @@ public final class DB implements AutoCloseable {
      * @param query       INSERT/UPDATE/DELETE query to stream.
      * @param namedParams query named parameters. Parameter name in the form of :name
      * @return update query
-     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Update
      */
     @SafeVarargs
@@ -350,7 +359,7 @@ public final class DB implements AutoCloseable {
      * @param query INSERT/UPDATE/DELETE query to stream.
      * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return update query
-     * @throws IllegalArgumentException if provided query is not valid DML statement
+     * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Update
      */
     @SafeVarargs

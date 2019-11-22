@@ -25,17 +25,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static buckelieg.fn.db.Utils.*;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("unchecked")
 @NotThreadSafe
@@ -50,6 +53,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     private final TrySupplier<Connection, SQLException> connectionSupplier;
     private ExecutorService conveyor;
     private int timeout;
+    private Consumer<String> logger;
     private boolean escaped = true;
     private boolean skipErrors = true;
     private boolean skipWarnings = true;
@@ -59,6 +63,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     private T[] params;
     private TransactionIsolation isolationLevel = TransactionIsolation.SERIALIZABLE;
     private String query;
+
     /**
      * Creates script executor query
      *
@@ -100,17 +105,27 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
 
     private long doExecute() throws SQLException {
         long end, start = currentTimeMillis();
-        List<T> paramList = params == null ? emptyList(): asList(params);
+        List<T> paramList = params == null ? emptyList() : asList(params);
         end = doInTransaction(connectionSupplier.get(), isolationLevel, conn -> {
             for (String query : script.split(delimiter)) {
                 if (isAnonymous(query)) {
-                    executeStatement(conn.createStatement(), s -> s.execute(query));
+                    log(query);
+                    if (isProcedure(query)) {
+                        executeProcedure(() -> new StoredProcedureQuery(connectionSupplier, query));
+                    } else {
+                        executeStatement(conn.createStatement(), s -> s.execute(query));
+                    }
                 } else {
                     if (params == null || params.length == 0) {
-                        throw new IllegalArgumentException(format("Query has named parameters but none of them are provided: '%s'", query));
+                        throw new IllegalArgumentException(format("Query '%s' has named parameters but none of them is provided", query));
                     }
                     Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, paramList);
-                    executeStatement(setStatementParameters(conn.prepareStatement(checkAnonymous(preparedQuery.getKey())), preparedQuery.getValue()), PreparedStatement::execute);
+                    log(Utils.asSQL(preparedQuery.getKey(), preparedQuery.getValue()));
+                    if (isProcedure(preparedQuery.getKey())) {
+                        executeProcedure(() -> new StoredProcedureQuery(connectionSupplier, preparedQuery.getKey(), stream(preparedQuery.getValue()).map(p -> p instanceof P ? (P<?>) p : P.in(p)).toArray(P[]::new)));
+                    } else {
+                        executeStatement(setStatementParameters(conn.prepareStatement(checkAnonymous(preparedQuery.getKey())), preparedQuery.getValue()), PreparedStatement::execute);
+                    }
                 }
             }
             return currentTimeMillis();
@@ -118,23 +133,41 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
         return end - start;
     }
 
+    private void executeProcedure(Supplier<StoredProcedure> supplier) throws SQLException {
+        try (StoredProcedure sp = supplier.get()) {
+            sp.call();
+        } catch (Exception e) {
+            if (skipErrors) {
+                errorHandler.accept(new SQLException(e));
+            } else {
+                throw new SQLException(e);
+            }
+        }
+    }
+
     private <S extends Statement> void executeStatement(S statement, TryConsumer<S, SQLException> consumer) throws SQLException {
         statement.setEscapeProcessing(escaped);
         statement.setPoolable(poolable);
-        if (skipErrors) {
-            try {
-                consumer.accept(statement);
-            } catch (SQLException e) {
-                errorHandler.accept(e);
-            }
-        } else {
+        try {
             consumer.accept(statement);
+            Optional<SQLWarning> warning = ofNullable(statement.getWarnings());
+            if (!skipWarnings && warning.isPresent()) {
+                throw warning.get();
+            } else {
+                warning.ifPresent(errorHandler);
+            }
+        } catch (SQLException e) {
+            if (skipErrors) {
+                errorHandler.accept(e);
+            } else {
+                throw e;
+            }
         }
-        Optional<SQLWarning> warning = ofNullable(statement.getWarnings());
-        if (!skipWarnings && warning.isPresent()) {
-            throw warning.get();
-        } else {
-            warning.ifPresent(errorHandler);
+    }
+
+    private void log(String query) {
+        if (logger != null) {
+            logger.accept(query);
         }
     }
 
@@ -196,6 +229,13 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     @Override
     public Script transacted(TransactionIsolation isolationLevel) {
         this.isolationLevel = requireNonNull(isolationLevel, "Transaction isolation level must be provided");
+        return this;
+    }
+
+    @Nonnull
+    @Override
+    public Script verbose(Consumer<String> logger) {
+        this.logger = requireNonNull(logger, "Logger must be provided");
         return this;
     }
 

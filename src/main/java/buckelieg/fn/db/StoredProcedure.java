@@ -70,15 +70,15 @@ public interface StoredProcedure extends Select {
     }
 
     /**
-     * Calls this procedure that is without any results expected
-     * Throws {@link SQLRuntimeException} in case of non empty results which could be obtained through {@link ResultSet} object.
+     * Calls this procedure ignoring all its results
      *
-     * @throws SQLRuntimeException if provided {@link ResultSet} is not empty.
-     * @see #call(TryFunction)
+     * @throws SQLRuntimeException if something went wrong.
+     * @see #call(TryFunction, Consumer)
      */
     default void call() {
-        call(cs -> null);
+        call(cs -> null, nil -> {}).single(rs -> null);
     }
+
 
     /**
      * Prints this query string to provided logger.

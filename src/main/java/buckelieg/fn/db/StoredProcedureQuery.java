@@ -85,11 +85,12 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
         for (int i = 1; i <= params.length; i++) {
             P<?> p = (P<?>) params[i - 1];
             if (p.isOut() || p.isInOut()) {
+                SQLType type = requireNonNull(p.getType(), format("Parameter '%s' must have SQLType set", p));
                 try {
-                    cs.registerOutParameter(i, requireNonNull(p.getType(), format("Parameter '%s' must have SQLType set", p)));
+                    cs.registerOutParameter(i, type);
                 } catch (SQLFeatureNotSupportedException e) {
                     // fallback to previous version of JDBC
-                    cs.registerOutParameter(i, requireNonNull(p.getType(), format("Parameter '%s' must have SQLType set", p)).getVendorTypeNumber());
+                    cs.registerOutParameter(i, type.getVendorTypeNumber());
                 }
             }
             if (p.isIn() || p.isInOut()) {

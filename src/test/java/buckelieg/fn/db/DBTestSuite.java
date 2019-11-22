@@ -242,7 +242,7 @@ public class DBTestSuite {
         assertEquals(11L, db.select("SELECT COUNT(*) FROM TEST").single((rs) -> rs.getLong(1)).orElse(-1L).longValue());
     }
 
-    @Test(expected = SQLRuntimeException.class)
+    @Test
     public void testStoredProcedureNonEmptyResult() throws Throwable {
         db.procedure("{call CREATETESTROW1(?)}", "new_name").call();
     }
@@ -255,6 +255,7 @@ public class DBTestSuite {
     @Test
     public void testTableStoredFunctionWithInParameter() throws Exception {
         assertEquals(1, db.select("SELECT s.* FROM TABLE(GETROWBYID(?)) s", 1).execute().peek(System.out::println).count());
+        assertEquals(1, db.select("SELECT s.* FROM TABLE(GETROWBYID(:id)) s", new SimpleImmutableEntry<>(":id", 1)).execute().peek(System.out::println).count());
     }
 
     @Test
@@ -335,7 +336,7 @@ public class DBTestSuite {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidSelect() throws Throwable {
-        db.select("SELECT COUNT(*) FROM test WHERE id=:id", 1).single(rs -> rs.getInt(1)).get();
+        db.select("SELECT COUNT(*) FROM test WHERE id=:id", 1).single(rs -> rs.getInt(1));
     }
 
     @Test
@@ -344,8 +345,9 @@ public class DBTestSuite {
                 "CREATE TABLE TEST1(id int PRIMARY KEY generated always as IDENTITY, name VARCHAR(255) NOT NULL);" +
                         "ALTER TABLE TEST1 ADD COLUMN surname VARCHAR(255);" +
                         "INSERT INTO TEST1(name, surname) VALUES ('test1', 'test2');" +
-                        "DROP TABLE TEST1;"
-        ).print().timeout(1).errorHandler(System.err::println).execute());
+                        "DROP TABLE TEST1;" +
+                        "{call GETALLNAMES()};"
+        ).print().verbose().timeout(1).errorHandler(System.err::println).execute());
     }
 
     @Test

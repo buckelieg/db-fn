@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 
 import static buckelieg.fn.db.Utils.STATEMENT_DELIMITER;
 import static buckelieg.fn.db.Utils.toOptional;
+import static java.lang.String.format;
 
 /**
  * An abstraction for SQL scripts.
@@ -193,6 +194,26 @@ public interface Script extends Query {
     @Nonnull
     default Script transacted(Supplier<TransactionIsolation> supplier) {
         return transacted(toOptional(supplier).orElse(TransactionIsolation.SERIALIZABLE));
+    }
+
+    /**
+     * Sets handler for each parsed query (as SQL string) to be handled.
+     * Intended for debug purposes (like Logger::debug).
+     *
+     * @param logger query string consumer
+     * @return a script query abstraction
+     */
+    @Nonnull
+    Script verbose(Consumer<String> logger);
+
+    /**
+     * Prints each parsed query (as SQL) to standard output.
+     *
+     * @return a script query abstraction
+     */
+    @Nonnull
+    default Script verbose() {
+        return verbose(query -> System.out.println(format("Executing query: %s", query)));
     }
 
 }
