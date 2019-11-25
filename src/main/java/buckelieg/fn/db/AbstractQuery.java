@@ -29,7 +29,7 @@ import static java.util.Objects.requireNonNull;
 @SuppressWarnings("unchecked")
 abstract class AbstractQuery<S extends PreparedStatement> implements Query {
 
-    S statement;
+    protected S statement;
     private final String query;
     protected final Connection connection;
     protected final boolean autoCommit;

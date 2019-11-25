@@ -193,7 +193,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     }
 
     @Override
-    PreparedStatement prepareStatement(Connection connection, String query, Object... params) throws SQLException {
+    PreparedStatement prepareStatement(Connection connection, String query, Object... params) {
         return null;
     }
 

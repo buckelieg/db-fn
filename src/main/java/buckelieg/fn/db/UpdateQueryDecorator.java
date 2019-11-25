@@ -16,12 +16,6 @@ final class UpdateQueryDecorator extends UpdateQuery {
 
     @Nonnull
     @Override
-    public Long execute() {
-        return setQueryParameters(new UpdateQuery(connection, query, batch)).execute();
-    }
-
-    @Nonnull
-    @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler) {
         return execute(generatedValuesHandler, new int[0]);
     }
