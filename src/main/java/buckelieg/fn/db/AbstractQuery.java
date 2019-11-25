@@ -31,7 +31,7 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
     S statement;
     private final String query;
     protected final Connection connection;
-    protected boolean autoCommit;
+    protected final boolean autoCommit;
 
     AbstractQuery(Connection connection, String query, Object... params) {
         try {

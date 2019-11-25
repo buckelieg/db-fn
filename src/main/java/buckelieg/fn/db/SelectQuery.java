@@ -83,10 +83,8 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     @Override
     public final <T> Stream<T> execute(TryFunction<ResultSet, T, SQLException> mapper) {
         requireNonNull(mapper, "Mapper must be provided");
-        return stream(withStatement(s -> {
-            if(s.getFetchSize() > 0) {
-                connection.setAutoCommit(false);
-            }
+        return stream(jdbcTry(() -> {
+            connection.setAutoCommit(false);
             doExecute();
             if (rs != null) {
                 wrapper = new ImmutableResultSet(rs);
