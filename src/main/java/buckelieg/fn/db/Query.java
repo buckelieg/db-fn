@@ -58,6 +58,17 @@ interface Query extends AutoCloseable {
     @Nonnull
     <Q extends Query> Q escaped(boolean escapeProcessing);
 
+
+    /**
+     * Sets flag whether to skip on warnings or not.
+     * Default is <code>true</code>
+     *
+     * @param skipWarnings true if to skip warning, false - otherwise.
+     * @return a query abstraction
+     */
+    @Nonnull
+    <Q extends Query> Q skipWarnings(boolean skipWarnings);
+
     /**
      * Represents this <code>query</code> AS <code>SQL</code> string.
      * All parameters are substituted by calling theirs' <code>toString()</code> methods.

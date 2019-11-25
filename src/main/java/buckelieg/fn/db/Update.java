@@ -193,6 +193,25 @@ public interface Update extends Query {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    Update skipWarnings(boolean skipWarnings);
+
+    /**
+     * Sets flag whether to skip on warnings or not.
+     *
+     * @param supplier skipWarning processing value supplier
+     * @return update query abstraction
+     * @throws NullPointerException if supplier is null
+     * @see #skipWarnings(boolean)
+     */
+    default Update skipWarnings(Supplier<Boolean> supplier) {
+        return skipWarnings(toOptional(supplier).orElse(true));
+    }
+
+    /**
      * Sets the transaction isolation level for this query.
      * These are:
      * {@code

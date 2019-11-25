@@ -26,12 +26,14 @@ import static buckelieg.fn.db.Utils.newSQLRuntimeException;
 import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
 
+@SuppressWarnings("unchecked")
 abstract class AbstractQuery<S extends PreparedStatement> implements Query {
 
     S statement;
     private final String query;
     protected final Connection connection;
     protected final boolean autoCommit;
+    protected boolean skipWarnings = true;
 
     AbstractQuery(Connection connection, String query, Object... params) {
         try {
@@ -62,7 +64,11 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
         return setStatementParameter(statement -> statement.setEscapeProcessing(escapeProcessing));
     }
 
-    @SuppressWarnings("unchecked")
+    final <Q extends Query> Q setSkipWarnings(boolean skipWarnings) {
+        this.skipWarnings = skipWarnings;
+        return (Q) this;
+    }
+
     final <Q extends Query> Q log(Consumer<String> printer) {
         requireNonNull(printer, "Printer must be provided").accept(query);
         return (Q) this;
@@ -99,7 +105,6 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
         }
     }
 
-    @SuppressWarnings("unchecked")
     final <Q extends Query> Q setStatementParameter(TryConsumer<S, SQLException> action) {
         jdbcTry(() -> action.accept(statement));
         return (Q) this;

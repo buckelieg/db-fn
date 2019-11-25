@@ -45,6 +45,12 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
 
     @Nonnull
     @Override
+    public StoredProcedure skipWarnings(boolean skipWarnings) {
+        return skipWarnings(skipWarnings);
+    }
+
+    @Nonnull
+    @Override
     public StoredProcedure print(Consumer<String> printer) {
         return log(printer);
     }

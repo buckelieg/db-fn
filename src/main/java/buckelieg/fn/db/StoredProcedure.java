@@ -25,7 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+import static buckelieg.fn.db.Utils.toOptional;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -79,6 +81,24 @@ public interface StoredProcedure extends Select {
         call(cs -> null, nil -> {}).single(rs -> null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    StoredProcedure skipWarnings(boolean skipWarnings);
+
+    /**
+     * Sets flag whether to skip on warnings or not.
+     *
+     * @param supplier skipWarning processing value supplier
+     * @return stored procedure call query abstraction
+     * @throws NullPointerException if supplier is null
+     * @see #skipWarnings(boolean)
+     */
+    default StoredProcedure skipWarnings(Supplier<Boolean> supplier) {
+        return skipWarnings(toOptional(supplier).orElse(true));
+    }
 
     /**
      * Prints this query string to provided logger.

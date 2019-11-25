@@ -112,6 +112,12 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
 
     @Nonnull
     @Override
+    public Update skipWarnings(boolean skipWarnings) {
+        return setSkipWarnings(skipWarnings);
+    }
+
+    @Nonnull
+    @Override
     public Update transacted(TransactionIsolation isolationLevel) {
         this.isolationLevel = requireNonNull(isolationLevel, "Transaction isolation level must be provided");
         return this;

@@ -128,13 +128,10 @@ public interface Script extends Query {
     }
 
     /**
-     * Sets flag whether to stkip on warnings or not.
-     * Default is <code>true</code>
-     *
-     * @param skipWarnings true if to skip warning, false - otherwise.
-     * @return script query abstraction
+     * {@inheritDoc}
      */
     @Nonnull
+    @Override
     Script skipWarnings(boolean skipWarnings);
 
 

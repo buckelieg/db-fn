@@ -135,6 +135,12 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
 
     @Nonnull
     @Override
+    public Select skipWarnings(boolean skipWarnings) {
+        return setSkipWarnings(skipWarnings);
+    }
+
+    @Nonnull
+    @Override
     public Select print(Consumer<String> printer) {
         return log(printer);
     }

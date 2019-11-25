@@ -246,6 +246,26 @@ public interface Select extends Query {
         return escaped(toOptional(supplier).orElse(true));
     }
 
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nonnull
+    @Override
+    Select skipWarnings(boolean skipWarnings);
+
+    /**
+     * Sets flag whether to skip on warnings or not.
+     *
+     * @param supplier skipWarning processing value supplier
+     * @return a select query abstraction
+     * @throws NullPointerException if supplier is null
+     * @see #skipWarnings(boolean)
+     */
+    default Select skipWarnings(Supplier<Boolean> supplier) {
+        return skipWarnings(toOptional(supplier).orElse(true));
+    }
+
     /**
      * Prints this query string (as SQL) to provided logger.
      *
