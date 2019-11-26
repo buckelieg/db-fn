@@ -19,7 +19,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.CallableStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,7 +77,8 @@ public interface StoredProcedure extends Select {
      * @see #call(TryFunction, Consumer)
      */
     default void call() {
-        call(cs -> null, nil -> {}).single(rs -> null);
+        call(cs -> null, nil -> {
+        }).single(rs -> null);
     }
 
     /**

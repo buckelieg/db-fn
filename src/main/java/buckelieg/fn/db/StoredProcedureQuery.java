@@ -21,7 +21,6 @@ import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.*;
 import java.util.function.Consumer;
 
-import static buckelieg.fn.db.Utils.newSQLRuntimeException;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
