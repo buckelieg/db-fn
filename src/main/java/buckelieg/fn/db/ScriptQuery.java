@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static buckelieg.fn.db.Utils.*;
 import static java.lang.Math.max;
@@ -109,7 +108,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
             for (String query : script.split(delimiter)) {
                 if (isAnonymous(query)) {
                     if (isProcedure(query)) {
-                        executeProcedure(() -> new StoredProcedureQuery(conn, query));
+                        executeProcedure(new StoredProcedureQuery(conn, query));
                     } else {
                         executeQuery(new QueryImpl(conn, query));
                     }
@@ -119,7 +118,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
                     }
                     Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, paramList);
                     if (isProcedure(preparedQuery.getKey())) {
-                        executeProcedure(() -> new StoredProcedureQuery(conn, preparedQuery.getKey(), stream(preparedQuery.getValue()).map(p -> p instanceof P ? (P<?>) p : P.in(p)).toArray(P[]::new)));
+                        executeProcedure(new StoredProcedureQuery(conn, preparedQuery.getKey(), stream(preparedQuery.getValue()).map(p -> p instanceof P ? (P<?>) p : P.in(p)).toArray(P[]::new)));
                     } else {
                         executeQuery(new QueryImpl(conn, checkAnonymous(preparedQuery.getKey()), preparedQuery.getValue()));
                     }
@@ -130,9 +129,9 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
         return end - start;
     }
 
-    private void executeProcedure(Supplier<StoredProcedure> supplier) throws SQLException {
-        try (StoredProcedure sp = supplier.get().skipWarnings(skipWarnings)) {
-            sp.print(this::log).call();
+    private void executeProcedure(StoredProcedure sp) throws SQLException {
+        try {
+            sp.skipWarnings(skipWarnings).print(this::log).call();
         } catch (Exception e) {
             if (skipErrors) {
                 errorHandler.accept(new SQLException(e));
@@ -142,7 +141,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
         }
     }
 
-    private <Q extends Query> void executeQuery(Q query) throws SQLException {
+    private void executeQuery(Query query) throws SQLException {
         try {
             query.escaped(escaped).poolable(poolable).skipWarnings(skipWarnings).print(this::log).execute();
         } catch (Exception e) {
