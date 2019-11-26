@@ -272,6 +272,7 @@ public interface Select extends Query {
      * @param printer query string consumer
      * @return select query abstraction
      */
+    @Override
     @Nonnull
     Select print(Consumer<String> printer);
 

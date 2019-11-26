@@ -19,7 +19,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -106,7 +108,6 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
         end = doInTransaction(connection, isolationLevel, conn -> {
             for (String query : script.split(delimiter)) {
                 if (isAnonymous(query)) {
-                    log(query);
                     if (isProcedure(query)) {
                         executeProcedure(() -> new StoredProcedureQuery(conn, query));
                     } else {
@@ -117,7 +118,6 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
                         throw new IllegalArgumentException(format("Query '%s' has named parameters but none of them is provided", query));
                     }
                     Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, paramList);
-                    log(Utils.asSQL(preparedQuery.getKey(), preparedQuery.getValue()));
                     if (isProcedure(preparedQuery.getKey())) {
                         executeProcedure(() -> new StoredProcedureQuery(conn, preparedQuery.getKey(), stream(preparedQuery.getValue()).map(p -> p instanceof P ? (P<?>) p : P.in(p)).toArray(P[]::new)));
                     } else {
@@ -132,7 +132,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
 
     private void executeProcedure(Supplier<StoredProcedure> supplier) throws SQLException {
         try (StoredProcedure sp = supplier.get().skipWarnings(skipWarnings)) {
-            sp.call();
+            sp.print(this::log).call();
         } catch (Exception e) {
             if (skipErrors) {
                 errorHandler.accept(new SQLException(e));
@@ -144,7 +144,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
 
     private <Q extends Query> void executeQuery(Q query) throws SQLException {
         try {
-            query.escaped(escaped).poolable(poolable).skipWarnings(skipWarnings).execute();
+            query.escaped(escaped).poolable(poolable).skipWarnings(skipWarnings).print(this::log).execute();
         } catch (Exception e) {
             if (skipErrors) {
                 errorHandler.accept(new SQLException(e));

@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.function.Consumer;
 
 import static buckelieg.fn.db.Utils.checkAnonymous;
 import static buckelieg.fn.db.Utils.setStatementParameters;
@@ -30,25 +31,31 @@ final class QueryImpl extends AbstractQuery<Statement> {
 
     @Nonnull
     @Override
-    public <Q extends Query> Q poolable(boolean poolable) {
+    public Query poolable(boolean poolable) {
         return setPoolable(poolable);
     }
 
     @Nonnull
     @Override
-    public <Q extends Query> Q timeout(int timeout) {
+    public Query timeout(int timeout) {
         return setTimeout(timeout);
     }
 
     @Nonnull
     @Override
-    public <Q extends Query> Q escaped(boolean escapeProcessing) {
+    public Query escaped(boolean escapeProcessing) {
         return setEscapeProcessing(escapeProcessing);
     }
 
     @Nonnull
     @Override
-    public <Q extends Query> Q skipWarnings(boolean skipWarnings) {
+    public Query skipWarnings(boolean skipWarnings) {
         return setSkipWarnings(skipWarnings);
+    }
+
+    @Nonnull
+    @Override
+    public Query print(Consumer<String> printer) {
+        return log(printer);
     }
 }

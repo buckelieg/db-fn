@@ -16,6 +16,8 @@
 package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
+import java.io.PrintStream;
+import java.util.function.Consumer;
 
 /**
  * An SQL query abstraction.
@@ -47,7 +49,7 @@ public interface Query extends AutoCloseable {
      * @see java.sql.Statement#setPoolable(boolean)
      */
     @Nonnull
-    <Q extends Query> Q poolable(boolean poolable);
+    Query poolable(boolean poolable);
 
     /**
      * Sets query execution timeout. Negative values are silently ignored.
@@ -57,7 +59,7 @@ public interface Query extends AutoCloseable {
      * @see java.sql.Statement#setQueryTimeout(int)
      */
     @Nonnull
-    <Q extends Query> Q timeout(int timeout);
+    Query timeout(int timeout);
 
     /**
      * Sets escape processing for this query
@@ -67,7 +69,7 @@ public interface Query extends AutoCloseable {
      * @see java.sql.Statement#setEscapeProcessing(boolean)
      */
     @Nonnull
-    <Q extends Query> Q escaped(boolean escapeProcessing);
+    Query escaped(boolean escapeProcessing);
 
 
     /**
@@ -78,7 +80,29 @@ public interface Query extends AutoCloseable {
      * @return a query abstraction
      */
     @Nonnull
-    <Q extends Query> Q skipWarnings(boolean skipWarnings);
+    Query skipWarnings(boolean skipWarnings);
+
+
+    /**
+     * Prints this query string (as SQL) to provided logger.
+     *
+     * @param printer query string consumer
+     * @return a query abstraction
+     */
+    @Nonnull
+    Query print(Consumer<String> printer);
+
+    /**
+     * Prints this query string (as SQL) to standard output.
+     *
+     * @return select query abstraction
+     * @see System#out
+     * @see PrintStream#println
+     */
+    @Nonnull
+    default Query print() {
+        return print(System.out::println);
+    }
 
     /**
      * Represents this <code>query</code> AS <code>SQL</code> string.
