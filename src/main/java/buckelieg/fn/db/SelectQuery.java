@@ -106,7 +106,7 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     @Nonnull
     @Override
     public final Select fetchSize(int size) {
-        return setStatementParameter(s -> s.setFetchSize(max(size, 0))); // 0 value is ignored by ResultSet.setFetchSize;
+        return setStatementParameter(s -> s.setFetchSize(max(size, 0))); // 0 value is ignored by Statement.setFetchSize;
     }
 
     @Nonnull
