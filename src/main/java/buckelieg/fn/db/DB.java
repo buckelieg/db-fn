@@ -75,7 +75,11 @@ public final class DB implements AutoCloseable {
         this.connectionSupplier = () -> connection.updateAndGet(c -> {
             try {
                 if (c == null || c.isClosed()) {
-                    c = requireNonNull(connectionSupplier.get(), "Connection supplier must provide non-null connection");
+                    synchronized (this) {
+                        if (c == null || c.isClosed()) {
+                            c = requireNonNull(connectionSupplier.get(), "Connection supplier must provide non-null connection");
+                        }
+                    }
                 }
             } catch (SQLException e) {
                 throw newSQLRuntimeException(e);
