@@ -28,6 +28,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static buckelieg.fn.db.Utils.newSQLRuntimeException;
 import static buckelieg.fn.db.Utils.setStatementParameters;
 import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
@@ -94,13 +95,7 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     }
 
     protected void doExecute() {
-        withStatement(s -> {
-            rs = s.executeQuery();
-            if(!skipWarnings && s.getWarnings() != null) {
-                throw s.getWarnings();
-            }
-            return s;
-        });
+        withStatement(s -> rs = s.executeQuery());
     }
 
     @Nonnull

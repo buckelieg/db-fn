@@ -17,8 +17,8 @@ package buckelieg.fn.db;
 
 import javax.annotation.Nonnull;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.function.Consumer;
 
 import static buckelieg.fn.db.Utils.cutComments;
@@ -27,21 +27,22 @@ import static java.lang.Math.max;
 import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("unchecked")
-abstract class AbstractQuery<S extends PreparedStatement> implements Query {
+abstract class AbstractQuery<S extends Statement> implements Query {
 
     protected S statement;
-    private final String query;
+    protected final String query;
+    private final String sqlString;
     protected final Connection connection;
     protected final boolean autoCommit;
     protected boolean skipWarnings = true;
 
     AbstractQuery(Connection connection, String query, Object... params) {
         try {
-            String q = cutComments(requireNonNull(query, "SQL query must be provided"));
+            this.query = cutComments(requireNonNull(query, "SQL query must be provided"));
             this.connection = connection;
             this.autoCommit = connection.getAutoCommit();
-            this.statement = prepareStatement(connection, q, params);
-            this.query = asSQL(q, params);
+            this.statement = prepareStatement(connection, this.query, params);
+            this.sqlString = asSQL(this.query, params);
         } catch (SQLException e) {
             throw newSQLRuntimeException(e);
         }
@@ -70,7 +71,7 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
     }
 
     final <Q extends Query> Q log(Consumer<String> printer) {
-        requireNonNull(printer, "Printer must be provided").accept(query);
+        requireNonNull(printer, "Printer must be provided").accept(sqlString);
         return (Q) this;
     }
 
@@ -98,7 +99,11 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
 
     final <O> O withStatement(TryFunction<S, O, SQLException> action) {
         try {
-            return action.apply(statement);
+            O result = action.apply(statement);
+            if(!skipWarnings && statement.getWarnings() != null) {
+                throw statement.getWarnings();
+            }
+            return result;
         } catch (SQLException e) {
             close();
             throw newSQLRuntimeException(e);
@@ -119,7 +124,7 @@ abstract class AbstractQuery<S extends PreparedStatement> implements Query {
     @Nonnull
     @Override
     public final String asSQL() {
-        return query;
+        return sqlString;
     }
 
     @Override

@@ -21,6 +21,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.*;
 import java.util.function.Consumer;
 
+import static buckelieg.fn.db.Utils.newSQLRuntimeException;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -57,17 +58,7 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
 
     @Override
     protected void doExecute() {
-        withStatement(s -> {
-            if(s.execute()) {
-                if(!skipWarnings && s.getWarnings() !=null) {
-                    throw s.getWarnings();
-                }
-                rs = s.getResultSet();
-            } else {
-                rs = null;
-            }
-            return s;
-        });
+        withStatement(s -> s.execute() ? rs = s.getResultSet() : null);
     }
 
     @SuppressWarnings("unchecked")

@@ -165,11 +165,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
         setPoolable(isPoolable);
         setTimeout(timeout);
         setEscapeProcessing(isEscaped);
-        long result = isBatch && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
-        if(!skipWarnings && statement.getWarnings() != null) {
-            throw statement.getWarnings();
-        }
-        return result;
+        return isBatch && conn.getMetaData().supportsBatchUpdates() ? executeBatch() : executeSimple();
     }
 
     private long executeSimple() {

@@ -48,7 +48,7 @@ import static java.util.stream.Stream.of;
 @ParametersAreNonnullByDefault
 public final class DB implements AutoCloseable {
 
-    private final AtomicReference<Connection> connection = new AtomicReference<>();
+    private Connection connection;
     private final Supplier<Connection> connectionSupplier;
 
     /**
@@ -72,20 +72,7 @@ public final class DB implements AutoCloseable {
      */
     public DB(TrySupplier<Connection, SQLException> connectionSupplier) {
         requireNonNull(connectionSupplier, "Connection supplier must be provided");
-        this.connectionSupplier = () -> connection.updateAndGet(c -> {
-            try {
-                if (c == null || c.isClosed()) {
-                    synchronized (this) {
-                        if (c == null || c.isClosed()) {
-                            c = requireNonNull(connectionSupplier.get(), "Connection supplier must provide non-null connection");
-                        }
-                    }
-                }
-            } catch (SQLException e) {
-                throw newSQLRuntimeException(e);
-            }
-            return c;
-        });
+        this.connectionSupplier = () -> getConnection(connectionSupplier);
     }
 
     /**
@@ -106,8 +93,7 @@ public final class DB implements AutoCloseable {
     @Override
     public void close() {
         try {
-            Connection c = connection.get();
-            if (c != null) c.close();
+            if (connection != null) connection.close();
         } catch (SQLException e) {
             throw newSQLRuntimeException(e);
         }
@@ -382,6 +368,21 @@ public final class DB implements AutoCloseable {
     private Update update(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return update(preparedQuery.getKey(), preparedQuery.getValue());
+    }
+
+    private Connection getConnection(TrySupplier<Connection, SQLException> supplier) {
+        try {
+            if (connection == null || connection.isClosed()) {
+                synchronized (this) {
+                    if (connection == null || connection.isClosed()) {
+                        connection = requireNonNull(supplier.get(), "Connection supplier must provide non-null connection");
+                    }
+                }
+            }
+            return connection;
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
     }
 
 }

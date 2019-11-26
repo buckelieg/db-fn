@@ -22,7 +22,6 @@ import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -35,7 +34,6 @@ import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -67,7 +65,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
      * Creates script executor query
      *
      * @param connection db connection
-     * @param script             an arbitrary SQL script to execute
+     * @param script     an arbitrary SQL script to execute
      * @throws IllegalArgumentException in case of corrupted script (like illegal comment lines encountered)
      */
     ScriptQuery(Connection connection, String script, @Nullable T... namedParams) {
@@ -110,9 +108,9 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
                 if (isAnonymous(query)) {
                     log(query);
                     if (isProcedure(query)) {
-                        executeProcedure(() -> new StoredProcedureQuery(connection, query));
+                        executeProcedure(() -> new StoredProcedureQuery(conn, query));
                     } else {
-                        executeStatement(conn.createStatement(), s -> s.execute(query));
+                        executeQuery(new QueryImpl(conn, query));
                     }
                 } else {
                     if (params == null || params.length == 0) {
@@ -121,9 +119,9 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
                     Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, paramList);
                     log(Utils.asSQL(preparedQuery.getKey(), preparedQuery.getValue()));
                     if (isProcedure(preparedQuery.getKey())) {
-                        executeProcedure(() -> new StoredProcedureQuery(connection, preparedQuery.getKey(), stream(preparedQuery.getValue()).map(p -> p instanceof P ? (P<?>) p : P.in(p)).toArray(P[]::new)));
+                        executeProcedure(() -> new StoredProcedureQuery(conn, preparedQuery.getKey(), stream(preparedQuery.getValue()).map(p -> p instanceof P ? (P<?>) p : P.in(p)).toArray(P[]::new)));
                     } else {
-                        executeStatement(setStatementParameters(conn.prepareStatement(checkAnonymous(preparedQuery.getKey())), preparedQuery.getValue()), PreparedStatement::execute);
+                        executeQuery(new QueryImpl(conn, checkAnonymous(preparedQuery.getKey()), preparedQuery.getValue()));
                     }
                 }
             }
@@ -144,22 +142,14 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
         }
     }
 
-    private <S extends Statement> void executeStatement(S statement, TryConsumer<S, SQLException> consumer) throws SQLException {
-        statement.setEscapeProcessing(escaped);
-        statement.setPoolable(poolable);
+    private <Q extends Query> void executeQuery(Q query) throws SQLException {
         try {
-            consumer.accept(statement);
-            Optional<SQLWarning> warning = ofNullable(statement.getWarnings());
-            if (!skipWarnings && warning.isPresent()) {
-                throw warning.get();
-            } else {
-                warning.ifPresent(errorHandler);
-            }
-        } catch (SQLException e) {
+            query.escaped(escaped).poolable(poolable).skipWarnings(skipWarnings).execute();
+        } catch (Exception e) {
             if (skipErrors) {
-                errorHandler.accept(e);
+                errorHandler.accept(new SQLException(e));
             } else {
-                throw e;
+                throw new SQLException(e);
             }
         }
     }

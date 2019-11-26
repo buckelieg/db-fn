@@ -18,7 +18,7 @@ package buckelieg.fn.db;
 import javax.annotation.Nonnull;
 
 /**
- * SQL query abstraction.
+ * An SQL query abstraction.
  *
  * @see AutoCloseable
  * @see Select
@@ -26,7 +26,18 @@ import javax.annotation.Nonnull;
  * @see StoredProcedure
  * @see Script
  */
-interface Query extends AutoCloseable {
+public interface Query extends AutoCloseable {
+
+    /**
+     * Executes this arbitrary SQL query
+     *
+     * @return an arbitrary query execution result(s)
+     * @see Select#execute()
+     * @see Update#execute()
+     * @see StoredProcedure#execute()
+     * @see Script#execute()
+     */
+    <T> T execute();
 
     /**
      * Tells JDBC driver that this query is poolable.
