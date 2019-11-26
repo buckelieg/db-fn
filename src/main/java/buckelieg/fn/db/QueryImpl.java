@@ -17,11 +17,12 @@ final class QueryImpl extends AbstractQuery<Statement> {
 
     QueryImpl(Connection connection, String query, Object... params) {
         super(connection, query, params);
+        this.isPrepared = params != null && params.length != 0;
     }
 
     @Override
     Statement prepareStatement(Connection connection, String query, Object... params) throws SQLException {
-        return (isPrepared = params != null && params.length != 0) ? setStatementParameters(connection.prepareStatement(query), params) : connection.createStatement();
+        return isPrepared ? setStatementParameters(connection.prepareStatement(query), params) : connection.createStatement();
     }
 
     @Override

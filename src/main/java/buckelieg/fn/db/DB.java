@@ -25,7 +25,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import static buckelieg.fn.db.Utils.*;
