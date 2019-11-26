@@ -46,7 +46,7 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
     @Nonnull
     @Override
     public StoredProcedure skipWarnings(boolean skipWarnings) {
-        return skipWarnings(skipWarnings);
+        return setSkipWarnings(skipWarnings);
     }
 
     @Nonnull
@@ -57,7 +57,17 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
 
     @Override
     protected void doExecute() {
-        withStatement(s -> s.execute() ? rs = s.getResultSet() : null);
+        withStatement(s -> {
+            if(s.execute()) {
+                if(!skipWarnings && s.getWarnings() !=null) {
+                    throw s.getWarnings();
+                }
+                rs = s.getResultSet();
+            } else {
+                rs = null;
+            }
+            return s;
+        });
     }
 
     @SuppressWarnings("unchecked")

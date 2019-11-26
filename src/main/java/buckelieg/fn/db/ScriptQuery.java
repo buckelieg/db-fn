@@ -133,7 +133,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     }
 
     private void executeProcedure(Supplier<StoredProcedure> supplier) throws SQLException {
-        try (StoredProcedure sp = supplier.get()) {
+        try (StoredProcedure sp = supplier.get().skipWarnings(skipWarnings)) {
             sp.call();
         } catch (Exception e) {
             if (skipErrors) {

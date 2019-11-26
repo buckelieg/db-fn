@@ -94,7 +94,13 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
     }
 
     protected void doExecute() {
-        withStatement(s -> rs = s.executeQuery());
+        withStatement(s -> {
+            rs = s.executeQuery();
+            if(!skipWarnings && s.getWarnings() != null) {
+                throw s.getWarnings();
+            }
+            return s;
+        });
     }
 
     @Nonnull
