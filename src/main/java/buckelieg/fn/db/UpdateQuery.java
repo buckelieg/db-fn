@@ -37,7 +37,7 @@ import static java.util.stream.Stream.of;
 @SuppressWarnings("unchecked")
 @NotThreadSafe
 @ParametersAreNonnullByDefault
-class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
+final class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
 
     private Object[][] batch;
     private boolean isLarge;
