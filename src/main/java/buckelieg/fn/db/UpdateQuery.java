@@ -39,13 +39,13 @@ import static java.util.stream.Stream.of;
 @ParametersAreNonnullByDefault
 class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
 
-    protected Object[][] batch;
-    protected boolean isLarge;
-    protected boolean isBatch;
-    protected boolean isPoolable;
-    protected boolean isEscaped = true;
-    protected int timeout;
-    protected TransactionIsolation isolationLevel = TransactionIsolation.SERIALIZABLE;
+    private Object[][] batch;
+    private boolean isLarge;
+    private boolean isBatch;
+    private boolean isPoolable;
+    private boolean isEscaped = true;
+    private int timeout;
+    private TransactionIsolation isolationLevel = TransactionIsolation.SERIALIZABLE;
 
     private UpdateQuery(TrySupplier<PreparedStatement, SQLException> prepareStatement, Connection connection, String query, Object[]... batch) {
         super(connection, query, (Object) batch);
