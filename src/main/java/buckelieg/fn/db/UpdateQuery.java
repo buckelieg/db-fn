@@ -57,7 +57,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
         this(() -> connection.prepareStatement(query), connection, query, batch);
     }
 
-    UpdateQuery(@Nullable int[] colIndices, Connection connection, String query, Object[]... batch) {
+    private UpdateQuery(@Nullable int[] colIndices, Connection connection, String query, Object[]... batch) {
         this(
                 () -> colIndices == null || colIndices.length == 0 ?
                         connection.prepareStatement(query, RETURN_GENERATED_KEYS) :
@@ -66,7 +66,7 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
         );
     }
 
-    UpdateQuery(@Nullable String[] colNames, Connection connection, String query, Object[]... batch) {
+    private UpdateQuery(@Nullable String[] colNames, Connection connection, String query, Object[]... batch) {
         this(
                 () -> colNames == null || colNames.length == 0 ?
                         connection.prepareStatement(query, RETURN_GENERATED_KEYS) :
