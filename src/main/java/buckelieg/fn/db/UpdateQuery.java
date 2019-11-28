@@ -139,13 +139,13 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, String... colNames) {
-        return newUpdateQuery(null, colNames).execute(generatedValuesHandler);
+        return execute(null, colNames, generatedValuesHandler);
     }
 
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, int... colIndices) {
-        return newUpdateQuery(colIndices, null).execute(generatedValuesHandler);
+        return execute(colIndices, null, generatedValuesHandler);
     }
 
     /**
@@ -204,8 +204,8 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     }
 
     // TODO rewrite class to eliminate unnecessary object creation
-    private Update newUpdateQuery(@Nullable int[] colIndices, @Nullable String[] colNames) {
+    private Long execute(@Nullable int[] colIndices, @Nullable String[] colNames, TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler) {
         close(); //close current prepared statement
-        return (colIndices == null || colIndices.length == 0 ? new UpdateQuery(colNames, connection, query, batch) : new UpdateQuery(colIndices, connection, query, batch)).timeout(timeout).poolable(isPoolable).escaped(isEscaped).batched(isBatch).large(isLarge).skipWarnings(skipWarnings).transacted(isolationLevel);
+        return (colIndices == null || colIndices.length == 0 ? new UpdateQuery(colNames, connection, query, batch) : new UpdateQuery(colIndices, connection, query, batch)).timeout(timeout).poolable(isPoolable).escaped(isEscaped).batched(isBatch).large(isLarge).skipWarnings(skipWarnings).transacted(isolationLevel).execute(generatedValuesHandler);
     }
 }
