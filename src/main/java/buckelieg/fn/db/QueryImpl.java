@@ -13,7 +13,7 @@ import static buckelieg.fn.db.Utils.setStatementParameters;
 @SuppressWarnings("unchecked")
 final class QueryImpl extends AbstractQuery<Statement> {
 
-    private boolean isPrepared;
+    private final boolean isPrepared;
 
     QueryImpl(Connection connection, String query, Object... params) {
         super(connection, query, params);
