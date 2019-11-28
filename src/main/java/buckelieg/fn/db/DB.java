@@ -120,7 +120,7 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       SELECT query to stream
+     * @param query       an arbitrary SQL query to execute
      * @param namedParameters query named parameters. Parameter name in the form of :name
      * @return select query
      * @throws IllegalArgumentException if provided query is a procedure call statement
@@ -135,7 +135,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes a set of an arbitrary SQL statement(s) against provided connection.
      *
-     * @param script      (a series of) SQL statement(s) to stream
+     * @param script      (a series of) SQL statement(s) to execute
      * @param namedParameters named parameters to be used in the script
      * @return script query abstraction
      * @throws NullPointerException if script is null
@@ -151,7 +151,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes an arbitrary SQL statement(s) against provided connection with default encoding (<code>Charset.UTF_8</code>)
      *
-     * @param source      file with a SQL script contained
+     * @param source      file with a SQL script contained to execute
      * @param namedParameters named parameters to be used in the script
      * @return script query abstraction
      * @throws RuntimeException in case of any errors (like {@link java.io.FileNotFoundException} or source file is null)
@@ -187,7 +187,7 @@ public final class DB implements AutoCloseable {
     /**
      * Calls stored procedure.
      *
-     * @param query procedure call string
+     * @param query procedure call string to execute
      * @return stored procedure call
      * @see StoredProcedure
      * @see #procedure(String, P[])
@@ -200,7 +200,7 @@ public final class DB implements AutoCloseable {
     /**
      * Calls stored procedure. Supplied parameters are considered as IN parameters
      *
-     * @param query  procedure call string
+     * @param query  procedure call string to execute
      * @param parameters procedure IN parameters' values
      * @return stored procedure call
      * @see StoredProcedure
@@ -217,7 +217,7 @@ public final class DB implements AutoCloseable {
      * So that :NAME and :name are two different parameters.
      * Named parameters order must match parameters type of the procedure called.
      *
-     * @param query  procedure call string
+     * @param query  procedure call string to execute
      * @param parameters procedure parameters as declared (IN/OUT/INOUT)
      * @return stored procedure call
      * @throws IllegalArgumentException if provided query is not valid DML statement or named parameters provided along with unnamed ones
@@ -253,7 +253,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes SELECT statement
      *
-     * @param query SELECT query to stream
+     * @param query SELECT query to execute
      * @return select query
      * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Select
@@ -266,7 +266,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes SELECT statement
      *
-     * @param query  SELECT query to stream
+     * @param query  SELECT query to execute
      * @param parameters query parameters in the declared order of '?'
      * @return select query
      * @throws IllegalArgumentException if provided query is a procedure call statement
@@ -284,7 +284,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
-     * @param query INSERT/UPDATE/DELETE query to stream.
+     * @param query INSERT/UPDATE/DELETE query to execute
      * @param batch an array of query parameters on the declared order of '?'
      * @return update query
      * @throws IllegalArgumentException if provided query is a procedure call statement
@@ -301,7 +301,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes a single SQL query against provided connection.
      *
-     * @param query a single arbitrary SQL query
+     * @param query a single arbitrary SQL query to execute
      * @param parameters query parameters in the declared order of '?'
      * @return an SQL query abstraction
      */
@@ -318,7 +318,7 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       SELECT query to stream
+     * @param query       SELECT query to execute
      * @param namedParameters query named parameters. Parameter name in the form of :name
      * @return select query
      * @throws IllegalArgumentException if provided query is a procedure call statement
@@ -334,7 +334,7 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       SELECT query to stream
+     * @param query       SELECT query to execute
      * @param namedParameters query named parameters. Parameter name in the form of :name
      * @return select query
      * @throws IllegalArgumentException if provided query is a procedure call statement
@@ -349,7 +349,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
-     * @param query INSERT/UPDATE/DELETE query to stream.
+     * @param query INSERT/UPDATE/DELETE query to execute
      * @return update query
      * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Update
@@ -362,7 +362,7 @@ public final class DB implements AutoCloseable {
     /**
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
-     * @param query  INSERT/UPDATE/DELETE query to stream.
+     * @param query  INSERT/UPDATE/DELETE query to execute
      * @param parameters query parameters on the declared order of '?'
      * @return update query
      * @throws IllegalArgumentException if provided query is a procedure call statement
@@ -378,7 +378,7 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       INSERT/UPDATE/DELETE query to stream.
+     * @param query       INSERT/UPDATE/DELETE query to execute
      * @param namedParameters query named parameters. Parameter name in the form of :name
      * @return update query
      * @throws IllegalArgumentException if provided query is a procedure call statement
@@ -395,7 +395,7 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query INSERT/UPDATE/DELETE query to stream.
+     * @param query INSERT/UPDATE/DELETE query to execute
      * @param batch an array of query named parameters. Parameter name in the form of :name
      * @return update query
      * @throws IllegalArgumentException if provided query is a procedure call statement
