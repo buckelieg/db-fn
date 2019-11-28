@@ -98,11 +98,45 @@ public final class DB implements AutoCloseable {
         }
     }
 
+
     /**
-     * Executes an arbitrary SQL statement(s) against provided connection.
+     * Executes an arbitrary parameterized SQL statement
+     * Parameter names are CASE SENSITIVE!
+     * So that :NAME and :name are two different parameters.
+     *
+     * @param query       an SQL query to execute
+     * @param namedParameters query named parameters. Parameter name in the form of :name
+     * @return select query
+     * @throws IllegalArgumentException if provided query is a procedure call statement
+     * @see Select
+     */
+    @Nonnull
+    public Query query(String query, Map<String, ?> namedParameters) {
+        return query(query, namedParameters.entrySet());
+    }
+
+    /**
+     * Executes an arbitrary SQL statement with named parameters.
+     * Parameter names are CASE SENSITIVE!
+     * So that :NAME and :name are two different parameters.
+     *
+     * @param query       SELECT query to stream
+     * @param namedParameters query named parameters. Parameter name in the form of :name
+     * @return select query
+     * @throws IllegalArgumentException if provided query is a procedure call statement
+     * @see Select
+     */
+    @SafeVarargs
+    @Nonnull
+    public final <T extends Map.Entry<String, ?>> Query query(String query, T... namedParameters) {
+        return query(query, asList(namedParameters));
+    }
+
+    /**
+     * Executes a set of an arbitrary SQL statement(s) against provided connection.
      *
      * @param script      (a series of) SQL statement(s) to stream
-     * @param namedParams named parameters to be used in the script
+     * @param namedParameters named parameters to be used in the script
      * @return script query abstraction
      * @throws NullPointerException if script is null
      * @see Script
@@ -110,23 +144,23 @@ public final class DB implements AutoCloseable {
     @SuppressWarnings("unchecked")
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Script script(String script, T... namedParams) {
-        return new ScriptQuery(connectionSupplier.get(), script, namedParams);
+    public final <T extends Map.Entry<String, ?>> Script script(String script, T... namedParameters) {
+        return new ScriptQuery(connectionSupplier.get(), script, namedParameters);
     }
 
     /**
      * Executes an arbitrary SQL statement(s) against provided connection with default encoding (<code>Charset.UTF_8</code>)
      *
      * @param source      file with a SQL script contained
-     * @param namedParams named parameters to be used in the script
+     * @param namedParameters named parameters to be used in the script
      * @return script query abstraction
      * @throws RuntimeException in case of any errors (like {@link java.io.FileNotFoundException} or source file is null)
      * @see #script(File, Charset, Map.Entry[])
      */
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Script script(File source, T... namedParams) {
-        return script(source, UTF_8, namedParams);
+    public final <T extends Map.Entry<String, ?>> Script script(File source, T... namedParameters) {
+        return script(source, UTF_8, namedParameters);
     }
 
     /**
@@ -134,7 +168,7 @@ public final class DB implements AutoCloseable {
      *
      * @param source      file with a SQL script contained
      * @param encoding    source file encoding to be used
-     * @param namedParams named parameters to be used in the script
+     * @param namedParameters named parameters to be used in the script
      * @return script query abstraction
      * @throws RuntimeException in case of any errors (like {@link java.io.FileNotFoundException} or source file is null)
      * @see #script(String, Map.Entry[])
@@ -142,9 +176,9 @@ public final class DB implements AutoCloseable {
      */
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Script script(File source, Charset encoding, T... namedParams) {
+    public final <T extends Map.Entry<String, ?>> Script script(File source, Charset encoding, T... namedParameters) {
         try {
-            return script(new String(readAllBytes(requireNonNull(source, "Source file must be provided").toPath()), requireNonNull(encoding, "File encoding must be provided")), namedParams);
+            return script(new String(readAllBytes(requireNonNull(source, "Source file must be provided").toPath()), requireNonNull(encoding, "File encoding must be provided")), namedParameters);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -164,17 +198,17 @@ public final class DB implements AutoCloseable {
     }
 
     /**
-     * Calls stored procedure. Supplied params are considered as IN parameters
+     * Calls stored procedure. Supplied parameters are considered as IN parameters
      *
      * @param query  procedure call string
-     * @param params procedure IN parameters' values
+     * @param parameters procedure IN parameters' values
      * @return stored procedure call
      * @see StoredProcedure
      * @see #procedure(String, P[])
      */
     @Nonnull
-    public StoredProcedure procedure(String query, Object... params) {
-        return procedure(query, stream(params).map(P::in).collect(toList()).toArray(new P<?>[params.length]));
+    public StoredProcedure procedure(String query, Object... parameters) {
+        return procedure(query, stream(parameters).map(P::in).collect(toList()).toArray(new P<?>[parameters.length]));
     }
 
     /**
@@ -184,42 +218,42 @@ public final class DB implements AutoCloseable {
      * Named parameters order must match parameters type of the procedure called.
      *
      * @param query  procedure call string
-     * @param params procedure parameters as declared (IN/OUT/INOUT)
+     * @param parameters procedure parameters as declared (IN/OUT/INOUT)
      * @return stored procedure call
      * @throws IllegalArgumentException if provided query is not valid DML statement or named parameters provided along with unnamed ones
      * @see StoredProcedure
      */
     @Nonnull
-    public StoredProcedure procedure(String query, P<?>... params) {
+    public StoredProcedure procedure(String query, P<?>... parameters) {
         if (isAnonymous(query) && !isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid procedure call statement", query));
         } else {
-            int namedParams = (int) of(params).filter(p -> !p.getName().isEmpty()).count();
-            if (namedParams == params.length && params.length > 0) {
+            int namedParams = (int) of(parameters).filter(p -> !p.getName().isEmpty()).count();
+            if (namedParams == parameters.length && parameters.length > 0) {
                 Map.Entry<String, Object[]> preparedQuery = prepareQuery(
                         query,
-                        of(params)
+                        of(parameters)
                                 .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
                                 .collect(toList())
                 );
                 query = preparedQuery.getKey();
-                params = stream(preparedQuery.getValue()).map(p -> (P<?>) p).toArray(P[]::new);
-            } else if (0 < namedParams && namedParams < params.length) {
+                parameters = stream(preparedQuery.getValue()).map(p -> (P<?>) p).toArray(P[]::new);
+            } else if (0 < namedParams && namedParams < parameters.length) {
                 throw new IllegalArgumentException(
                         format(
                                 "Cannot combine named parameters(count=%s) with unnamed ones(count=%s).",
-                                namedParams, params.length - namedParams
+                                namedParams, parameters.length - namedParams
                         )
                 );
             }
         }
-        return new StoredProcedureQuery(connectionSupplier.get(), query, params);
+        return new StoredProcedureQuery(connectionSupplier.get(), query, parameters);
     }
 
     /**
      * Executes SELECT statement
      *
-     * @param query SELECT query to stream. Can be recursive-WITH query
+     * @param query SELECT query to stream
      * @return select query
      * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Select
@@ -232,18 +266,18 @@ public final class DB implements AutoCloseable {
     /**
      * Executes SELECT statement
      *
-     * @param query  SELECT query to stream. Can be recursive-WITH query
-     * @param params query parameters on the declared order of '?'
+     * @param query  SELECT query to stream
+     * @param parameters query parameters in the declared order of '?'
      * @return select query
      * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Select
      */
     @Nonnull
-    public Select select(String query, Object... params) {
+    public Select select(String query, Object... parameters) {
         if (isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid select statement", query));
         }
-        return new SelectQuery(connectionSupplier.get(), checkAnonymous(query), params);
+        return new SelectQuery(connectionSupplier.get(), checkAnonymous(query), parameters);
     }
 
 
@@ -265,19 +299,34 @@ public final class DB implements AutoCloseable {
     }
 
     /**
+     * Executes a single SQL query against provided connection.
+     *
+     * @param query a single arbitrary SQL query
+     * @param parameters query parameters in the declared order of '?'
+     * @return an SQL query abstraction
+     */
+    @Nonnull
+    public Query query(String query, Object... parameters) {
+        if (isProcedure(query)) {
+            throw new IllegalArgumentException(format("Query '%s' is not valid select statement", query));
+        }
+        return new QueryImpl(connectionSupplier.get(), query, parameters);
+    }
+
+    /**
      * Executes SELECT statement
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       SELECT query to stream. Can be recursive-WITH query
-     * @param namedParams query named parameters. Parameter name in the form of :name
+     * @param query       SELECT query to stream
+     * @param namedParameters query named parameters. Parameter name in the form of :name
      * @return select query
      * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Select
      */
     @Nonnull
-    public Select select(String query, Map<String, ?> namedParams) {
-        return select(query, namedParams.entrySet());
+    public Select select(String query, Map<String, ?> namedParameters) {
+        return select(query, namedParameters.entrySet());
     }
 
     /**
@@ -285,16 +334,16 @@ public final class DB implements AutoCloseable {
      * Parameter names are CASE SENSITIVE!
      * So that :NAME and :name are two different parameters.
      *
-     * @param query       SELECT query to stream. Can be recursive-WITH query
-     * @param namedParams query named parameters. Parameter name in the form of :name
+     * @param query       SELECT query to stream
+     * @param namedParameters query named parameters. Parameter name in the form of :name
      * @return select query
      * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Select
      */
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Select select(String query, T... namedParams) {
-        return select(query, asList(namedParams));
+    public final <T extends Map.Entry<String, ?>> Select select(String query, T... namedParameters) {
+        return select(query, asList(namedParameters));
     }
 
     /**
@@ -314,14 +363,14 @@ public final class DB implements AutoCloseable {
      * Executes one of DML statements: INSERT, UPDATE or DELETE.
      *
      * @param query  INSERT/UPDATE/DELETE query to stream.
-     * @param params query parameters on the declared order of '?'
+     * @param parameters query parameters on the declared order of '?'
      * @return update query
      * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Update
      */
     @Nonnull
-    public Update update(String query, Object... params) {
-        return update(query, new Object[][]{params});
+    public Update update(String query, Object... parameters) {
+        return update(query, new Object[][]{parameters});
     }
 
     /**
@@ -330,15 +379,15 @@ public final class DB implements AutoCloseable {
      * So that :NAME and :name are two different parameters.
      *
      * @param query       INSERT/UPDATE/DELETE query to stream.
-     * @param namedParams query named parameters. Parameter name in the form of :name
+     * @param namedParameters query named parameters. Parameter name in the form of :name
      * @return update query
      * @throws IllegalArgumentException if provided query is a procedure call statement
      * @see Update
      */
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Update update(String query, T... namedParams) {
-        return update(query, asList(namedParams));
+    public final <T extends Map.Entry<String, ?>> Update update(String query, T... namedParameters) {
+        return update(query, asList(namedParameters));
     }
 
     /**
@@ -367,6 +416,11 @@ public final class DB implements AutoCloseable {
     private Update update(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
         Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return update(preparedQuery.getKey(), preparedQuery.getValue());
+    }
+
+    private Query query(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
+        Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
+        return query(preparedQuery.getKey(), preparedQuery.getValue());
     }
 
     private Connection getConnection(TrySupplier<Connection, SQLException> supplier) {
