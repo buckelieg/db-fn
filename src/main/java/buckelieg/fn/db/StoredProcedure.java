@@ -71,7 +71,7 @@ public interface StoredProcedure extends Select {
     }
 
     /**
-     * Calls this procedure ignoring all its results
+     * Calls this procedure ignoring all its possible results
      *
      * @throws SQLRuntimeException if something went wrong.
      * @see #call(TryFunction, Consumer)

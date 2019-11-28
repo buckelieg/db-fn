@@ -33,7 +33,7 @@ final class UpdateQueryDecorator extends UpdateQuery {
     }
 
     private Update setQueryParameters(Update query) {
-        return query.timeout(timeout).poolable(isPoolable).escaped(isEscaped).batched(isBatch).large(isLarge).transacted(isolationLevel);
+        return query.timeout(timeout).poolable(isPoolable).escaped(isEscaped).batched(isBatch).large(isLarge).skipWarnings(skipWarnings).transacted(isolationLevel);
     }
 
 }
