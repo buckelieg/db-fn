@@ -295,7 +295,7 @@ public final class DB implements AutoCloseable {
         if (isProcedure(query)) {
             throw new IllegalArgumentException(format("Query '%s' is not valid DML statement", query));
         }
-        return new UpdateQueryDecorator(connectionSupplier.get(), checkAnonymous(query), batch);
+        return new UpdateQuery(connectionSupplier.get(), checkAnonymous(query), batch);
     }
 
     /**

@@ -45,13 +45,11 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     protected boolean isPoolable;
     protected boolean isEscaped = true;
     protected int timeout;
-    protected final String query;
     protected TransactionIsolation isolationLevel = TransactionIsolation.SERIALIZABLE;
 
     private UpdateQuery(TrySupplier<PreparedStatement, SQLException> prepareStatement, Connection connection, String query, Object[]... batch) {
         super(connection, query, (Object) batch);
         this.batch = requireNonNull(batch, "Batch must be provided");
-        this.query = query;
         this.statement = jdbcTry(prepareStatement);
     }
 
@@ -141,13 +139,13 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, String... colNames) {
-        return new UpdateQuery(colNames, connection, query, batch).execute(generatedValuesHandler);
+        return newUpdateQuery(null, colNames).execute(generatedValuesHandler);
     }
 
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler, int... colIndices) {
-        return new UpdateQuery(colIndices, connection, query, batch).execute(generatedValuesHandler);
+        return newUpdateQuery(colIndices, null).execute(generatedValuesHandler);
     }
 
     /**
@@ -203,5 +201,11 @@ class UpdateQuery extends AbstractQuery<PreparedStatement> implements Update {
                 .flatMap(p -> of((Object[]) p))
                 .map(p -> super.asSQL(query, (Object[]) p))
                 .collect(joining(STATEMENT_DELIMITER));
+    }
+
+    // TODO rewrite class to eliminate unnecessary object creation
+    private Update newUpdateQuery(@Nullable int[] colIndices, @Nullable String[] colNames) {
+        close(); //close current prepared statement
+        return (colIndices == null || colIndices.length == 0 ? new UpdateQuery(colNames, connection, query, batch) : new UpdateQuery(colIndices, connection, query, batch)).timeout(timeout).poolable(isPoolable).escaped(isEscaped).batched(isBatch).large(isLarge).skipWarnings(skipWarnings).transacted(isolationLevel);
     }
 }
