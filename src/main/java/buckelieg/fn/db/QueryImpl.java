@@ -26,7 +26,9 @@ final class QueryImpl extends AbstractQuery<Statement> {
 
     @Override
     public Boolean execute() {
-        return withStatement(s -> isPrepared ? ((PreparedStatement) s).execute() : s.execute(checkAnonymous(query)));
+        boolean result = withStatement(s -> isPrepared ? ((PreparedStatement) s).execute() : s.execute(checkAnonymous(query)));
+        close(); // force closing this statement since we will not process any of its possible results
+        return result;
     }
 
     @Nonnull
