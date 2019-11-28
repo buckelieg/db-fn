@@ -83,7 +83,7 @@ public interface Select extends Query {
      */
     @Nonnull
     default Stream<Map<String, Object>> execute() {
-        return execute(defaultMapper);
+        return execute(new DefaultMapper());
     }
 
     /**

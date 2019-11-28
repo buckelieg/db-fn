@@ -123,6 +123,31 @@ final class Utils {
         return result;
     };
 
+    static final class DefaultMapper implements TryFunction<ResultSet, Map<String, Object>, SQLException> {
+
+        private TryFunction<ResultSet, Map<String, Object>, SQLException> mapper;
+/*        private int columnCount;
+        private ResultSetMetaData meta;*/
+
+        @Override
+        public Map<String, Object> apply(ResultSet input) throws SQLException {
+            ResultSetMetaData meta = input.getMetaData();
+            int columnCount = meta.getColumnCount();
+            Map<String, Object> result = new IdentityHashMap<>(columnCount);
+            if (mapper == null) {
+                mapper = rs -> result;
+                for (int i = 1; i <= columnCount; i++) {
+                    int col = i;
+                    mapper = TryFunction.of(mapper).compose(rs -> {
+                        result.put(meta.getColumnLabel(col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject).apply(input, col));
+                        return rs;
+                    });
+                }
+            }
+            return mapper.apply(input);
+        }
+    }
+
     private static final Pattern MULTILINE_COMMENT_DELIMITER = Pattern.compile("(/\\*)|(\\*/)*");
     private static final String MULTILINE_COMMENT_DELIMITER_START = "/*";
     private static final String MULTILINE_COMMENT_DELIMITER_END = "*/";
@@ -209,7 +234,7 @@ final class Utils {
             autoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
             savepoint = conn.setSavepoint();
-            if(isolation != isolationLevel.level && conn.getMetaData().supportsTransactionIsolationLevel(isolationLevel.level)) {
+            if (isolation != isolationLevel.level && conn.getMetaData().supportsTransactionIsolationLevel(isolationLevel.level)) {
                 conn.setTransactionIsolation(isolationLevel.level);
             }
             result = requireNonNull(action, "Action must be provided").apply(conn);
