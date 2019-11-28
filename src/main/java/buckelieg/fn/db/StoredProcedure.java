@@ -77,8 +77,7 @@ public interface StoredProcedure extends Select {
      * @see #call(TryFunction, Consumer)
      */
     default void call() {
-        call(cs -> null, nil -> {
-        }).single(rs -> null);
+        call(cs -> null, nil -> {}).single(rs -> null);
     }
 
     /**
