@@ -115,7 +115,7 @@ final class Utils {
         <code>DB.select(...).execute().map(HashMap::new).collect(Collectors.toSet())</code>
      */
     @Nonnull
-    static TryFunction<ResultSet, Map<String, Object>, SQLException> defaultMapper = rs -> {
+    static final TryFunction<ResultSet, Map<String, Object>, SQLException> defaultMapper = rs -> {
         ResultSetMetaData meta = rs.getMetaData();
         int columnCount = meta.getColumnCount();
         Map<String, Object> result = new IdentityHashMap<>(columnCount);
