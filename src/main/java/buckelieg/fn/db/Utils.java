@@ -142,7 +142,8 @@ final class Utils {
                 mapper = TryFunction.<ResultSet, Map<String, Object>, SQLException>of(rs -> new IdentityHashMap<>(columnCount))
                         .andThen(map -> {
                             for (Entry<String, Entry<Integer, TryBiFunction<ResultSet, Integer, Object, SQLException>>> e : colReaders.entrySet()) {
-                                map.put(e.getKey(), e.getValue().getValue().apply(input, e.getValue().getKey()));
+                                Entry<Integer, TryBiFunction<ResultSet, Integer, Object, SQLException>> value = e.getValue();
+                                map.put(e.getKey(), value.getValue().apply(input, value.getKey()));
                             }
                             return map;
                         });
