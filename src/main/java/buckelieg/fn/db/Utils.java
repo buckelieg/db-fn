@@ -126,24 +126,25 @@ final class Utils {
     static final class DefaultMapper implements TryFunction<ResultSet, Map<String, Object>, SQLException> {
 
         private TryFunction<ResultSet, Map<String, Object>, SQLException> mapper;
-/*        private int columnCount;
-        private ResultSetMetaData meta;*/
+        private int columnCount;
+        private ResultSetMetaData meta;
+
+        DefaultMapper(ResultSet input) throws SQLException {
+            meta = input.getMetaData();
+            columnCount = meta.getColumnCount();
+            Map<String, Object> result = new IdentityHashMap<>(columnCount);
+            mapper = rs -> result;
+            for (int i = columnCount; i >= 1; i--) {
+                int col = i;
+                mapper = mapper.compose(rs -> {
+                    result.put(meta.getColumnLabel(col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject).apply(input, col));
+                    return rs;
+                });
+            }
+        }
 
         @Override
         public Map<String, Object> apply(ResultSet input) throws SQLException {
-            ResultSetMetaData meta = input.getMetaData();
-            int columnCount = meta.getColumnCount();
-            Map<String, Object> result = new IdentityHashMap<>(columnCount);
-            if (mapper == null) {
-                mapper = rs -> result;
-                for (int i = 1; i <= columnCount; i++) {
-                    int col = i;
-                    mapper = TryFunction.of(mapper).compose(rs -> {
-                        result.put(meta.getColumnLabel(col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject).apply(input, col));
-                        return rs;
-                    });
-                }
-            }
             return mapper.apply(input);
         }
     }
