@@ -139,14 +139,13 @@ final class Utils {
                 for (int col = 1; col <= columnCount; col++) {
                     colReaders.put(new SimpleImmutableEntry<>(col, meta.getColumnLabel(col)), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject));
                 }
-                mapper = TryFunction.<ResultSet, Map<String, Object>, SQLException>of(rs -> new IdentityHashMap<>(columnCount))
-                        .andThen(map -> {
-                            for (Entry<Entry<Integer, String>, TryBiFunction<ResultSet, Integer, Object, SQLException>> e : colReaders.entrySet()) {
-                                Entry<Integer, String> key = e.getKey();
-                                map.put(key.getValue(), e.getValue().apply(input, key.getKey()));
-                            }
-                            return map;
-                        });
+                mapper = TryFunction.<ResultSet, Map<String, Object>, SQLException>of(rs -> new IdentityHashMap<>(columnCount)).andThen(map -> {
+                    for (Entry<Entry<Integer, String>, TryBiFunction<ResultSet, Integer, Object, SQLException>> e : colReaders.entrySet()) {
+                        Entry<Integer, String> key = e.getKey();
+                        map.put(key.getValue(), e.getValue().apply(input, key.getKey()));
+                    }
+                    return map;
+                });
             }
             return mapper.apply(input);
         }
