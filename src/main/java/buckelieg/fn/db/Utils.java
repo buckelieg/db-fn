@@ -128,7 +128,7 @@ final class Utils {
     static final class DefaultMapper implements TryFunction<ResultSet, Map<String, Object>, SQLException> {
 
         private TryFunction<ResultSet, Map<String, Object>, SQLException> mapper;
-        private Map<String, Entry<Integer, TryBiFunction<ResultSet, Integer, Object, SQLException>>> colReaders;
+        private Map<Entry<Integer, String>, TryBiFunction<ResultSet, Integer, Object, SQLException>> colReaders;
 
         @Override
         public Map<String, Object> apply(ResultSet input) throws SQLException {
@@ -137,13 +137,13 @@ final class Utils {
                 ResultSetMetaData meta = input.getMetaData();
                 int columnCount = meta.getColumnCount();
                 for (int col = 1; col <= columnCount; col++) {
-                    colReaders.put(meta.getColumnLabel(col), new SimpleImmutableEntry<>(col, defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject)));
+                    colReaders.put(new SimpleImmutableEntry<>(col, meta.getColumnLabel(col)), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject));
                 }
                 mapper = TryFunction.<ResultSet, Map<String, Object>, SQLException>of(rs -> new IdentityHashMap<>(columnCount))
                         .andThen(map -> {
-                            for (Entry<String, Entry<Integer, TryBiFunction<ResultSet, Integer, Object, SQLException>>> e : colReaders.entrySet()) {
-                                Entry<Integer, TryBiFunction<ResultSet, Integer, Object, SQLException>> value = e.getValue();
-                                map.put(e.getKey(), value.getValue().apply(input, value.getKey()));
+                            for (Entry<Entry<Integer, String>, TryBiFunction<ResultSet, Integer, Object, SQLException>> e : colReaders.entrySet()) {
+                                Entry<Integer, String> key = e.getKey();
+                                map.put(key.getValue(), e.getValue().apply(input, key.getKey()));
                             }
                             return map;
                         });
