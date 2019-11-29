@@ -128,7 +128,7 @@ final class Utils {
     static final class DefaultMapper implements TryFunction<ResultSet, Map<String, Object>, SQLException> {
 
         private TryFunction<ResultSet, Map<String, Object>, SQLException> mapper;
-        private Map<Entry<Integer, String>, TryBiFunction<ResultSet, Integer, Object, SQLException>> colReaders;
+        private Map<Entry<String, Integer>, TryBiFunction<ResultSet, Integer, Object, SQLException>> colReaders;
 
         @Override
         public Map<String, Object> apply(ResultSet input) throws SQLException {
@@ -137,15 +137,15 @@ final class Utils {
                 ResultSetMetaData meta = input.getMetaData();
                 int columnCount = meta.getColumnCount();
                 for (int col = 1; col <= columnCount; col++) {
-                    colReaders.put(new SimpleImmutableEntry<>(col, meta.getColumnLabel(col)), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject));
+                    colReaders.put(new SimpleImmutableEntry<>(meta.getColumnLabel(col), col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject));
                 }
-                mapper = TryFunction.<ResultSet, Map<String, Object>, SQLException>of(rs -> new IdentityHashMap<>(columnCount)).andThen(map -> {
-                    for (Entry<Entry<Integer, String>, TryBiFunction<ResultSet, Integer, Object, SQLException>> e : colReaders.entrySet()) {
-                        Entry<Integer, String> key = e.getKey();
-                        map.put(key.getValue(), e.getValue().apply(input, key.getKey()));
+                mapper = rs -> {
+                    Map<String, Object> result = new IdentityHashMap<>(columnCount);
+                    for (Entry<Entry<String, Integer>, TryBiFunction<ResultSet, Integer, Object, SQLException>> e : colReaders.entrySet()) {
+                        result.put(e.getKey().getKey(), e.getValue().apply(rs, e.getKey().getValue()));
                     }
-                    return map;
-                });
+                    return result;
+                };
             }
             return mapper.apply(input);
         }
