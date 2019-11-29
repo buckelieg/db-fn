@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.sql.*;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -114,10 +115,11 @@ final class Utils {
         <code>DB.select(...).execute().map(HashMap::new).collect(Collectors.toSet())</code>
      */
     @Nonnull
-    static TryFunction<ResultSet, Map<String, Object>, SQLException> defaultMapper = rs -> {
+    static final TryFunction<ResultSet, Map<String, Object>, SQLException> defaultMapper = rs -> {
         ResultSetMetaData meta = rs.getMetaData();
-        Map<String, Object> result = new IdentityHashMap<>(meta.getColumnCount());
-        for (int col = 1; col <= meta.getColumnCount(); col++) {
+        int columnCount = meta.getColumnCount();
+        Map<String, Object> result = new IdentityHashMap<>(columnCount);
+        for (int col = 1; col <= columnCount; col++) {
             result.put(meta.getColumnLabel(col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject).apply(rs, col));
         }
         return result;
@@ -126,25 +128,25 @@ final class Utils {
     static final class DefaultMapper implements TryFunction<ResultSet, Map<String, Object>, SQLException> {
 
         private TryFunction<ResultSet, Map<String, Object>, SQLException> mapper;
-        private int columnCount;
-        private ResultSetMetaData meta;
-
-        DefaultMapper(ResultSet input) throws SQLException {
-            meta = input.getMetaData();
-            columnCount = meta.getColumnCount();
-            Map<String, Object> result = new IdentityHashMap<>(columnCount);
-            mapper = rs -> result;
-            for (int i = columnCount; i >= 1; i--) {
-                int col = i;
-                mapper = mapper.compose(rs -> {
-                    result.put(meta.getColumnLabel(col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject).apply(input, col));
-                    return rs;
-                });
-            }
-        }
+        private Map<Entry<String, Integer>, TryBiFunction<ResultSet, Integer, Object, SQLException>> colReaders;
 
         @Override
         public Map<String, Object> apply(ResultSet input) throws SQLException {
+            if (mapper == null) {
+                colReaders = new HashMap<>();
+                ResultSetMetaData meta = input.getMetaData();
+                int columnCount = meta.getColumnCount();
+                for (int col = 1; col <= columnCount; col++) {
+                    colReaders.put(new SimpleImmutableEntry<>(meta.getColumnLabel(col), col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject));
+                }
+                mapper = rs -> {
+                    Map<String, Object> result = new IdentityHashMap<>(columnCount);
+                    for (Entry<Entry<String, Integer>, TryBiFunction<ResultSet, Integer, Object, SQLException>> e : colReaders.entrySet()) {
+                        result.put(e.getKey().getKey(), e.getValue().apply(rs, e.getKey().getValue()));
+                    }
+                    return result;
+                };
+            }
             return mapper.apply(input);
         }
     }
@@ -158,7 +160,7 @@ final class Utils {
     }
 
     @Nonnull
-    static Map.Entry<String, Object[]> prepareQuery(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
+    static Entry<String, Object[]> prepareQuery(String query, Iterable<? extends Entry<String, ?>> namedParams) {
         Map<Integer, Object> indicesToValues = new TreeMap<>();
         Map<String, Optional<?>> transformedParams = stream(namedParams.spliterator(), false).collect(toMap(
                 e -> e.getKey().startsWith(":") ? e.getKey() : format(":%s", e.getKey()),
@@ -171,7 +173,7 @@ final class Utils {
                 indicesToValues.put(++idx, o);
             }
         }
-        for (Map.Entry<String, Optional<?>> e : transformedParams.entrySet()) {
+        for (Entry<String, Optional<?>> e : transformedParams.entrySet()) {
             query = query.replaceAll(
                     e.getKey(),
                     stream(asIterable(e.getValue()).spliterator(), false).map(o -> "?").collect(joining(", "))

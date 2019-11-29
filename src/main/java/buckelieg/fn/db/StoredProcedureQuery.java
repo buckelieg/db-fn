@@ -19,11 +19,16 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.sql.*;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
+import static buckelieg.fn.db.Utils.defaultMapper;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
+@SuppressWarnings("unchecked")
 @NotThreadSafe
 @ParametersAreNonnullByDefault
 final class StoredProcedureQuery extends SelectQuery implements StoredProcedure {
@@ -45,6 +50,18 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
 
     @Nonnull
     @Override
+    public Stream<Map<String, Object>> execute() {
+        return execute(defaultMapper);
+    }
+
+    @Nonnull
+    @Override
+    public List<Map<String, Object>> list() {
+        return list(defaultMapper);
+    }
+
+    @Nonnull
+    @Override
     public StoredProcedure skipWarnings(boolean skipWarnings) {
         return setSkipWarnings(skipWarnings);
     }
@@ -60,7 +77,6 @@ final class StoredProcedureQuery extends SelectQuery implements StoredProcedure 
         withStatement(s -> s.execute() ? rs = s.getResultSet() : null);
     }
 
-    @SuppressWarnings("unchecked")
     protected boolean doHasNext() {
         return jdbcTry(() -> {
             boolean moved = super.doHasNext();

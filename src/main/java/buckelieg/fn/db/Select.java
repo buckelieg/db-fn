@@ -116,7 +116,7 @@ public interface Select extends Query {
      */
     @Nonnull
     default List<Map<String, Object>> list() {
-        return list(defaultMapper);
+        return list(new DefaultMapper());
     }
 
     /**
