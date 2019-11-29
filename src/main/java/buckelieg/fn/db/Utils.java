@@ -128,20 +128,20 @@ final class Utils {
     static final class DefaultMapper implements TryFunction<ResultSet, Map<String, Object>, SQLException> {
 
         private TryFunction<ResultSet, Map<String, Object>, SQLException> mapper;
-        private Map<Entry<String, Integer>, TryBiFunction<ResultSet, Integer, Object, SQLException>> colReaders;
+        private List<Entry<Entry<String, Integer>, TryBiFunction<ResultSet, Integer, Object, SQLException>>> colReaders;
 
         @Override
         public Map<String, Object> apply(ResultSet input) throws SQLException {
             if (mapper == null) {
-                colReaders = new HashMap<>();
                 ResultSetMetaData meta = input.getMetaData();
                 int columnCount = meta.getColumnCount();
+                colReaders = new ArrayList<>(columnCount);
                 for (int col = 1; col <= columnCount; col++) {
-                    colReaders.put(new SimpleImmutableEntry<>(meta.getColumnLabel(col), col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject));
+                    colReaders.add(new SimpleImmutableEntry<>(new SimpleImmutableEntry<>(meta.getColumnLabel(col), col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject)));
                 }
                 mapper = rs -> {
                     Map<String, Object> result = new IdentityHashMap<>(columnCount);
-                    for (Entry<Entry<String, Integer>, TryBiFunction<ResultSet, Integer, Object, SQLException>> e : colReaders.entrySet()) {
+                    for (Entry<Entry<String, Integer>, TryBiFunction<ResultSet, Integer, Object, SQLException>> e : colReaders) {
                         result.put(e.getKey().getKey(), e.getValue().apply(rs, e.getKey().getValue()));
                     }
                     return result;
