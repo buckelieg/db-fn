@@ -20,7 +20,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -62,11 +65,11 @@ public interface Select extends Query {
     /**
      * Executes SELECT statement for SINGLE result with default mapper applied
      *
-     * @return a {@link Map} with key-value pairs
+     * @return an {@link Optional} with the {@link Map} as a value
      */
     @Nonnull
-    default Map<String, Object> single() {
-        return single(defaultMapper).orElse(Collections.emptyMap());
+    default Optional<Map<String, Object>> single() {
+        return single(defaultMapper);
     }
 
     /**
