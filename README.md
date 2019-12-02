@@ -7,7 +7,7 @@ Add maven dependency:
 <dependency>
   <groupId>com.github.buckelieg</groupId>
   <artifactId>db-fn</artifactId>
-  <version>0.3.7</version>
+  <version>0.3.8</version>
 </dependency>
 ```
 Operate on result set in a functional way.
