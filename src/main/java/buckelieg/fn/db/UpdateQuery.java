@@ -130,8 +130,9 @@ final class UpdateQuery extends AbstractQuery<PreparedStatement> implements Upda
     @Nonnull
     @Override
     public Long execute(TryConsumer<Stream<ResultSet>, SQLException> generatedValuesHandler) {
+        requireNonNull(generatedValuesHandler, "Generated values handler must be provided");
         return jdbcTry(() -> doInTransaction(connection, isolationLevel, TryFunction.of(this::doExecute).andThen(count -> {
-            setStatementParameter(s -> requireNonNull(generatedValuesHandler, "Generated values handler must be provided").accept(StreamSupport.stream(new ResultSetSpliterator(s::getGeneratedKeys), false).onClose(this::close)));
+            setStatementParameter(s -> generatedValuesHandler.accept(StreamSupport.stream(new ResultSetSpliterator(s::getGeneratedKeys), false).onClose(this::close)));
             return count;
         })));
     }

@@ -74,8 +74,9 @@ public interface TryFunction<I, O, E extends Throwable> {
      * @see #andThen(TryFunction)
      */
     default <V> TryFunction<V, O, E> compose(TryFunction<? super V, ? extends I, ? extends E> before) throws E {
+        requireNonNull(before);
         try {
-            return (V v) -> apply(requireNonNull(before).apply(v));
+            return (V v) -> apply(before.apply(v));
         } catch (Throwable t) {
             throw (E) t;
         }
@@ -95,8 +96,9 @@ public interface TryFunction<I, O, E extends Throwable> {
      * @see #compose(TryFunction)
      */
     default <V> TryFunction<I, V, E> andThen(TryFunction<? super O, ? extends V, ? extends E> after) throws E {
+        requireNonNull(after);
         try {
-            return (I t) -> requireNonNull(after).apply(apply(t));
+            return (I t) -> after.apply(apply(t));
         } catch (Throwable t) {
             throw (E) t;
         }

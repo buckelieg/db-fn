@@ -61,10 +61,11 @@ public interface TryConsumer<T, E extends Throwable> {
      * @throws NullPointerException if {@code after} is null
      */
     default TryConsumer<T, E> andThen(TryConsumer<? super T, E> after) throws E {
+        requireNonNull(after);
         try {
             return (T t) -> {
                 accept(t);
-                requireNonNull(after).accept(t);
+                after.accept(t);
             };
         } catch (Throwable t) {
             throw (E) t;
@@ -85,9 +86,10 @@ public interface TryConsumer<T, E extends Throwable> {
      * @throws NullPointerException if {@code before} is null
      */
     default TryConsumer<T, E> compose(TryConsumer<? super T, E> before) throws E {
+        requireNonNull(before);
         try {
             return (T t) -> {
-                requireNonNull(before).accept(t);
+                before.accept(t);
                 accept(t);
             };
         } catch (Throwable t) {

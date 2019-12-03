@@ -28,7 +28,7 @@ import static buckelieg.fn.db.Utils.defaultMapper;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "rawtypes"})
 @NotThreadSafe
 @ParametersAreNonnullByDefault
 final class StoredProcedureQuery extends SelectQuery implements StoredProcedure {

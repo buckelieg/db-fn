@@ -31,9 +31,10 @@ class ResultSetSpliterator implements Spliterator<ResultSet>, AutoCloseable {
 
     @Override
     public final boolean tryAdvance(Consumer<? super ResultSet> action) {
+        requireNonNull(action);
         if (hasMoved) {
             hasMoved = false;
-            requireNonNull(action).accept(wrapper);
+            action.accept(wrapper);
         } else {
             try {
                 hasNext = rs != null && rs.next();

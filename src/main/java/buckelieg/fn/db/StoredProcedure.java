@@ -63,8 +63,9 @@ public interface StoredProcedure extends Select {
      */
     @Nonnull
     default <T> Optional<T> call(TryFunction<CallableStatement, T, SQLException> mapper) {
+        requireNonNull(mapper, "Mapper must be provided");
         List<Optional<T>> results = new ArrayList<>(1);
-        call(cs -> ofNullable(requireNonNull(mapper, "Mapper must be provided").apply(cs)), results::add).single(rs -> rs).ifPresent(rs -> {
+        call(cs -> ofNullable(mapper.apply(cs)), results::add).single(rs -> rs).ifPresent(rs -> {
             throw new SQLRuntimeException("Procedure has non-empty result set");
         });
         return results.get(0);

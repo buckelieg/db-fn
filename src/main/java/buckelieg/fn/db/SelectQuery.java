@@ -152,8 +152,9 @@ class SelectQuery extends AbstractQuery<PreparedStatement> implements Iterable<R
 
     @Override
     public final boolean tryAdvance(Consumer<? super ResultSet> action) {
+        requireNonNull(action);
         if (hasNext()) {
-            requireNonNull(action).accept(next());
+            action.accept(next());
             return true;
         }
         return false;
