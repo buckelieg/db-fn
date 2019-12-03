@@ -114,7 +114,6 @@ final class Utils {
         will not eliminate duplicates from tuple. To do it just use UNION on the SQL query side or do this:
         <code>DB.select(...).execute().map(HashMap::new).collect(Collectors.toSet())</code>
      */
-    @Nonnull
     static final TryFunction<ResultSet, Map<String, Object>, SQLException> defaultMapper = rs -> {
         ResultSetMetaData meta = rs.getMetaData();
         int columnCount = meta.getColumnCount();
