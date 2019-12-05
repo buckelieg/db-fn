@@ -42,6 +42,10 @@ import static java.util.stream.Stream.of;
  * Database query factory
  *
  * @see Query
+ * @see Select
+ * @see Update
+ * @see StoredProcedure
+ * @see Script
  */
 @ThreadSafe
 @ParametersAreNonnullByDefault
@@ -141,7 +145,7 @@ public final class DB implements AutoCloseable {
      * @throws NullPointerException if script is null
      * @see Script
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @SafeVarargs
     @Nonnull
     public final <T extends Map.Entry<String, ?>> Script script(String script, T... namedParameters) {
