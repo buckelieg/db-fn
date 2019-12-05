@@ -25,6 +25,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Supplier;
 
 import static buckelieg.fn.db.Utils.*;
@@ -132,7 +133,7 @@ public final class DB implements AutoCloseable {
      */
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Query query(String query, T... namedParameters) {
+    public final <T extends Entry<String, ?>> Query query(String query, T... namedParameters) {
         return query(query, asList(namedParameters));
     }
 
@@ -148,7 +149,7 @@ public final class DB implements AutoCloseable {
     @SuppressWarnings({"unchecked", "rawtypes"})
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Script script(String script, T... namedParameters) {
+    public final <T extends Entry<String, ?>> Script script(String script, T... namedParameters) {
         return new ScriptQuery(connectionSupplier.get(), script, namedParameters);
     }
 
@@ -159,11 +160,11 @@ public final class DB implements AutoCloseable {
      * @param namedParameters named parameters to be used in the script
      * @return script query abstraction
      * @throws RuntimeException in case of any errors (like {@link java.io.FileNotFoundException} or source file is null)
-     * @see #script(File, Charset, Map.Entry[])
+     * @see #script(File, Charset, Entry[])
      */
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Script script(File source, T... namedParameters) {
+    public final <T extends Entry<String, ?>> Script script(File source, T... namedParameters) {
         return script(source, UTF_8, namedParameters);
     }
 
@@ -175,12 +176,12 @@ public final class DB implements AutoCloseable {
      * @param namedParameters named parameters to be used in the script
      * @return script query abstraction
      * @throws RuntimeException in case of any errors (like {@link java.io.FileNotFoundException} or source file is null)
-     * @see #script(String, Map.Entry[])
+     * @see #script(String, Entry[])
      * @see Charset
      */
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Script script(File source, Charset encoding, T... namedParameters) {
+    public final <T extends Entry<String, ?>> Script script(File source, Charset encoding, T... namedParameters) {
         try {
             return script(new String(readAllBytes(requireNonNull(source, "Source file must be provided").toPath()), requireNonNull(encoding, "File encoding must be provided")), namedParameters);
         } catch (Exception e) {
@@ -234,7 +235,7 @@ public final class DB implements AutoCloseable {
         } else {
             int namedParams = (int) of(parameters).filter(p -> !p.getName().isEmpty()).count();
             if (namedParams == parameters.length && parameters.length > 0) {
-                Map.Entry<String, Object[]> preparedQuery = prepareQuery(
+                Entry<String, Object[]> preparedQuery = prepareQuery(
                         query,
                         of(parameters)
                                 .map(p -> new SimpleImmutableEntry<>(p.getName(), new P<?>[]{p}))
@@ -346,7 +347,7 @@ public final class DB implements AutoCloseable {
      */
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Select select(String query, T... namedParameters) {
+    public final <T extends Entry<String, ?>> Select select(String query, T... namedParameters) {
         return select(query, asList(namedParameters));
     }
 
@@ -390,7 +391,7 @@ public final class DB implements AutoCloseable {
      */
     @SafeVarargs
     @Nonnull
-    public final <T extends Map.Entry<String, ?>> Update update(String query, T... namedParameters) {
+    public final <T extends Entry<String, ?>> Update update(String query, T... namedParameters) {
         return update(query, asList(namedParameters));
     }
 
@@ -408,22 +409,22 @@ public final class DB implements AutoCloseable {
     @SafeVarargs
     @Nonnull
     public final Update update(String query, Map<String, ?>... batch) {
-        List<Map.Entry<String, Object[]>> params = of(batch).map(np -> prepareQuery(query, np.entrySet())).collect(toList());
-        return update(params.get(0).getKey(), params.stream().map(Map.Entry::getValue).collect(toList()).toArray(new Object[params.size()][]));
+        List<Entry<String, Object[]>> params = of(batch).map(np -> prepareQuery(query, np.entrySet())).collect(toList());
+        return update(params.get(0).getKey(), params.stream().map(Entry::getValue).collect(toList()).toArray(new Object[params.size()][]));
     }
 
-    private Select select(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
-        Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
+    private Select select(String query, Iterable<? extends Entry<String, ?>> namedParams) {
+        Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return select(preparedQuery.getKey(), preparedQuery.getValue());
     }
 
-    private Update update(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
-        Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
+    private Update update(String query, Iterable<? extends Entry<String, ?>> namedParams) {
+        Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return update(preparedQuery.getKey(), preparedQuery.getValue());
     }
 
-    private Query query(String query, Iterable<? extends Map.Entry<String, ?>> namedParams) {
-        Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
+    private Query query(String query, Iterable<? extends Entry<String, ?>> namedParams) {
+        Entry<String, Object[]> preparedQuery = prepareQuery(query, namedParams);
         return query(preparedQuery.getKey(), preparedQuery.getValue());
     }
 
