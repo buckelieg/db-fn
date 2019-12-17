@@ -59,7 +59,7 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
     private Consumer<SQLException> errorHandler = NOOP;
     private String delimiter = STATEMENT_DELIMITER;
     private T[] params;
-    private TransactionIsolation isolationLevel = TransactionIsolation.SERIALIZABLE;
+    private TransactionIsolation isolationLevel;
     private String query;
 
     /**
@@ -106,21 +106,29 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
         List<T> paramList = params == null ? emptyList() : asList(params);
         end = doInTransaction(connection, isolationLevel, conn -> {
             for (String query : script.split(delimiter)) {
-                if (isAnonymous(query)) {
-                    if (isProcedure(query)) {
-                        executeProcedure(new StoredProcedureQuery(conn, query));
+                try {
+                    if (isAnonymous(query)) {
+                        if (isProcedure(query)) {
+                            executeProcedure(new StoredProcedureQuery(conn, query));
+                        } else {
+                            executeQuery(new QueryImpl(conn, query));
+                        }
                     } else {
-                        executeQuery(new QueryImpl(conn, query));
+                        if (params == null || params.length == 0) {
+                            throw new IllegalArgumentException(format("Query '%s' has named parameters but none of them is provided", query));
+                        }
+                        Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, paramList);
+                        if (isProcedure(preparedQuery.getKey())) {
+                            executeProcedure(new StoredProcedureQuery(conn, preparedQuery.getKey(), stream(preparedQuery.getValue()).map(p -> p instanceof P ? (P<?>) p : P.in(p)).toArray(P[]::new)));
+                        } else {
+                            executeQuery(new QueryImpl(conn, checkAnonymous(preparedQuery.getKey()), preparedQuery.getValue()));
+                        }
                     }
-                } else {
-                    if (params == null || params.length == 0) {
-                        throw new IllegalArgumentException(format("Query '%s' has named parameters but none of them is provided", query));
-                    }
-                    Map.Entry<String, Object[]> preparedQuery = prepareQuery(query, paramList);
-                    if (isProcedure(preparedQuery.getKey())) {
-                        executeProcedure(new StoredProcedureQuery(conn, preparedQuery.getKey(), stream(preparedQuery.getValue()).map(p -> p instanceof P ? (P<?>) p : P.in(p)).toArray(P[]::new)));
+                } catch (Exception e) {
+                    if (skipErrors) {
+                        errorHandler.accept(new SQLException(e));
                     } else {
-                        executeQuery(new QueryImpl(conn, checkAnonymous(preparedQuery.getKey()), preparedQuery.getValue()));
+                        throw new SQLException(e);
                     }
                 }
             }
@@ -129,28 +137,12 @@ final class ScriptQuery<T extends Map.Entry<String, ?>> implements Script {
         return end - start;
     }
 
-    private void executeProcedure(StoredProcedure sp) throws SQLException {
-        try {
-            sp.skipWarnings(skipWarnings).print(this::log).call();
-        } catch (Exception e) {
-            if (skipErrors) {
-                errorHandler.accept(new SQLException(e));
-            } else {
-                throw new SQLException(e);
-            }
-        }
+    private void executeProcedure(StoredProcedure sp) {
+        sp.skipWarnings(skipWarnings).print(this::log).call();
     }
 
-    private void executeQuery(Query query) throws SQLException {
-        try {
-            query.escaped(escaped).poolable(poolable).skipWarnings(skipWarnings).print(this::log).execute();
-        } catch (Exception e) {
-            if (skipErrors) {
-                errorHandler.accept(new SQLException(e));
-            } else {
-                throw new SQLException(e);
-            }
-        }
+    private void executeQuery(Query query) {
+        query.escaped(escaped).poolable(poolable).skipWarnings(skipWarnings).print(this::log).execute();
     }
 
     private void log(String query) {

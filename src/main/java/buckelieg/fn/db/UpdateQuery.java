@@ -45,7 +45,7 @@ final class UpdateQuery extends AbstractQuery<PreparedStatement> implements Upda
     private boolean isPoolable;
     private boolean isEscaped = true;
     private int timeout;
-    private TransactionIsolation isolationLevel = TransactionIsolation.SERIALIZABLE;
+    private TransactionIsolation isolationLevel;
 
     private UpdateQuery(TrySupplier<PreparedStatement, SQLException> prepareStatement, Connection connection, String query, Object[]... batch) {
         super(connection, query, (Object) batch);

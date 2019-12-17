@@ -236,7 +236,7 @@ final class Utils {
             autoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
             savepoint = conn.setSavepoint();
-            if (isolation != isolationLevel.level && conn.getMetaData().supportsTransactionIsolationLevel(isolationLevel.level)) {
+            if (isolationLevel != null && isolation != isolationLevel.level && conn.getMetaData().supportsTransactionIsolationLevel(isolationLevel.level)) {
                 conn.setTransactionIsolation(isolationLevel.level);
             }
             result = requireNonNull(action, "Action must be provided").apply(conn);
