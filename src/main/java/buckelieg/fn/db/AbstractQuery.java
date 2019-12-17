@@ -91,6 +91,8 @@ abstract class AbstractQuery<S extends Statement> implements Query {
     final void jdbcTry(TryAction<SQLException> action) {
         try {
             requireNonNull(action, "Action must be provided").doTry();
+        } catch (AbstractMethodError ame) {
+            // ignore this possible vendor-specific JDBC driver's error.
         } catch (SQLException e) {
             close();
             throw newSQLRuntimeException(e);
@@ -100,7 +102,7 @@ abstract class AbstractQuery<S extends Statement> implements Query {
     final <O> O withStatement(TryFunction<S, O, SQLException> action) {
         try {
             O result = action.apply(statement);
-            if(!skipWarnings && statement.getWarnings() != null) {
+            if (!skipWarnings && statement.getWarnings() != null) {
                 throw statement.getWarnings();
             }
             return result;
