@@ -102,22 +102,10 @@ final class Utils {
         defaultReaders.put(OTHER, ResultSet::getObject);
     }
 
-    /*
-        <code>IdentityHashMap</code> is used to process cases like:
-        <code>
-            SELECT * FROM SOME_TABLE UNION ALL SELECT * FROM SOME_TABLE
-        </code>
-        therefore such Java stream construction
-        <code>
-            DB.select(...).execute().collect(Collectors.toSet())
-        </cdoe>
-        will not eliminate duplicates from tuple. To do it just use UNION on the SQL query side or do this:
-        <code>DB.select(...).execute().map(HashMap::new).collect(Collectors.toSet())</code>
-     */
     static final TryFunction<ResultSet, Map<String, Object>, SQLException> defaultMapper = rs -> {
         ResultSetMetaData meta = rs.getMetaData();
         int columnCount = meta.getColumnCount();
-        Map<String, Object> result = new IdentityHashMap<>(columnCount);
+        Map<String, Object> result = new LinkedHashMap<>(columnCount);
         for (int col = 1; col <= columnCount; col++) {
             result.put(meta.getColumnLabel(col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject).apply(rs, col));
         }
@@ -139,7 +127,7 @@ final class Utils {
                     colReaders.add(new SimpleImmutableEntry<>(new SimpleImmutableEntry<>(meta.getColumnLabel(col), col), defaultReaders.getOrDefault(valueOf(meta.getColumnType(col)), ResultSet::getObject)));
                 }
                 mapper = rs -> {
-                    Map<String, Object> result = new IdentityHashMap<>(columnCount);
+                    Map<String, Object> result = new LinkedHashMap<>(columnCount);
                     for (Entry<Entry<String, Integer>, TryBiFunction<ResultSet, Integer, Object, SQLException>> e : colReaders) {
                         result.put(e.getKey().getKey(), e.getValue().apply(rs, e.getKey().getValue()));
                     }
